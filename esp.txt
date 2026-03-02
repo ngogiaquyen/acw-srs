@@ -1,0 +1,414 @@
+#include <WiFi.h>
+    #include <WebServer.h>
+    #include <WiFiManager.h>
+    #include <Preferences.h>
+    #include <HTTPClient.h>
+    #include <ArduinoJson.h>
+    
+    #define RELAY_PIN 5
+    #define RESET_PIN 0
+    #define CHECK_INTERVAL 5000
+    #define SESSION_TIMEOUT 900000
+    
+    WebServer server(80);
+    Preferences preferences;
+    
+    /* ================= SYSTEM ================= */
+    
+    String sheetID="";
+    bool maintenanceMode=false;
+    
+    bool relayState=false;
+    unsigned long pumpEndTime=0;
+    unsigned long lastCheck=0;
+    
+    String lastReference="";
+    int lastAmount=0;
+    
+    unsigned long wifiLostTime=0;
+    
+    /* ================= LOGIN ================= */
+    
+    String adminUser="admin";
+    String adminPass="123456";
+    bool loggedIn=false;
+    unsigned long sessionExpire=0;
+    
+    /* ================= PRICE ================= */
+    
+    struct PriceItem{
+      int amount;
+      int minutes;
+    };
+    
+    PriceItem priceList[15];
+    int priceCount=0;
+    
+    /* ================= RELAY ================= */
+    
+    void relayOn(){ digitalWrite(RELAY_PIN,LOW); relayState=true; }
+    void relayOff(){ digitalWrite(RELAY_PIN,HIGH); relayState=false; }
+    
+    /* ================= RESET ================= */
+    
+    void checkFactoryReset(){
+      pinMode(RESET_PIN,INPUT_PULLUP);
+      if(digitalRead(RESET_PIN)==LOW){
+        delay(5000);
+        if(digitalRead(RESET_PIN)==LOW){
+          preferences.clear();
+          ESP.restart();
+        }
+      }
+    }
+    
+    /* ================= PRICE SAVE/LOAD ================= */
+    
+    void savePrices(){
+      DynamicJsonDocument doc(2048);
+      JsonArray arr=doc.to<JsonArray>();
+      for(int i=0;i<priceCount;i++){
+        JsonObject obj=arr.createNestedObject();
+        obj["a"]=priceList[i].amount;
+        obj["m"]=priceList[i].minutes;
+      }
+      String out;
+      serializeJson(doc,out);
+      preferences.putString("prices",out);
+    }
+    
+    void loadPrices(){
+      String data=preferences.getString("prices","");
+      if(data==""){
+        priceList[0]={15000,10};
+        priceCount=1;
+        savePrices();
+        return;
+      }
+      DynamicJsonDocument doc(2048);
+      if(deserializeJson(doc,data)) return;
+      JsonArray arr=doc.as<JsonArray>();
+      priceCount=0;
+      for(JsonObject obj:arr){
+        priceList[priceCount].amount=obj["a"];
+        priceList[priceCount].minutes=obj["m"];
+        priceCount++;
+      }
+    }
+    
+    /* ================= PAYMENT ================= */
+    
+    void checkPayment(){
+      if(WiFi.status()!=WL_CONNECTED) return;
+      if(sheetID=="") return;
+      if(maintenanceMode) return;
+    
+      String url="https://docs.google.com/spreadsheets/d/"+sheetID+
+      "/gviz/tq?tqx=out:json&tq=select%20H,I%20order%20by%20B%20desc%20limit%201";
+    
+      HTTPClient http;
+      http.begin(url);
+      int httpCode=http.GET();
+      if(httpCode!=200){ http.end(); return; }
+    
+      String payload=http.getString();
+      http.end();
+    
+      int start=payload.indexOf("{");
+      int end=payload.lastIndexOf("}");
+      payload=payload.substring(start,end+1);
+    
+      DynamicJsonDocument doc(4096);
+      if(deserializeJson(doc,payload)) return;
+    
+      JsonArray rows=doc["table"]["rows"];
+      if(rows.size()==0) return;
+    
+      int amount=rows[0]["c"][0]["v"];
+      String ref=rows[0]["c"][1]["v"].as<String>();
+    
+      if(ref==""||ref==lastReference) return;
+    
+      for(int i=0;i<priceCount;i++){
+    if(amount==priceList[i].amount){
+          int minutes=priceList[i].minutes;
+          if(pumpEndTime==0)
+            pumpEndTime=millis()+minutes*60000;
+          else
+            pumpEndTime+=minutes*60000;
+          relayOn();
+          lastAmount=amount;
+        }
+      }
+      lastReference=ref;
+    }
+    
+    /* ================= LOGIN ================= */
+    
+    bool isLoggedIn(){
+      if(!loggedIn) return false;
+      if(millis()>sessionExpire){
+        loggedIn=false;
+        return false;
+      }
+      return true;
+    }
+    
+    void handleLogin(){
+      server.send(200,"text/html",
+      "<h2>Xanh19 PRO Login</h2>"
+      "<form action='/doLogin'>"
+      "User:<br><input name='u'><br>"
+      "Pass:<br><input type='password' name='p'><br><br>"
+      "<input type='submit' value='Login'>"
+      "</form>");
+    }
+    
+    void handleDoLogin(){
+      if(server.arg("u")==adminUser && server.arg("p")==adminPass){
+        loggedIn=true;
+        sessionExpire=millis()+SESSION_TIMEOUT;
+        server.sendHeader("Location","/admin");
+        server.send(303);
+      }else{
+        server.send(200,"text/html","Sai mat khau");
+      }
+    }
+    
+    /* ================= STATUS API ================= */
+    
+    void handleStatus(){
+      unsigned long remain=0;
+      if(relayState && pumpEndTime>millis())
+        remain=(pumpEndTime-millis())/1000;
+    
+      int m=remain/60;
+      int s=remain%60;
+    
+      DynamicJsonDocument doc(256);
+    
+      if(relayState){
+        doc["state"]="<div class='on'>DANG BAT</div>";
+        doc["time"]=String(m)+"p "+String(s)+"s";
+      }else{
+        doc["state"]="<div class='off'>DANG TAT</div>";
+        doc["time"]="";
+      }
+    
+      doc["amount"]=lastAmount;
+    
+      String out;
+      serializeJson(doc,out);
+      server.send(200,"application/json",out);
+    }
+    
+    /* ================= DASHBOARD ================= */
+    
+    void handleAdmin(){
+      if(!isLoggedIn()){
+        server.sendHeader("Location","/login");
+        server.send(303);
+        return;
+      }
+    
+      String html=R"====(
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    body{font-family:-apple-system,Segoe UI;background:#f2f4f8;padding:16px}
+    .card{background:#fff;padding:20px;border-radius:18px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);margin-bottom:18px}
+    .on{background:#00c853;color:white;padding:16px;border-radius:14px;
+    text-align:center;font-size:18px;font-weight:bold}
+    .off{background:#d50000;color:white;padding:16px;border-radius:14px;
+    text-align:center;font-size:18px;font-weight:bold}
+    .btn{padding:14px 18px;border:none;border-radius:12px;
+    font-size:16px;font-weight:600;width:48%;margin:4px}
+    .green{background:#00c853;color:white}
+    .red{background:#f44336;color:white}
+    </style>
+    <script>
+    function loadStatus(){
+     fetch('/status').then(r=>r.json()).then(d=>{
+      document.getElementById('relay').innerHTML=d.state;
+      document.getElementById('time').innerHTML=d.time;
+      document.getElementById('amount').innerHTML=d.amount;
+     });
+    }
+    function manualOn(){ fetch('/manualOn'); }
+    function manualOff(){ fetch('/manualOff'); }
+    setInterval(loadStatus,1000);
+    </script>
+    </head>
+    <body>
+    
+    <h2>Xanh19 Smart Wash PRO</h2>
+    
+    <div class='card'>
+     <div id='relay'>Loading...</div>
+     <div id='time'></div>
+    </div>
+    <div class='card'>
+     Giao dich: <b id='amount'></b>
+    </div>
+    
+    <div class='card'>
+     <button class='btn green' onclick='manualOn()'>BAT THU</button>
+     <button class='btn red' onclick='manualOff()'>TAT</button>
+    </div>
+    
+    <div class='card'>
+     <a class='btn green' href='/config'>Cau hinh</a>
+     <a class='btn green' href='/changePass'>Doi mat khau</a>
+     <a class='btn red' href='/resetWifi'>Doi WiFi</a>
+    </div>
+    
+    <div class='card'>
+     <a class='btn red' href='/logout'>Dang xuat</a>
+    </div>
+    
+    </body></html>
+    )====";
+    
+      server.send(200,"text/html",html);
+    }
+    
+    /* ================= MANUAL ================= */
+    
+    void handleManualOn(){ pumpEndTime=millis()+5*60000; relayOn(); server.send(200,"text/plain","OK"); }
+    void handleManualOff(){ relayOff(); pumpEndTime=0; server.send(200,"text/plain","OK"); }
+    
+    /* ================= CHANGE PASS ================= */
+    
+    void handleChangePass(){
+      if(!isLoggedIn()){
+        server.sendHeader("Location","/login");
+        server.send(303);
+        return;
+      }
+    
+      server.send(200,"text/html",
+      "<h2>Doi mat khau</h2>"
+      "<form action='/doChangePass'>"
+      "Mat khau cu:<br><input type='password' name='old'><br><br>"
+      "Mat khau moi:<br><input type='password' name='new1'><br><br>"
+      "Nhap lai:<br><input type='password' name='new2'><br><br>"
+      "<input type='submit' value='Doi'>"
+      "</form><br><a href='/admin'>Quay lai</a>");
+    }
+    
+    void handleDoChangePass(){
+      if(!isLoggedIn()) return;
+    
+      String oldPass=server.arg("old");
+      String new1=server.arg("new1");
+      String new2=server.arg("new2");
+    
+      if(oldPass!=adminPass){
+        server.send(200,"text/html","Sai mat khau cu");
+        return;
+      }
+    
+      if(new1!=new2||new1.length()<4){
+        server.send(200,"text/html","Mat khau moi khong hop le");
+        return;
+      }
+    
+      adminPass=new1;
+      preferences.putString("adminPass",adminPass);
+      server.send(200,"text/html","Doi thanh cong<br><a href='/admin'>Ve admin</a>");
+    }
+    
+    /* ================= CONFIG ================= */
+    
+    void handleConfig(){
+      if(!isLoggedIn()){
+        server.sendHeader("Location","/login");
+        server.send(303);
+        return;
+      }
+    
+      String html="<h2>Cau hinh</h2><form action='/save'>";
+      html+="Sheet ID:<br><input name='sheet' value='"+sheetID+"'><br><br>";
+    
+      for(int i=0;i<priceCount;i++){
+        html+="Tien:<input name='a"+String(i)+"' value='"+String(priceList[i].amount)+"'>";
+        html+=" Phut:<input name='m"+String(i)+"' value='"+String(priceList[i].minutes)+"'><br>";
+      }
+    
+      html+="<br>Them:<br>";
+      html+="Tien:<input name='a_new'> Phut:<input name='m_new'><br><br>";
+      html+="<input type='submit' value='Luu'>";
+      html+="</form><br><a href='/admin'>Quay lai</a>";
+    
+      server.send(200,"text/html",html);
+    }
+    
+    void handleSave(){
+      if(!isLoggedIn()) return;
+    
+      sheetID=server.arg("sheet");
+      preferences.putString("sheetID",sheetID);
+    
+      priceCount=0;
+      for(int i=0;i<10;i++){
+        if(server.hasArg("a"+String(i))){
+          int a=server.arg("a"+String(i)).toInt();
+          int m=server.arg("m"+String(i)).toInt();
+          if(a>0 && m>0){
+            priceList[priceCount]={a,m};
+            priceCount++;
+          }
+    }
+      }
+    
+      int na=server.arg("a_new").toInt();
+      int nm=server.arg("m_new").toInt();
+      if(na>0 && nm>0){
+        priceList[priceCount]={na,nm};
+        priceCount++;
+      }
+    
+      savePrices();
+      server.sendHeader("Location","/config");
+      server.send(303);
+    }
+    
+    /* ================= WIFI RESET ================= */
+    
+    void handleResetWifi(){
+      WiFiManager wm;
+      wm.resetSettings();
+      server.send(200,"text/html","Dang reset WiFi...");
+      delay(2000);
+      ESP.restart();
+    }
+    
+    /* ================= SETUP ================= */
+    
+    void setup(){
+    
+      Serial.begin(115200);
+      pinMode(RELAY_PIN,OUTPUT);
+      relayOff();
+    
+      preferences.begin("config",false);
+    
+      sheetID=preferences.getString("sheetID","");
+      adminPass=preferences.getString("adminPass","123456");
+    
+      loadPrices();
+      checkFactoryReset();
+    
+      WiFiManager wm;
+      wm.setConnectTimeout(20);
+    
+      if(!wm.autoConnect("Xanh19-Setup")){
+        wm.startConfigPortal("Xanh19-Setup");
+      }
+    
+      server.on("/",[](){ server.send(200,"text/html","<a href='/login'>Admin</a>"); });
+      server.on("/login",handleLogin);
+    

@@ -1,0 +1,16 @@
+-- Create devices table
+CREATE TABLE IF NOT EXISTS devices (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  tenant_id INT NOT NULL,
+  station_id INT NULL,
+  device_id VARCHAR(255) UNIQUE NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  status ENUM('online', 'offline', 'maintenance') DEFAULT 'offline',
+  last_heartbeat TIMESTAMP NULL,
+  firmware_version VARCHAR(50),
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+  FOREIGN KEY (station_id) REFERENCES stations(id) ON DELETE SET NULL
+);
