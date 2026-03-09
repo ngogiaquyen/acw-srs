@@ -13,7 +13,6 @@ export interface StationFormData {
   address: string;
   latitude: string;
   longitude: string;
-  qrCode: string;
   isActive: boolean;
 }
 
@@ -28,7 +27,6 @@ const defaultValues: StationFormData = {
   address: "",
   latitude: "",
   longitude: "",
-  qrCode: "",
   isActive: true,
 };
 
@@ -95,16 +93,6 @@ export function StationForm({ mode, stationId, initialData }: StationFormProps) 
               id="name"
               value={formData.name}
               onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="qrCode">Mã QR</Label>
-            <Input
-              id="qrCode"
-              value={formData.qrCode}
-              onChange={(e) => setFormData((p) => ({ ...p, qrCode: e.target.value }))}
               required
             />
           </div>

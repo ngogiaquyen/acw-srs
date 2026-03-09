@@ -65,6 +65,10 @@ export async function POST(request: Request) {
         ? new Date(body.subscriptionEndDate)
         : null,
       isActive: body.isActive ?? true,
+      sepayBankAccount: body.sepayBankAccount ?? null,
+      sepayBankCode: body.sepayBankCode ?? null,
+      sepayAccountName: body.sepayAccountName ?? null,
+      sepayWebhookSecret: body.sepayWebhookSecret ?? null,
     };
 
     const tenant = await createTenant(input);

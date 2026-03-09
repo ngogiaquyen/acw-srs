@@ -42,10 +42,6 @@ export default async function TenantStationDetailPage({ params }: Props) {
             <dd className="font-medium">{station.name}</dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">Mã QR</dt>
-            <dd className="font-medium">{station.qr_code}</dd>
-          </div>
-          <div>
             <dt className="text-xs text-muted-foreground">Địa chỉ</dt>
             <dd className="font-medium">{station.address ?? "-"}</dd>
           </div>

@@ -6,13 +6,14 @@ import {
 import { getDeviceById } from "@/lib/db/devices";
 
 interface Params {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function GET(_request: Request, { params }: Params) {
-  const deviceId = Number.parseInt(params.id, 10);
+  const { id: idParam } = await params;
+  const deviceId = Number.parseInt(idParam, 10);
 
   if (Number.isNaN(deviceId)) {
     return NextResponse.json({ error: "ID thiết bị không hợp lệ" }, { status: 400 });

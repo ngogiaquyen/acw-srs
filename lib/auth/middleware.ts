@@ -9,9 +9,9 @@ export async function getAuthTokenFromCookies(): Promise<string | null> {
   return token?.value ?? null;
 }
 
-export async function getCurrentUserFromCookies():
-  | Promise<{ isAuthenticated: true; user: AuthTokenPayload }>
-  | Promise<{ isAuthenticated: false; user: null }> {
+export async function getCurrentUserFromCookies(): Promise<
+  { isAuthenticated: true; user: AuthTokenPayload } | { isAuthenticated: false; user: null }
+> {
   const token = await getAuthTokenFromCookies();
 
   if (!token) {

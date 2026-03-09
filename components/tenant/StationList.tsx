@@ -12,7 +12,6 @@ export interface StationItem {
   id: number;
   name: string;
   address: string | null;
-  qr_code: string;
   is_active: number | boolean;
 }
 
@@ -26,7 +25,7 @@ export function StationList({ stations }: StationListProps) {
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const filtered = stations.filter((station) =>
-    [station.name, station.address ?? "", station.qr_code]
+    [station.name, station.address ?? ""]
       .join(" ")
       .toLowerCase()
       .includes(keyword.trim().toLowerCase()),
@@ -57,7 +56,7 @@ export function StationList({ stations }: StationListProps) {
     <Card className="p-4">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Input
-          placeholder="Tìm theo tên trạm, địa chỉ, QR..."
+          placeholder="Tìm theo tên trạm, địa chỉ..."
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           className="sm:max-w-md"
@@ -74,7 +73,6 @@ export function StationList({ stations }: StationListProps) {
               <th className="px-3 py-2">ID</th>
               <th className="px-3 py-2">Tên trạm</th>
               <th className="px-3 py-2">Địa chỉ</th>
-              <th className="px-3 py-2">Mã QR</th>
               <th className="px-3 py-2">Trạng thái</th>
               <th className="px-3 py-2">Thao tác</th>
             </tr>
@@ -85,7 +83,6 @@ export function StationList({ stations }: StationListProps) {
                 <td className="px-3 py-3">#{station.id}</td>
                 <td className="px-3 py-3 font-medium">{station.name}</td>
                 <td className="px-3 py-3">{station.address ?? "-"}</td>
-                <td className="px-3 py-3">{station.qr_code}</td>
                 <td className="px-3 py-3">
                   <Badge variant={station.is_active ? "default" : "outline"}>
                     {station.is_active ? "Đang hoạt động" : "Vô hiệu hóa"}

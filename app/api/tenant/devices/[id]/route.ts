@@ -3,11 +3,10 @@ import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
 import {
   getDeviceById,
   getDeviceByIdAndTenantId,
-  softDeleteDevice,
+  deleteDevice,
   updateDevice,
   type UpdateDeviceInput,
 } from "@/lib/db/devices";
-import { getStationByIdAndTenantId } from "@/lib/db/stations";
 import { validateDevicePayload, type DevicePayload } from "@/lib/utils/validation";
 
 async function ensureAuthenticated() {
@@ -21,9 +20,9 @@ async function ensureAuthenticated() {
 }
 
 interface Params {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function GET(_request: Request, { params }: Params) {
@@ -33,7 +32,8 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const id = Number.parseInt(params.id, 10);
+  const { id: idParam } = await params;
+  const id = Number.parseInt(idParam, 10);
   if (Number.isNaN(id)) {
     return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
   }
@@ -68,7 +68,8 @@ export async function PUT(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const id = Number.parseInt(params.id, 10);
+  const { id: idParam } = await params;
+  const id = Number.parseInt(idParam, 10);
   if (Number.isNaN(id)) {
     return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
   }
@@ -84,8 +85,6 @@ export async function PUT(request: Request, { params }: Params) {
       );
     }
 
-    let tenantIdForOwnership: number | null = null;
-
     if (user.role === "TENANT_ADMIN") {
       if (!user.tenantId) {
         return NextResponse.json(
@@ -98,33 +97,22 @@ export async function PUT(request: Request, { params }: Params) {
       if (!owned) {
         return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
       }
-      tenantIdForOwnership = user.tenantId;
     } else if (user.role === "SUPER_ADMIN") {
       const device = await getDeviceById(id);
       if (!device) {
         return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
       }
-      tenantIdForOwnership = device.tenant_id;
     } else {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    if (body.stationId !== undefined && body.stationId !== null) {
-      const station = await getStationByIdAndTenantId(body.stationId, tenantIdForOwnership);
-      if (!station) {
-        return NextResponse.json(
-          { error: "stationId không tồn tại hoặc không thuộc tenant" },
-          { status: 400 },
-        );
-      }
-    }
-
     const input: UpdateDeviceInput = {
-      stationId: body.stationId,
       name: body.name,
+      paymentCode: body.paymentCode,
       status: body.status,
       firmwareVersion: body.firmwareVersion,
       isActive: body.isActive,
+      pricePerMinute: body.pricePerMinute,
     };
 
     const updated = await updateDevice(id, input);
@@ -150,7 +138,8 @@ export async function DELETE(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const id = Number.parseInt(params.id, 10);
+  const { id: idParam } = await params;
+  const id = Number.parseInt(idParam, 10);
   if (Number.isNaN(id)) {
     return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
   }
@@ -175,7 +164,7 @@ export async function DELETE(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  await softDeleteDevice(id);
+  await deleteDevice(id);
 
-  return NextResponse.json({ message: "Thiết bị đã được vô hiệu hóa" }, { status: 200 });
+  return NextResponse.json({ message: "Đã xóa thiết bị" }, { status: 200 });
 }

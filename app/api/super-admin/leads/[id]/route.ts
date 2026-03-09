@@ -9,7 +9,7 @@ async function ensureSuperAdmin() {
 }
 
 interface Params {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 interface UpdateBody {
@@ -29,7 +29,8 @@ export async function GET(_request: Request, { params }: Params) {
   const user = await ensureSuperAdmin();
   if (!user) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const id = Number.parseInt(params.id, 10);
+  const { id: idParam } = await params;
+  const id = Number.parseInt(idParam, 10);
   if (Number.isNaN(id)) return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
 
   const lead = await getLeadById(id);
@@ -42,7 +43,8 @@ export async function PUT(request: Request, { params }: Params) {
   const user = await ensureSuperAdmin();
   if (!user) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const id = Number.parseInt(params.id, 10);
+  const { id: idParam } = await params;
+  const id = Number.parseInt(idParam, 10);
   if (Number.isNaN(id)) return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
 
   try {
@@ -76,7 +78,8 @@ export async function DELETE(_request: Request, { params }: Params) {
   const user = await ensureSuperAdmin();
   if (!user) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const id = Number.parseInt(params.id, 10);
+  const { id: idParam } = await params;
+  const id = Number.parseInt(idParam, 10);
   if (Number.isNaN(id)) return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
 
   const deleted = await deleteLead(id);

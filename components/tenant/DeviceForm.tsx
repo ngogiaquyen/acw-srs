@@ -7,17 +7,13 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface StationOption {
-  id: number;
-  name: string;
-}
-
 export interface DeviceFormData {
   deviceId: string;
   name: string;
-  stationId: string;
+  paymentCode: string;
   status: "online" | "offline" | "maintenance";
   firmwareVersion: string;
+  pricePerMinute: string;
   isActive: boolean;
 }
 
@@ -25,19 +21,19 @@ interface DeviceFormProps {
   mode: "create" | "edit";
   deviceIdParam?: string;
   initialData?: Partial<DeviceFormData>;
-  stations: StationOption[];
 }
 
 const defaultValues: DeviceFormData = {
   deviceId: "",
   name: "",
-  stationId: "",
+  paymentCode: "",
   status: "offline",
   firmwareVersion: "",
+  pricePerMinute: "",
   isActive: true,
 };
 
-export function DeviceForm({ mode, deviceIdParam, initialData, stations }: DeviceFormProps) {
+export function DeviceForm({ mode, deviceIdParam, initialData }: DeviceFormProps) {
   const router = useRouter();
   const [formData, setFormData] = useState<DeviceFormData>({
     ...defaultValues,
@@ -45,6 +41,17 @@ export function DeviceForm({ mode, deviceIdParam, initialData, stations }: Devic
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function handleCopyPaymentCode() {
+    if (!formData.paymentCode) return;
+    try {
+      await navigator.clipboard.writeText(formData.paymentCode);
+      window.alert("Đã copy mã thanh toán");
+    } catch (err) {
+      console.error(err);
+      window.alert("Không thể copy mã thanh toán");
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,8 +65,9 @@ export function DeviceForm({ mode, deviceIdParam, initialData, stations }: Devic
 
       const payload = {
         ...formData,
-        stationId: formData.stationId ? Number(formData.stationId) : null,
         firmwareVersion: formData.firmwareVersion || null,
+        pricePerMinute: formData.pricePerMinute ? Number(formData.pricePerMinute) : null,
+        paymentCode: formData.paymentCode || null,
       };
 
       const res = await fetch(endpoint, {
@@ -104,6 +112,26 @@ export function DeviceForm({ mode, deviceIdParam, initialData, stations }: Devic
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="paymentCode">Mã thanh toán (tự tạo theo PA1)</Label>
+            <div className="flex gap-2">
+              <Input
+                id="paymentCode"
+                value={formData.paymentCode || "Sẽ tự tạo sau khi lưu (DV{tenantId}{deviceId})"}
+                readOnly
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCopyPaymentCode}
+                disabled={!formData.paymentCode}
+              >
+                Copy
+              </Button>
+            </div>
+
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="name">Tên thiết bị</Label>
             <Input
               id="name"
@@ -113,22 +141,6 @@ export function DeviceForm({ mode, deviceIdParam, initialData, stations }: Devic
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="stationId">Trạm</Label>
-            <select
-              id="stationId"
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-              value={formData.stationId}
-              onChange={(e) => setFormData((p) => ({ ...p, stationId: e.target.value }))}
-            >
-              <option value="">Không gán trạm</option>
-              {stations.map((station) => (
-                <option key={station.id} value={String(station.id)}>
-                  {station.name}
-                </option>
-              ))}
-            </select>
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="status">Trạng thái</Label>
@@ -157,6 +169,21 @@ export function DeviceForm({ mode, deviceIdParam, initialData, stations }: Devic
               onChange={(e) =>
                 setFormData((p) => ({ ...p, firmwareVersion: e.target.value }))
               }
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="pricePerMinute">Giá mỗi phút (VNĐ)</Label>
+            <Input
+              id="pricePerMinute"
+              type="number"
+              min={0}
+              step="any"
+              value={formData.pricePerMinute}
+              onChange={(e) =>
+                setFormData((p) => ({ ...p, pricePerMinute: e.target.value }))
+              }
+              placeholder="VD: 5000"
             />
           </div>
 

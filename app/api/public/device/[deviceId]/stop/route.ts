@@ -11,16 +11,17 @@ interface StopPayload {
 }
 
 interface Params {
-  params: {
+  params: Promise<{
     deviceId: string;
-  };
+  }>;
 }
 
 export async function POST(request: Request, { params }: Params) {
   try {
     const body = (await request.json()) as StopPayload;
+    const { deviceId } = await params;
 
-    const device = await getDeviceByDeviceId(params.deviceId);
+    const device = await getDeviceByDeviceId(deviceId);
 
     if (!device || !device.is_active) {
       return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });

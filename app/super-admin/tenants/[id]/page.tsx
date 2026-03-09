@@ -49,6 +49,10 @@ export default async function SuperAdminTenantDetailPage({ params }: Props) {
       ? tenant.subscription_end_date.toISOString().slice(0, 10)
       : null,
     is_active: tenant.is_active,
+    sepay_bank_account: tenant.sepay_bank_account,
+    sepay_bank_code: tenant.sepay_bank_code,
+    sepay_account_name: tenant.sepay_account_name,
+    sepay_webhook_secret: tenant.sepay_webhook_secret,
     created_at: tenant.created_at.toISOString(),
     updated_at: tenant.updated_at.toISOString(),
   };

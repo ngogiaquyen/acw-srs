@@ -22,19 +22,20 @@ async function ensureSuperAdmin() {
 }
 
 interface Params {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function GET(_request: Request, { params }: Params) {
-  const currentUser = ensureSuperAdmin();
+  const currentUser = await ensureSuperAdmin();
 
   if (!currentUser) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const id = Number.parseInt(params.id, 10);
+  const { id: idParam } = await params;
+  const id = Number.parseInt(idParam, 10);
 
   if (Number.isNaN(id)) {
     return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
@@ -50,13 +51,14 @@ export async function GET(_request: Request, { params }: Params) {
 }
 
 export async function PUT(request: Request, { params }: Params) {
-  const currentUser = ensureSuperAdmin();
+  const currentUser = await ensureSuperAdmin();
 
   if (!currentUser) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const id = Number.parseInt(params.id, 10);
+  const { id: idParam } = await params;
+  const id = Number.parseInt(idParam, 10);
 
   if (Number.isNaN(id)) {
     return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
@@ -88,6 +90,10 @@ export async function PUT(request: Request, { params }: Params) {
         ? new Date(body.subscriptionEndDate)
         : undefined,
       isActive: body.isActive,
+      sepayBankAccount: body.sepayBankAccount,
+      sepayBankCode: body.sepayBankCode,
+      sepayAccountName: body.sepayAccountName,
+      sepayWebhookSecret: body.sepayWebhookSecret,
     };
 
     const updated = await updateTenant(id, input);
@@ -107,13 +113,14 @@ export async function PUT(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const currentUser = ensureSuperAdmin();
+  const currentUser = await ensureSuperAdmin();
 
   if (!currentUser) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const id = Number.parseInt(params.id, 10);
+  const { id: idParam } = await params;
+  const id = Number.parseInt(idParam, 10);
 
   if (Number.isNaN(id)) {
     return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });

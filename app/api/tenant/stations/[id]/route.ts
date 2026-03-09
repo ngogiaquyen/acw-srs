@@ -23,9 +23,9 @@ async function ensureAuthenticated() {
 }
 
 interface Params {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function GET(_request: Request, { params }: Params) {
@@ -35,7 +35,8 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const id = Number.parseInt(params.id, 10);
+  const { id: idParam } = await params;
+  const id = Number.parseInt(idParam, 10);
 
   if (Number.isNaN(id)) {
     return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
@@ -71,7 +72,8 @@ export async function PUT(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const id = Number.parseInt(params.id, 10);
+  const { id: idParam } = await params;
+  const id = Number.parseInt(idParam, 10);
 
   if (Number.isNaN(id)) {
     return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
@@ -110,7 +112,6 @@ export async function PUT(request: Request, { params }: Params) {
       address: body.address,
       latitude: body.latitude ?? undefined,
       longitude: body.longitude ?? undefined,
-      qrCode: body.qrCode,
       isActive: body.isActive,
     };
 
@@ -137,7 +138,8 @@ export async function DELETE(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const id = Number.parseInt(params.id, 10);
+  const { id: idParam } = await params;
+  const id = Number.parseInt(idParam, 10);
 
   if (Number.isNaN(id)) {
     return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });

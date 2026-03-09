@@ -5,12 +5,10 @@ import {
   updateDevice,
   updateDeviceHeartbeat,
 } from "@/lib/db/devices";
-import { getStationByIdAndTenantId } from "@/lib/db/stations";
 
 interface RegisterPayload {
   deviceId?: string;
   tenantId?: number;
-  stationId?: number | null;
   name?: string;
   firmwareVersion?: string | null;
 }
@@ -26,21 +24,10 @@ export async function POST(request: Request) {
       );
     }
 
-    if (body.stationId !== undefined && body.stationId !== null) {
-      const station = await getStationByIdAndTenantId(body.stationId, body.tenantId);
-      if (!station) {
-        return NextResponse.json(
-          { error: "stationId không tồn tại hoặc không thuộc tenant" },
-          { status: 400 },
-        );
-      }
-    }
-
     const existed = await getDeviceByDeviceId(body.deviceId);
 
     if (existed) {
       await updateDevice(existed.id, {
-        stationId: body.stationId ?? existed.station_id,
         name: body.name,
         firmwareVersion: body.firmwareVersion ?? existed.firmware_version,
         isActive: true,
@@ -59,7 +46,6 @@ export async function POST(request: Request) {
 
     const device = await createDevice({
       tenantId: body.tenantId,
-      stationId: body.stationId ?? null,
       deviceId: body.deviceId,
       name: body.name,
       status: "online",

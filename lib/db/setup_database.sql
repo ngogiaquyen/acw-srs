@@ -1,17 +1,14 @@
 -- ============================================
--- SCRIPT SETUP DATABASE HOÀN CHỈNH
+-- SCRIPT SETUP DATABASE (CLEAN - NO STATIONS)
 -- Hệ thống quản lý rửa xe tự động
 -- ============================================
 
--- Tạo database (nếu chưa có)
 CREATE DATABASE IF NOT EXISTS car_wash_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE car_wash_db;
 
 -- ============================================
--- 1. TẠO BẢNG CORE
+-- 1) TENANTS
 -- ============================================
-
--- Create tenants table
 CREATE TABLE IF NOT EXISTS tenants (
   id INT PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(255) NOT NULL,
@@ -23,17 +20,23 @@ CREATE TABLE IF NOT EXISTS tenants (
   subscription_start_date DATE,
   subscription_end_date DATE,
   is_active BOOLEAN DEFAULT TRUE,
+  sepay_bank_account VARCHAR(50) DEFAULT NULL,
+  sepay_bank_code VARCHAR(20) DEFAULT NULL,
+  sepay_account_name VARCHAR(100) DEFAULT NULL,
+  sepay_webhook_secret VARCHAR(255) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create users table
+-- ============================================
+-- 2) USERS
+-- ============================================
 CREATE TABLE IF NOT EXISTS users (
   id INT PRIMARY KEY AUTO_INCREMENT,
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   role ENUM('SUPER_ADMIN', 'TENANT_ADMIN') NOT NULL,
-  tenant_id INT NULL,  -- NULL for SUPER_ADMIN
+  tenant_id INT NULL,
   name VARCHAR(255) NOT NULL,
   phone VARCHAR(20),
   is_active BOOLEAN DEFAULT TRUE,
@@ -43,75 +46,32 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- ============================================
--- 2. TẠO BẢNG STATIONS
+-- 3) DEVICES (NO station_id)
 -- ============================================
-
--- Create stations table
-CREATE TABLE IF NOT EXISTS stations (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  tenant_id INT NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  address TEXT,
-  latitude DECIMAL(10, 8),
-  longitude DECIMAL(11, 8),
-  qr_code VARCHAR(255) UNIQUE NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
-);
-
--- ============================================
--- 3. TẠO BẢNG DEVICES
--- ============================================
-
--- Create devices table
 CREATE TABLE IF NOT EXISTS devices (
   id INT PRIMARY KEY AUTO_INCREMENT,
   tenant_id INT NOT NULL,
-  station_id INT NULL,
   device_id VARCHAR(255) UNIQUE NOT NULL,
   name VARCHAR(255) NOT NULL,
   status ENUM('online', 'offline', 'maintenance') DEFAULT 'offline',
   last_heartbeat TIMESTAMP NULL,
   firmware_version VARCHAR(50),
   is_active BOOLEAN DEFAULT TRUE,
+  price_per_minute DECIMAL(10, 2) DEFAULT NULL,
+  payment_code VARCHAR(50) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-  FOREIGN KEY (station_id) REFERENCES stations(id) ON DELETE SET NULL
+  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 );
 
 -- ============================================
--- 4. TẠO BẢNG PRICING PACKAGES
+-- 4) TRANSACTIONS (NO station_id)
 -- ============================================
-
--- Create pricing_packages table
-CREATE TABLE IF NOT EXISTS pricing_packages (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  tenant_id INT NOT NULL,
-  station_id INT NULL,
-  name VARCHAR(255) NOT NULL,
-  price DECIMAL(10, 2) NOT NULL,
-  duration_minutes INT NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-  FOREIGN KEY (station_id) REFERENCES stations(id) ON DELETE CASCADE
-);
-
--- ============================================
--- 5. TẠO BẢNG TRANSACTIONS
--- ============================================
-
--- Create transactions table
 CREATE TABLE IF NOT EXISTS transactions (
   id INT PRIMARY KEY AUTO_INCREMENT,
   tenant_id INT NOT NULL,
-  station_id INT NOT NULL,
   device_id INT NOT NULL,
-  pricing_package_id INT NOT NULL,
+  pricing_package_id INT NULL,
   qr_code VARCHAR(255) NOT NULL,
   amount DECIMAL(10, 2) NOT NULL,
   duration_minutes INT NOT NULL,
@@ -123,36 +83,15 @@ CREATE TABLE IF NOT EXISTS transactions (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-  FOREIGN KEY (station_id) REFERENCES stations(id) ON DELETE CASCADE,
   FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE,
-  FOREIGN KEY (pricing_package_id) REFERENCES pricing_packages(id) ON DELETE CASCADE
+  INDEX idx_transactions_tenant_id (tenant_id),
+  INDEX idx_transactions_device_id (device_id),
+  INDEX idx_transactions_pricing_package_id (pricing_package_id)
 );
 
 -- ============================================
--- 6. TẠO BẢNG QR CODES
+-- 5) DEVICE COMMANDS
 -- ============================================
-
--- Create qr_codes table
-CREATE TABLE IF NOT EXISTS qr_codes (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  tenant_id INT NOT NULL,
-  station_id INT NULL,
-  device_id INT NULL,
-  code VARCHAR(255) UNIQUE NOT NULL,
-  label VARCHAR(255) NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-  FOREIGN KEY (station_id) REFERENCES stations(id) ON DELETE SET NULL,
-  FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE SET NULL
-);
-
--- ============================================
--- 7. TẠO BẢNG DEVICE COMMANDS
--- ============================================
-
--- Create device_commands table
 CREATE TABLE IF NOT EXISTS device_commands (
   id INT PRIMARY KEY AUTO_INCREMENT,
   device_id INT NOT NULL,
@@ -167,10 +106,8 @@ CREATE TABLE IF NOT EXISTS device_commands (
 );
 
 -- ============================================
--- 8. TẠO BẢNG DEVICE LOGS
+-- 6) DEVICE LOGS
 -- ============================================
-
--- Create device_logs table
 CREATE TABLE IF NOT EXISTS device_logs (
   id INT PRIMARY KEY AUTO_INCREMENT,
   device_id INT NOT NULL,
@@ -183,9 +120,8 @@ CREATE TABLE IF NOT EXISTS device_logs (
 );
 
 -- ============================================
--- 9. TẠO BẢNG SUBSCRIPTIONS & INVOICES
+-- 7) SUBSCRIPTIONS
 -- ============================================
-
 CREATE TABLE IF NOT EXISTS subscriptions (
   id INT PRIMARY KEY AUTO_INCREMENT,
   tenant_id INT NOT NULL,
@@ -205,6 +141,9 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   INDEX idx_subscriptions_end_date (end_date)
 );
 
+-- ============================================
+-- 8) INVOICES
+-- ============================================
 CREATE TABLE IF NOT EXISTS invoices (
   id INT PRIMARY KEY AUTO_INCREMENT,
   tenant_id INT NOT NULL,
@@ -227,10 +166,8 @@ CREATE TABLE IF NOT EXISTS invoices (
 );
 
 -- ============================================
--- 10. TẠO BẢNG LEADS & ORDERS
+-- 9) LEADS
 -- ============================================
-
--- Create leads table
 CREATE TABLE IF NOT EXISTS leads (
   id INT PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(255) NOT NULL,
@@ -252,7 +189,9 @@ CREATE TABLE IF NOT EXISTS leads (
   INDEX idx_leads_created_at (created_at)
 );
 
--- Create orders table
+-- ============================================
+-- 10) ORDERS
+-- ============================================
 CREATE TABLE IF NOT EXISTS orders (
   id INT PRIMARY KEY AUTO_INCREMENT,
   lead_id INT NULL,
@@ -287,15 +226,8 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 
 -- ============================================
--- 11. INSERT SUPER ADMIN USER
+-- 11) SEED SUPER ADMIN
 -- ============================================
-
--- Insert Super Admin user
--- Email: admin@example.com
--- Password: admin123
--- Password hash được tạo bằng bcrypt với salt rounds 10
--- Lưu ý: Bạn có thể tạo hash mới bằng script: node lib/db/generate_password_hash.js <password>
-
 INSERT INTO users (email, password_hash, role, tenant_id, name, phone, is_active)
 VALUES (
   'admin@example.com',
@@ -309,8 +241,7 @@ VALUES (
 ON DUPLICATE KEY UPDATE email = email;
 
 -- ============================================
--- HOÀN TẤT
+-- DONE
 -- ============================================
-
 SELECT 'Database setup completed successfully!' AS message;
 SELECT 'Super Admin created: admin@example.com / admin123' AS credentials;

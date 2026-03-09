@@ -66,8 +66,16 @@ export default async function TenantDeviceDetailPage({ params }: Props) {
             <dd className="font-medium">{device.firmware_version ?? "-"}</dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">Station ID</dt>
-            <dd className="font-medium">{device.station_id ?? "-"}</dd>
+            <dt className="text-xs text-muted-foreground">Giá mỗi phút</dt>
+            <dd className="font-medium">
+              {device.price_per_minute
+                ? `${Number(device.price_per_minute).toLocaleString("vi-VN")} VNĐ`
+                : "Chưa thiết lập"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Mã nội dung chuyển khoản</dt>
+            <dd className="font-medium">{device.payment_code ?? "(Dùng mặc định theo device)"}</dd>
           </div>
           <div>
             <dt className="text-xs text-muted-foreground">Kích hoạt</dt>

@@ -13,9 +13,9 @@ async function ensureAuthenticated() {
 }
 
 interface Params {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 interface CommandPayload {
@@ -37,7 +37,8 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const id = Number.parseInt(params.id, 10);
+  const { id: idParam } = await params;
+  const id = Number.parseInt(idParam, 10);
   if (Number.isNaN(id)) {
     return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
   }

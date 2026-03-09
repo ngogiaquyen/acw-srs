@@ -53,6 +53,10 @@ export default async function SuperAdminEditTenantPage({ params }: Props) {
           subscriptionStartDate: toDateInputValue(tenant.subscription_start_date),
           subscriptionEndDate: toDateInputValue(tenant.subscription_end_date),
           isActive: Boolean(tenant.is_active),
+          sepayBankAccount: tenant.sepay_bank_account ?? "",
+          sepayBankCode: tenant.sepay_bank_code ?? "",
+          sepayAccountName: tenant.sepay_account_name ?? "",
+          sepayWebhookSecret: tenant.sepay_webhook_secret ?? "",
         }}
       />
     </div>

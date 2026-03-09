@@ -27,7 +27,7 @@ export interface TenantItem {
   license_max_devices: number;
   subscription_status: "active" | "suspended" | "expired";
   is_active: number | boolean;
-  created_at: string;
+  created_at: Date | string;
 }
 
 interface TenantListProps {

@@ -3,9 +3,8 @@ import { Badge } from "@/components/ui/badge";
 
 export interface TransactionItem {
   id: number;
-  station_id: number;
   device_id: number;
-  pricing_package_id: number;
+  pricing_package_id: number | null;
   amount: number;
   duration_minutes: number;
   status: "pending" | "completed" | "failed" | "refunded";
@@ -39,9 +38,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
           <thead>
             <tr className="border-b text-left">
               <th className="px-3 py-2">ID</th>
-              <th className="px-3 py-2">Station</th>
               <th className="px-3 py-2">Device</th>
-              <th className="px-3 py-2">Pricing</th>
               <th className="px-3 py-2">Số tiền</th>
               <th className="px-3 py-2">Thời lượng</th>
               <th className="px-3 py-2">Trạng thái</th>
@@ -53,9 +50,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
             {transactions.map((tx) => (
               <tr key={tx.id} className="border-b">
                 <td className="px-3 py-3">#{tx.id}</td>
-                <td className="px-3 py-3">{tx.station_id}</td>
                 <td className="px-3 py-3">{tx.device_id}</td>
-                <td className="px-3 py-3">{tx.pricing_package_id}</td>
                 <td className="px-3 py-3">{formatCurrency(Number(tx.amount))}</td>
                 <td className="px-3 py-3">{tx.duration_minutes} phút</td>
                 <td className="px-3 py-3">

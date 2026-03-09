@@ -11,6 +11,11 @@ export interface TenantPayload {
   subscriptionStartDate?: string | null;
   subscriptionEndDate?: string | null;
   isActive?: boolean;
+  // SePay configuration
+  sepayBankAccount?: string | null;
+  sepayBankCode?: string | null;
+  sepayAccountName?: string | null;
+  sepayWebhookSecret?: string | null;
 }
 
 export interface StationPayload {
@@ -18,24 +23,16 @@ export interface StationPayload {
   address?: string | null;
   latitude?: number | null;
   longitude?: number | null;
-  qrCode?: string;
   isActive?: boolean;
 }
 
 export interface DevicePayload {
   deviceId?: string;
   name?: string;
-  stationId?: number | null;
+  paymentCode?: string | null;
   status?: DeviceStatus;
   firmwareVersion?: string | null;
-  isActive?: boolean;
-}
-
-export interface PricingPayload {
-  name?: string;
-  stationId?: number | null;
-  price?: number;
-  durationMinutes?: number;
+  pricePerMinute?: number | null;
   isActive?: boolean;
 }
 
@@ -123,17 +120,6 @@ export function validateStationPayload(
     errors.push("Tên trạm phải từ 2 đến 255 ký tự");
   }
 
-  if (isCreate && !payload.qrCode) {
-    errors.push("QR code là bắt buộc");
-  }
-
-  if (payload.qrCode) {
-    const qrRegex = /^[A-Za-z0-9_-]+$/;
-    if (!qrRegex.test(payload.qrCode)) {
-      errors.push("QR code chỉ được chứa chữ, số, dấu gạch ngang và gạch dưới");
-    }
-  }
-
   if (payload.latitude !== undefined && payload.latitude !== null) {
     if (
       Number.isNaN(payload.latitude) ||
@@ -183,65 +169,17 @@ export function validateDevicePayload(
     errors.push("Tên thiết bị phải từ 2 đến 255 ký tự");
   }
 
-  if (
-    payload.stationId !== undefined &&
-    payload.stationId !== null &&
-    (!Number.isInteger(payload.stationId) || payload.stationId <= 0)
-  ) {
-    errors.push("stationId phải là số nguyên dương");
-  }
-
   const VALID_DEVICE_STATUSES: DeviceStatus[] = ["online", "offline", "maintenance"];
   if (payload.status && !VALID_DEVICE_STATUSES.includes(payload.status)) {
     errors.push("status thiết bị không hợp lệ");
   }
 
-  return {
-    valid: errors.length === 0,
-    errors,
-  };
-}
-
-export function validatePricingPayload(
-  payload: PricingPayload,
-  options: { isCreate: boolean },
-): { valid: boolean; errors: string[] } {
-  const errors: string[] = [];
-  const { isCreate } = options;
-
-  if (isCreate && !payload.name) {
-    errors.push("Tên gói giá là bắt buộc");
-  }
-
-  if (payload.name && (payload.name.length < 2 || payload.name.length > 255)) {
-    errors.push("Tên gói giá phải từ 2 đến 255 ký tự");
-  }
-
-  if (payload.price !== undefined) {
-    if (Number.isNaN(payload.price) || payload.price < 0) {
-      errors.push("Giá phải là số không âm");
-    }
-  } else if (isCreate) {
-    errors.push("Giá là bắt buộc");
-  }
-
-  if (payload.durationMinutes !== undefined) {
-    if (
-      !Number.isInteger(payload.durationMinutes) ||
-      payload.durationMinutes <= 0
-    ) {
-      errors.push("Thời lượng phải là số nguyên dương (phút)");
-    }
-  } else if (isCreate) {
-    errors.push("Thời lượng là bắt buộc");
-  }
-
   if (
-    payload.stationId !== undefined &&
-    payload.stationId !== null &&
-    (!Number.isInteger(payload.stationId) || payload.stationId <= 0)
+    payload.pricePerMinute !== undefined &&
+    payload.pricePerMinute !== null &&
+    (Number.isNaN(payload.pricePerMinute) || payload.pricePerMinute <= 0)
   ) {
-    errors.push("stationId phải là số nguyên dương");
+    errors.push("Giá mỗi phút phải là số dương");
   }
 
   return {
@@ -249,3 +187,4 @@ export function validatePricingPayload(
     errors,
   };
 }
+

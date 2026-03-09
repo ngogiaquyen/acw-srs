@@ -10,7 +10,6 @@ import {
   getDeviceByDeviceId,
   type CreateDeviceInput,
 } from "@/lib/db/devices";
-import { getStationByIdAndTenantId } from "@/lib/db/stations";
 import { validateDevicePayload, type DevicePayload } from "@/lib/utils/validation";
 
 async function ensureAuthenticated() {
@@ -31,12 +30,6 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
-  const stationIdParam = url.searchParams.get("station_id");
-
-  const stationId = stationIdParam ? Number.parseInt(stationIdParam, 10) : undefined;
-  if (stationIdParam && Number.isNaN(stationId)) {
-    return NextResponse.json({ error: "station_id không hợp lệ" }, { status: 400 });
-  }
 
   const access = resolveTenantAccess(user, url.searchParams.get("tenant_id"));
   if (!access.ok) {
@@ -44,11 +37,11 @@ export async function GET(request: Request) {
   }
 
   if (access.tenantId !== undefined) {
-    const devices = await getDevicesByTenantId(access.tenantId, { stationId });
+    const devices = await getDevicesByTenantId(access.tenantId);
     return NextResponse.json({ devices }, { status: 200 });
   }
 
-  const devices = await getAllDevices({ stationId });
+  const devices = await getAllDevices();
   return NextResponse.json({ devices }, { status: 200 });
 }
 
@@ -91,16 +84,6 @@ export async function POST(request: Request) {
 
     const tenantId = access.tenantId;
 
-    if (body.stationId !== undefined && body.stationId !== null) {
-      const station = await getStationByIdAndTenantId(body.stationId, tenantId);
-      if (!station) {
-        return NextResponse.json(
-          { error: "stationId không tồn tại hoặc không thuộc tenant" },
-          { status: 400 },
-        );
-      }
-    }
-
     const existed = await getDeviceByDeviceId(body.deviceId!);
     if (existed) {
       return NextResponse.json({ error: "deviceId đã tồn tại" }, { status: 409 });
@@ -108,12 +91,13 @@ export async function POST(request: Request) {
 
     const input: CreateDeviceInput = {
       tenantId,
-      stationId: body.stationId ?? null,
       deviceId: body.deviceId!,
       name: body.name!,
+      paymentCode: body.paymentCode ?? null,
       status: body.status,
       firmwareVersion: body.firmwareVersion ?? null,
       isActive: body.isActive ?? true,
+      pricePerMinute: body.pricePerMinute ?? null,
     };
 
     const device = await createDevice(input);

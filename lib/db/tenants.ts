@@ -13,6 +13,11 @@ export interface TenantRecord {
   subscription_start_date: Date | null;
   subscription_end_date: Date | null;
   is_active: number | boolean;
+  // SePay configuration
+  sepay_bank_account: string | null;
+  sepay_bank_code: string | null;
+  sepay_account_name: string | null;
+  sepay_webhook_secret: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -27,6 +32,11 @@ export interface CreateTenantInput {
   subscriptionStartDate?: Date | null;
   subscriptionEndDate?: Date | null;
   isActive?: boolean;
+  // SePay configuration
+  sepayBankAccount?: string | null;
+  sepayBankCode?: string | null;
+  sepayAccountName?: string | null;
+  sepayWebhookSecret?: string | null;
 }
 
 export interface UpdateTenantInput {
@@ -39,6 +49,11 @@ export interface UpdateTenantInput {
   subscriptionStartDate?: Date | null;
   subscriptionEndDate?: Date | null;
   isActive?: boolean;
+  // SePay configuration
+  sepayBankAccount?: string | null;
+  sepayBankCode?: string | null;
+  sepayAccountName?: string | null;
+  sepayWebhookSecret?: string | null;
 }
 
 export async function getTenants(): Promise<TenantRecord[]> {
@@ -67,6 +82,10 @@ export async function createTenant(
     subscriptionStartDate = null,
     subscriptionEndDate = null,
     isActive = true,
+    sepayBankAccount = null,
+    sepayBankCode = null,
+    sepayAccountName = null,
+    sepayWebhookSecret = null,
   } = input;
 
   const [result] = await pool.query(
@@ -80,9 +99,13 @@ export async function createTenant(
       subscription_status,
       subscription_start_date,
       subscription_end_date,
-      is_active
+      is_active,
+      sepay_bank_account,
+      sepay_bank_code,
+      sepay_account_name,
+      sepay_webhook_secret
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
     [
       name,
@@ -94,6 +117,10 @@ export async function createTenant(
       subscriptionStartDate,
       subscriptionEndDate,
       isActive ? 1 : 0,
+      sepayBankAccount,
+      sepayBankCode,
+      sepayAccountName,
+      sepayWebhookSecret,
     ],
   );
 
@@ -150,6 +177,22 @@ export async function updateTenant(
   if (input.isActive !== undefined) {
     fields.push("is_active = ?");
     values.push(input.isActive ? 1 : 0);
+  }
+  if (input.sepayBankAccount !== undefined) {
+    fields.push("sepay_bank_account = ?");
+    values.push(input.sepayBankAccount);
+  }
+  if (input.sepayBankCode !== undefined) {
+    fields.push("sepay_bank_code = ?");
+    values.push(input.sepayBankCode);
+  }
+  if (input.sepayAccountName !== undefined) {
+    fields.push("sepay_account_name = ?");
+    values.push(input.sepayAccountName);
+  }
+  if (input.sepayWebhookSecret !== undefined) {
+    fields.push("sepay_webhook_secret = ?");
+    values.push(input.sepayWebhookSecret);
   }
 
   if (fields.length === 0) {

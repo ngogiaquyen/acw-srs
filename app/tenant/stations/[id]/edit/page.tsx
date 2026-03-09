@@ -35,7 +35,6 @@ export default async function TenantEditStationPage({ params }: Props) {
           address: station.address ?? "",
           latitude: station.latitude !== null ? String(station.latitude) : "",
           longitude: station.longitude !== null ? String(station.longitude) : "",
-          qrCode: station.qr_code,
           isActive: Boolean(station.is_active),
         }}
       />

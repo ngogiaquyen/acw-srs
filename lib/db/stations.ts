@@ -7,7 +7,6 @@ export interface StationRecord {
   address: string | null;
   latitude: number | null;
   longitude: number | null;
-  qr_code: string;
   is_active: number | boolean;
   created_at: Date;
   updated_at: Date;
@@ -19,7 +18,6 @@ export interface CreateStationInput {
   address?: string | null;
   latitude?: number | null;
   longitude?: number | null;
-  qrCode: string;
   isActive?: boolean;
 }
 
@@ -28,7 +26,6 @@ export interface UpdateStationInput {
   address?: string | null;
   latitude?: number | null;
   longitude?: number | null;
-  qrCode?: string;
   isActive?: boolean;
 }
 
@@ -78,7 +75,6 @@ export async function createStation(
     address = null,
     latitude = null,
     longitude = null,
-    qrCode,
     isActive = true,
   } = input;
 
@@ -90,12 +86,11 @@ export async function createStation(
       address,
       latitude,
       longitude,
-      qr_code,
       is_active
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?)
   `,
-    [tenantId, name, address, latitude, longitude, qrCode, isActive ? 1 : 0],
+    [tenantId, name, address, latitude, longitude, isActive ? 1 : 0],
   );
 
   const insertResult = result as { insertId: number };
@@ -131,10 +126,6 @@ export async function updateStation(
   if (input.longitude !== undefined) {
     fields.push("longitude = ?");
     values.push(input.longitude);
-  }
-  if (input.qrCode !== undefined) {
-    fields.push("qr_code = ?");
-    values.push(input.qrCode);
   }
   if (input.isActive !== undefined) {
     fields.push("is_active = ?");

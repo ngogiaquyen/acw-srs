@@ -1,7 +1,7 @@
-import { SignJWT, jwtVerify } from "jose";
+import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import type { UserRecord } from "../db/users";
 
-export interface AuthTokenPayload {
+export interface AuthTokenPayload extends JWTPayload {
   userId: number;
   role: UserRecord["role"];
   tenantId: number | null;

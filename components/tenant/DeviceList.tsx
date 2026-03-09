@@ -13,8 +13,9 @@ export interface DeviceItem {
   device_id: string;
   name: string;
   status: "online" | "offline" | "maintenance";
-  station_id: number | null;
+  last_heartbeat: Date | string | null;
   firmware_version: string | null;
+  price_per_minute: number | null;
   is_active: number | boolean;
 }
 
@@ -26,6 +27,26 @@ function statusVariant(status: DeviceItem["status"]) {
   if (status === "online") return "default" as const;
   if (status === "maintenance") return "secondary" as const;
   return "outline" as const;
+}
+
+function formatLastHeartbeat(lastHeartbeat: Date | string | null): string {
+  if (!lastHeartbeat) return "-";
+
+  const date = typeof lastHeartbeat === "string" ? new Date(lastHeartbeat) : lastHeartbeat;
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / 60000);
+
+  if (diffMinutes < 1) return "Vừa xong";
+  if (diffMinutes < 60) return `${diffMinutes} phút trước`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours} giờ trước`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays} ngày trước`;
+
+  return date.toLocaleDateString("vi-VN");
 }
 
 export function DeviceList({ devices }: DeviceListProps) {
@@ -41,7 +62,7 @@ export function DeviceList({ devices }: DeviceListProps) {
   );
 
   async function handleDelete(id: number) {
-    const ok = window.confirm("Bạn có chắc muốn vô hiệu hóa thiết bị này?");
+    const ok = window.confirm("Bạn có chắc muốn xóa thiết bị này? Hành động không thể hoàn tác.");
     if (!ok) return;
 
     setDeletingId(id);
@@ -76,15 +97,17 @@ export function DeviceList({ devices }: DeviceListProps) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[920px] text-sm">
+        <table className="w-full min-w-[1000px] text-sm">
           <thead>
             <tr className="border-b text-left">
               <th className="px-3 py-2">ID</th>
               <th className="px-3 py-2">Device ID</th>
               <th className="px-3 py-2">Tên</th>
               <th className="px-3 py-2">Trạng thái</th>
-              <th className="px-3 py-2">Station</th>
+              <th className="px-3 py-2">Hoạt động</th>
+              <th className="px-3 py-2">Lần cuối</th>
               <th className="px-3 py-2">Firmware</th>
+              <th className="px-3 py-2">Giá/phút</th>
               <th className="px-3 py-2">Kích hoạt</th>
               <th className="px-3 py-2">Thao tác</th>
             </tr>
@@ -98,8 +121,24 @@ export function DeviceList({ devices }: DeviceListProps) {
                 <td className="px-3 py-3">
                   <Badge variant={statusVariant(device.status)}>{device.status}</Badge>
                 </td>
-                <td className="px-3 py-3">{device.station_id ?? "-"}</td>
+                <td className="px-3 py-3">
+                  {device.status === "online" ? (
+                    <span className="text-green-600">Đang hoạt động</span>
+                  ) : device.status === "maintenance" ? (
+                    <span className="text-yellow-600">Bảo trì</span>
+                  ) : (
+                    <span className="text-gray-500">Ngừng hoạt động</span>
+                  )}
+                </td>
+                <td className="px-3 py-3 text-muted-foreground">
+                  {formatLastHeartbeat(device.last_heartbeat)}
+                </td>
                 <td className="px-3 py-3">{device.firmware_version ?? "-"}</td>
+                <td className="px-3 py-3">
+                  {device.price_per_minute
+                    ? `${Number(device.price_per_minute).toLocaleString("vi-VN")}đ`
+                    : "-"}
+                </td>
                 <td className="px-3 py-3">
                   <Badge variant={device.is_active ? "default" : "outline"}>
                     {device.is_active ? "Đang hoạt động" : "Vô hiệu hóa"}

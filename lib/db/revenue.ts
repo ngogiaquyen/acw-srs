@@ -26,7 +26,7 @@ export interface TenantRevenuePoint {
 }
 
 export async function getSuperAdminRevenueSummary(): Promise<SuperAdminRevenueSummary> {
-  const [[tenantRow]] = await pool.query(
+  const [tenantRows] = await pool.query(
     `
     SELECT
       COUNT(*) AS totalTenants,
@@ -34,8 +34,9 @@ export async function getSuperAdminRevenueSummary(): Promise<SuperAdminRevenueSu
     FROM tenants
   `,
   );
+  const [tenantRow] = tenantRows as Array<{ totalTenants: number; activeTenants: number | null }>;
 
-  const [[deviceRow]] = await pool.query(
+  const [deviceRows] = await pool.query(
     `
     SELECT
       COUNT(*) AS totalDevices,
@@ -44,8 +45,9 @@ export async function getSuperAdminRevenueSummary(): Promise<SuperAdminRevenueSu
     WHERE is_active = 1
   `,
   );
+  const [deviceRow] = deviceRows as Array<{ totalDevices: number; onlineDevices: number | null }>;
 
-  const [[txnRow]] = await pool.query(
+  const [txnRows] = await pool.query(
     `
     SELECT
       COALESCE(SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END), 0) AS totalRevenue,
@@ -55,15 +57,16 @@ export async function getSuperAdminRevenueSummary(): Promise<SuperAdminRevenueSu
     FROM transactions
   `,
   );
-
-  const tenants = tenantRow as { totalTenants: number; activeTenants: number | null };
-  const devices = deviceRow as { totalDevices: number; onlineDevices: number | null };
-  const txns = txnRow as {
+  const [txnRow] = txnRows as Array<{
     totalRevenue: number | string;
     revenueToday: number | string;
     totalTransactions: number;
     transactionsToday: number | null;
-  };
+  }>;
+
+  const tenants = tenantRow;
+  const devices = deviceRow;
+  const txns = txnRow;
 
   return {
     totalRevenue: Number(txns.totalRevenue ?? 0),

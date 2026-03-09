@@ -1,0 +1,13 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "npx next": true,
+        "/^cmd /c \"cd /d E:\\\\JOB\\\\esp32\\\\acw-srs && npx next build 2>&1\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cmd /c \"cd /d E:\\\\JOB\\\\esp32\\\\acw-srs && npx eslint app --ext \\.ts,\\.tsx 2>&1\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

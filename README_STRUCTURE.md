@@ -453,9 +453,12 @@ JWT_REFRESH_EXPIRES_IN=30d
 # Next.js
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-# Payment Gateways (tùy chọn)
-VNPAY_TMN_CODE=your-tmn-code
-VNPAY_HASH_SECRET=your-hash-secret
+# Payment Gateway SePay (tùy chọn)
+SEPAY_QR_BASE_URL=https://qr.sepay.vn/img
+SEPAY_BANK_ACCOUNT=your-bank-account
+SEPAY_BANK_CODE=MB
+SEPAY_ACCOUNT_NAME=YOUR_ACCOUNT_NAME
+SEPAY_WEBHOOK_SECRET=your-webhook-secret
 
 # Email (tùy chọn)
 SMTP_HOST=smtp.gmail.com

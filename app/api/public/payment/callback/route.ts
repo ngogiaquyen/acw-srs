@@ -1,57 +1,156 @@
 import { NextResponse } from "next/server";
 import {
-  getTransactionById,
+  createTransaction,
+  getActiveTransactionByDeviceId,
   updateTransaction,
-  updateTransactionStatus,
 } from "@/lib/db/transactions";
-import { verifyPaymentCallback } from "@/lib/payment/mock";
+import { createDeviceCommand } from "@/lib/db/device-commands";
+import { getDeviceByPaymentCode } from "@/lib/db/devices";
+import { getTenantById } from "@/lib/db/tenants";
 
-export async function GET(request: Request) {
+interface SePayWebhookBody {
+  id?: string | number;
+  transferType?: string;
+  transferAmount?: string | number;
+  content?: string;
+}
+
+function normalizePaymentCode(content?: string): string {
+  return (content || "").trim().toUpperCase();
+}
+
+function verifyWebhookByTenantSecret(headers: Headers, secret: string | null): boolean {
+  if (!secret) return true;
+
+  const headerToken =
+    headers.get("x-sepay-token") ||
+    headers.get("authorization") ||
+    headers.get("Authorization");
+
+  if (!headerToken) return false;
+
+  return headerToken.includes(secret);
+}
+
+export async function GET() {
+  return NextResponse.json(
+    { error: "Phương thức GET không được hỗ trợ cho webhook QR tĩnh" },
+    { status: 405 },
+  );
+}
+
+export async function POST(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
+    const body = (await request.json()) as SePayWebhookBody;
 
-    const verified = verifyPaymentCallback({
-      transactionId: searchParams.get("transaction_id"),
-      status: searchParams.get("status"),
-      paymentTransactionId: searchParams.get("payment_transaction_id"),
-    });
-
-    if (!verified.valid || !verified.transactionId) {
+    const paymentCode = normalizePaymentCode(body.content);
+    if (!paymentCode) {
       return NextResponse.json(
-        { error: "Callback không hợp lệ" },
+        { error: "Không tìm thấy payment_code trong nội dung chuyển khoản" },
         { status: 400 },
       );
     }
 
-    const transaction = await getTransactionById(verified.transactionId);
-
-    if (!transaction) {
+    const device = await getDeviceByPaymentCode(paymentCode);
+    if (!device || !device.is_active) {
       return NextResponse.json(
-        { error: "Transaction không tồn tại" },
+        { error: "Không tìm thấy thiết bị theo payment_code" },
         { status: 404 },
       );
     }
 
-    await updateTransaction(transaction.id, {
-      paymentTransactionId: verified.paymentTransactionId,
-    });
+    const tenant = await getTenantById(device.tenant_id);
+    const webhookValid = verifyWebhookByTenantSecret(
+      request.headers,
+      tenant?.sepay_webhook_secret || null,
+    );
 
-    if (verified.success) {
-      const updated = await updateTransactionStatus(transaction.id, "completed");
+    if (!webhookValid) {
+      return NextResponse.json({ error: "Webhook token không hợp lệ" }, { status: 401 });
+    }
+
+    if (!device.price_per_minute || device.price_per_minute <= 0) {
+      return NextResponse.json({ error: "Thiết bị chưa cấu hình giá/phút" }, { status: 400 });
+    }
+
+    const transferType = (body.transferType || "").toLowerCase();
+    const transferAmount = Number(body.transferAmount || 0);
+
+    if (transferType === "out" || transferAmount <= 0) {
       return NextResponse.json(
-        { message: "Thanh toán thành công", transaction: updated },
+        { message: "Bỏ qua giao dịch không hợp lệ" },
         { status: 200 },
       );
     }
 
-    const updated = await updateTransactionStatus(transaction.id, "failed");
+    const addedMinutes = Math.floor(transferAmount / device.price_per_minute);
+
+    if (addedMinutes <= 0) {
+      return NextResponse.json(
+        { error: "Số tiền không đủ để sử dụng thiết bị" },
+        { status: 400 },
+      );
+    }
+
+    const activeTransaction = await getActiveTransactionByDeviceId(device.id);
+
+    if (activeTransaction) {
+      const updatedTransaction = await updateTransaction(activeTransaction.id, {
+        amount: Number(activeTransaction.amount) + transferAmount,
+        durationMinutes: activeTransaction.duration_minutes + addedMinutes,
+        paymentTransactionId: body.id ? String(body.id) : activeTransaction.payment_transaction_id,
+      });
+
+      return NextResponse.json(
+        {
+          message: "Đã cộng dồn tiền/phút vào transaction đang chạy",
+          deviceId: device.device_id,
+          paymentCode,
+          addedMinutes,
+          transaction: updatedTransaction,
+        },
+        { status: 200 },
+      );
+    }
+
+    const transaction = await createTransaction({
+      tenantId: device.tenant_id,
+      deviceId: device.id,
+      pricingPackageId: null,
+      qrCode: `STATIC-${device.id}-${Date.now()}`,
+      amount: transferAmount,
+      durationMinutes: addedMinutes,
+      status: "completed",
+      paymentMethod: "sepay",
+      paymentTransactionId: body.id ? String(body.id) : null,
+      startedAt: new Date(),
+    });
+
+    const command = await createDeviceCommand({
+      deviceId: device.id,
+      commandType: "start",
+      commandData: {
+        transactionId: transaction.id,
+        durationMinutes: transaction.duration_minutes,
+        addedMinutes,
+        amount: transferAmount,
+        paymentCode,
+      },
+    });
 
     return NextResponse.json(
-      { message: "Thanh toán thất bại", transaction: updated },
+      {
+        message: "Đã ghi nhận thanh toán và tạo lệnh start thiết bị",
+        deviceId: device.device_id,
+        paymentCode,
+        addedMinutes,
+        transaction,
+        command,
+      },
       { status: 200 },
     );
   } catch (error) {
-    console.error("Error in GET /api/public/payment/callback:", error);
+    console.error("Error in POST /api/public/payment/callback:", error);
     return NextResponse.json(
       { error: "Đã xảy ra lỗi khi xử lý callback" },
       { status: 500 },

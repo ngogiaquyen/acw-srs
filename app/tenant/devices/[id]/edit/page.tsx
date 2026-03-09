@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { DeviceForm } from "@/components/tenant/DeviceForm";
 import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
 import { getDeviceByIdAndTenantId } from "@/lib/db/devices";
-import { getStationsByTenantId } from "@/lib/db/stations";
 
 interface Props {
   params: Promise<{
@@ -21,10 +20,7 @@ export default async function TenantEditDevicePage({ params }: Props) {
   const id = Number.parseInt(idParam, 10);
   if (Number.isNaN(id)) notFound();
 
-  const [device, stations] = await Promise.all([
-    getDeviceByIdAndTenantId(id, auth.user.tenantId),
-    getStationsByTenantId(auth.user.tenantId),
-  ]);
+  const device = await getDeviceByIdAndTenantId(id, auth.user.tenantId);
 
   if (!device) notFound();
 
@@ -38,13 +34,13 @@ export default async function TenantEditDevicePage({ params }: Props) {
       <DeviceForm
         mode="edit"
         deviceIdParam={String(device.id)}
-        stations={stations.map((s) => ({ id: s.id, name: s.name }))}
         initialData={{
           deviceId: device.device_id,
           name: device.name,
-          stationId: device.station_id ? String(device.station_id) : "",
+          paymentCode: device.payment_code ?? "",
           status: device.status,
           firmwareVersion: device.firmware_version ?? "",
+          pricePerMinute: device.price_per_minute ? String(device.price_per_minute) : "",
           isActive: Boolean(device.is_active),
         }}
       />

@@ -13,6 +13,11 @@ export interface TenantDetailData {
   subscription_start_date: string | null;
   subscription_end_date: string | null;
   is_active: number | boolean;
+  // SePay configuration
+  sepay_bank_account: string | null;
+  sepay_bank_code: string | null;
+  sepay_account_name: string | null;
+  sepay_webhook_secret: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -71,6 +76,32 @@ export function TenantDetail({ tenant }: TenantDetailProps) {
           <dd className="font-medium">{tenant.address ?? "-"}</dd>
         </div>
       </dl>
+
+      {(tenant.sepay_bank_account || tenant.sepay_bank_code) && (
+        <div className="mt-6 pt-6 border-t">
+          <h3 className="text-sm font-medium mb-3">Cấu hình SePay</h3>
+          <dl className="grid gap-4 md:grid-cols-2">
+            <div>
+              <dt className="text-xs text-muted-foreground">Số tài khoản</dt>
+              <dd className="font-medium">{tenant.sepay_bank_account ?? "-"}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Mã ngân hàng</dt>
+              <dd className="font-medium">{tenant.sepay_bank_code ?? "-"}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Tên chủ tài khoản</dt>
+              <dd className="font-medium">{tenant.sepay_account_name ?? "-"}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Webhook Secret</dt>
+              <dd className="font-medium">
+                {tenant.sepay_webhook_secret ? "******" : "-"}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      )}
     </Card>
   );
 }

@@ -20,6 +20,11 @@ export interface TenantFormData {
   subscriptionStartDate: string;
   subscriptionEndDate: string;
   isActive: boolean;
+  // SePay configuration
+  sepayBankAccount: string;
+  sepayBankCode: string;
+  sepayAccountName: string;
+  sepayWebhookSecret: string;
 }
 
 interface TenantFormProps {
@@ -38,6 +43,10 @@ const defaultValues: TenantFormData = {
   subscriptionStartDate: "",
   subscriptionEndDate: "",
   isActive: true,
+  sepayBankAccount: "",
+  sepayBankCode: "",
+  sepayAccountName: "",
+  sepayWebhookSecret: "",
 };
 
 export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
@@ -68,6 +77,10 @@ export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
         address: formData.address || null,
         subscriptionStartDate: formData.subscriptionStartDate || null,
         subscriptionEndDate: formData.subscriptionEndDate || null,
+        sepayBankAccount: formData.sepayBankAccount || null,
+        sepayBankCode: formData.sepayBankCode || null,
+        sepayAccountName: formData.sepayAccountName || null,
+        sepayWebhookSecret: formData.sepayWebhookSecret || null,
       };
 
       const res = await fetch(endpoint, {
@@ -219,6 +232,59 @@ export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
             onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
             rows={3}
           />
+        </div>
+
+        <div className="rounded-md border p-4 space-y-4">
+          <h3 className="text-sm font-medium">Cấu hình SePay (thanh toán)</h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="sepayBankAccount">Số tài khoản ngân hàng</Label>
+              <Input
+                id="sepayBankAccount"
+                value={formData.sepayBankAccount}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, sepayBankAccount: e.target.value }))
+                }
+                placeholder="VD: 10575000"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="sepayBankCode">Mã ngân hàng</Label>
+              <Input
+                id="sepayBankCode"
+                value={formData.sepayBankCode}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, sepayBankCode: e.target.value }))
+                }
+                placeholder="VD: VTB, VCB, MB..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="sepayAccountName">Tên chủ tài khoản</Label>
+              <Input
+                id="sepayAccountName"
+                value={formData.sepayAccountName}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, sepayAccountName: e.target.value }))
+                }
+                placeholder="VD: NGUYEN VAN A"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="sepayWebhookSecret">Webhook Secret</Label>
+              <Input
+                id="sepayWebhookSecret"
+                value={formData.sepayWebhookSecret}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, sepayWebhookSecret: e.target.value }))
+                }
+                placeholder="Secret từ SePay dashboard"
+              />
+            </div>
+          </div>
         </div>
 
         {error && <p className="text-sm text-red-500">{error}</p>}

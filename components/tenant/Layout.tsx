@@ -5,12 +5,10 @@ import { TenantSidebarNav } from "@/components/tenant/SidebarNav";
 
 const navItems = [
   { href: "/tenant/dashboard", label: "Dashboard" },
-  { href: "/tenant/stations", label: "Trạm rửa xe" },
   { href: "/tenant/devices", label: "Thiết bị" },
-  { href: "/tenant/pricing", label: "Gói giá" },
   { href: "/tenant/transactions", label: "Giao dịch" },
   { href: "/tenant/revenue", label: "Doanh thu" },
-  { href: "/tenant/qr-codes", label: "QR Codes" },
+  { href: "/tenant/settings", label: "Cấu hình" },
 ];
 
 interface TenantLayoutProps {

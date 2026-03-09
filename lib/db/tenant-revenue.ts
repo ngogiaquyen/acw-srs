@@ -17,7 +17,7 @@ export interface TenantRevenuePoint {
 export async function getTenantRevenueSummary(
   tenantId: number,
 ): Promise<TenantRevenueSummary> {
-  const [[row]] = await pool.query(
+  const [resultRows] = await pool.query(
     `
     SELECT
       COALESCE(SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END), 0) AS totalRevenue,
@@ -29,13 +29,14 @@ export async function getTenantRevenueSummary(
   `,
     [tenantId],
   );
-
-  const stats = row as {
+  const [row] = resultRows as Array<{
     totalRevenue: number | string;
     revenueToday: number | string;
     totalTransactions: number;
     transactionsToday: number | null;
-  };
+  }>;
+
+  const stats = row;
 
   return {
     tenantId,

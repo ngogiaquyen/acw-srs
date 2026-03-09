@@ -10,6 +10,11 @@ CREATE TABLE IF NOT EXISTS tenants (
   subscription_start_date DATE,
   subscription_end_date DATE,
   is_active BOOLEAN DEFAULT TRUE,
+  -- SePay configuration per tenant
+  sepay_bank_account VARCHAR(50) DEFAULT NULL,
+  sepay_bank_code VARCHAR(20) DEFAULT NULL,
+  sepay_account_name VARCHAR(100) DEFAULT NULL,
+  sepay_webhook_secret VARCHAR(255) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
