@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import {
   createTransaction,
   getActiveTransactionByDeviceId,
-  updateTransaction,
 } from "@/lib/db/transactions";
 import { createDeviceCommand } from "@/lib/db/device-commands";
 import { getDeviceByPaymentCode } from "@/lib/db/devices";
@@ -94,38 +93,7 @@ export async function POST(request: Request) {
 
     const activeTransaction = await getActiveTransactionByDeviceId(device.id);
 
-    if (activeTransaction) {
-      const updatedTransaction = await updateTransaction(activeTransaction.id, {
-        amount: Number(activeTransaction.amount) + transferAmount,
-        durationMinutes: activeTransaction.duration_minutes + addedMinutes,
-        paymentTransactionId: body.id ? String(body.id) : activeTransaction.payment_transaction_id,
-      });
-
-      // Gửi lệnh add_time để ESP32 cộng dồn thời gian trực tiếp
-      const command = await createDeviceCommand({
-        deviceId: device.id,
-        commandType: "add_time",
-        commandData: {
-          transactionId: activeTransaction.id,
-          addedMinutes,
-          amount: transferAmount,
-          paymentCode,
-        },
-      });
-
-      return NextResponse.json(
-        {
-          message: "Dã cộng dồn tiền/phút và gửi lệnh add_time tới thiết bị",
-          deviceId: device.device_id,
-          paymentCode,
-          addedMinutes,
-          transaction: updatedTransaction,
-          command,
-        },
-        { status: 200 },
-      );
-    }
-
+    // Mỗi lần chuyển khoản luôn tạo transaction mới (hiển thị riêng trong danh sách)
     const transaction = await createTransaction({
       tenantId: device.tenant_id,
       deviceId: device.id,
@@ -139,9 +107,11 @@ export async function POST(request: Request) {
       startedAt: new Date(),
     });
 
+    // Nếu thiết bị đang chạy → add_time (cộng thêm), nếu chưa chạy → start
+    const commandType = activeTransaction ? "add_time" : "start";
     const command = await createDeviceCommand({
       deviceId: device.id,
-      commandType: "start",
+      commandType,
       commandData: {
         transactionId: transaction.id,
         durationMinutes: transaction.duration_minutes,
@@ -153,7 +123,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        message: "Đã ghi nhận thanh toán và tạo lệnh start thiết bị",
+        message: activeTransaction
+          ? "Đã tạo giao dịch mới và gửi lệnh add_time tới thiết bị"
+          : "Đã tạo giao dịch và gửi lệnh start thiết bị",
         deviceId: device.device_id,
         paymentCode,
         addedMinutes,

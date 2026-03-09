@@ -6,10 +6,7 @@ import { Card } from "@/components/ui/card";
 import { CountdownTimer } from "@/components/ui/countdown-timer";
 import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
 import { getDeviceByIdAndTenantId } from "@/lib/db/devices";
-import {
-  getActiveTransactionByDeviceId,
-  computeRemainingSeconds,
-} from "@/lib/db/transactions";
+import { getDeviceRemainingSeconds } from "@/lib/device-state";
 
 interface Props {
   params: Promise<{
@@ -31,8 +28,7 @@ export default async function TenantDeviceDetailPage({ params }: Props) {
   const device = await getDeviceByIdAndTenantId(id, auth.user.tenantId);
   if (!device) notFound();
 
-  const activeTx = await getActiveTransactionByDeviceId(device.id);
-  const remainingSeconds = activeTx ? computeRemainingSeconds(activeTx) : null;
+  const remainingSeconds = getDeviceRemainingSeconds(device.id);
 
   return (
     <div className="space-y-4">

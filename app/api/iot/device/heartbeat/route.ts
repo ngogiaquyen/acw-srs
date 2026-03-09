@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { getDeviceByDeviceId, updateDeviceHeartbeat } from "@/lib/db/devices";
+import { setDeviceRemainingSeconds } from "@/lib/device-state";
 
 interface HeartbeatPayload {
   deviceId?: string;
+  remainingSeconds?: number;
 }
 
 export async function POST(request: Request) {
@@ -23,6 +25,11 @@ export async function POST(request: Request) {
     }
 
     const updated = await updateDeviceHeartbeat(body.deviceId);
+
+    // Lưu remainingSeconds từ ESP32 vào in-memory store (không cần DB)
+    if (typeof body.remainingSeconds === "number") {
+      setDeviceRemainingSeconds(device.id, body.remainingSeconds);
+    }
 
     return NextResponse.json(
       { message: "Heartbeat thành công", device: updated },

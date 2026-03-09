@@ -51,12 +51,21 @@ export async function getTransactionById(id: number): Promise<TransactionRecord 
   return result[0] ?? null;
 }
 
-export async function getTransactionsByTenantId(tenantId: number): Promise<TransactionRecord[]> {
+export interface TransactionWithDevice extends TransactionRecord {
+  device_name: string;
+  device_code: string;
+}
+
+export async function getTransactionsByTenantId(tenantId: number): Promise<TransactionWithDevice[]> {
   const [rows] = await pool.query(
-    "SELECT * FROM transactions WHERE tenant_id = ? ORDER BY created_at DESC",
+    `SELECT t.*, d.name AS device_name, d.device_id AS device_code
+     FROM transactions t
+     LEFT JOIN devices d ON d.id = t.device_id
+     WHERE t.tenant_id = ?
+     ORDER BY t.created_at DESC`,
     [tenantId],
   );
-  return rows as TransactionRecord[];
+  return rows as TransactionWithDevice[];
 }
 
 export async function getActiveTransactionByDeviceId(deviceId: number): Promise<TransactionRecord | null> {

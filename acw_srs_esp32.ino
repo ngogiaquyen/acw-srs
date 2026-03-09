@@ -338,7 +338,8 @@ bool registerDevice() {
 
 void sendHeartbeat() {
   StaticJsonDocument<128> doc;
-  doc["deviceId"] = cfg_device_id;
+  doc["deviceId"]        = cfg_device_id;
+  doc["remainingSeconds"] = (int)(relayRemainingMs / 1000);
 
   String body;
   serializeJson(doc, body);

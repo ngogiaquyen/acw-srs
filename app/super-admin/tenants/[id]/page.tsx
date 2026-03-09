@@ -8,10 +8,7 @@ import { getDevicesByTenantId } from "@/lib/db/devices";
 import { getStationsByTenantId } from "@/lib/db/stations";
 import { DeviceList } from "@/components/tenant/DeviceList";
 import { StationList } from "@/components/tenant/StationList";
-import {
-  getActiveTransactionsByDeviceIds,
-  computeRemainingSeconds,
-} from "@/lib/db/transactions";
+import { getDeviceRemainingSecondsMap } from "@/lib/device-state";
 
 interface Props {
   params: Promise<{
@@ -38,17 +35,12 @@ export default async function SuperAdminTenantDetailPage({ params }: Props) {
     getStationsByTenantId(id),
   ]);
 
-  const activeTxMap = await getActiveTransactionsByDeviceIds(
-    rawDevices.map((d) => d.id),
-  );
+  const remainingMap = getDeviceRemainingSecondsMap(rawDevices.map((d) => d.id));
 
-  const devices = rawDevices.map((d) => {
-    const tx = activeTxMap.get(d.id);
-    return {
-      ...d,
-      remainingSeconds: tx ? computeRemainingSeconds(tx) : null,
-    };
-  });
+  const devices = rawDevices.map((d) => ({
+    ...d,
+    remainingSeconds: remainingMap.get(d.id) ?? null,
+  }));
 
   const tenantData: TenantDetailData = {
     id: tenant.id,
