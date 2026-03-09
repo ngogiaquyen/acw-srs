@@ -6,6 +6,10 @@ import {
   getDeviceByIdAndTenantId,
   updateDeviceStatus,
 } from "@/lib/db/devices";
+import {
+  getActiveTransactionByDeviceId,
+  computeRemainingSeconds,
+} from "@/lib/db/transactions";
 
 async function ensureAuthenticated() {
   const auth = await getCurrentUserFromCookies();
@@ -90,6 +94,11 @@ export async function GET(_request: Request, { params }: Params) {
 
   const logs = await getDeviceLogsByDeviceId(device.id, 50);
 
+  const activeTransaction = await getActiveTransactionByDeviceId(device.id);
+  const remainingSeconds = activeTransaction
+    ? computeRemainingSeconds(activeTransaction)
+    : null;
+
   return NextResponse.json(
     {
       device,
@@ -99,6 +108,7 @@ export async function GET(_request: Request, { params }: Params) {
         alertCreated,
       },
       logs,
+      remainingSeconds,
     },
     { status: 200 },
   );

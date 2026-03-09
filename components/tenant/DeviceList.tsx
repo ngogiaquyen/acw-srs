@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { CountdownTimer } from "@/components/ui/countdown-timer";
 
 export interface DeviceItem {
   id: number;
@@ -17,6 +18,7 @@ export interface DeviceItem {
   firmware_version: string | null;
   price_per_minute: number | null;
   is_active: number | boolean;
+  remainingSeconds?: number | null;
 }
 
 interface DeviceListProps {
@@ -97,7 +99,7 @@ export function DeviceList({ devices }: DeviceListProps) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1000px] text-sm">
+          <table className="w-full min-w-250 text-sm">
           <thead>
             <tr className="border-b text-left">
               <th className="px-3 py-2">ID</th>
@@ -105,6 +107,7 @@ export function DeviceList({ devices }: DeviceListProps) {
               <th className="px-3 py-2">Tên</th>
               <th className="px-3 py-2">Trạng thái</th>
               <th className="px-3 py-2">Hoạt động</th>
+              <th className="px-3 py-2">Còn lại</th>
               <th className="px-3 py-2">Lần cuối</th>
               <th className="px-3 py-2">Firmware</th>
               <th className="px-3 py-2">Giá/phút</th>
@@ -128,6 +131,13 @@ export function DeviceList({ devices }: DeviceListProps) {
                     <span className="text-yellow-600">Bảo trì</span>
                   ) : (
                     <span className="text-gray-500">Ngừng hoạt động</span>
+                  )}
+                </td>
+                <td className="px-3 py-3">
+                  {device.remainingSeconds != null && device.remainingSeconds > 0 ? (
+                    <CountdownTimer initialSeconds={device.remainingSeconds} />
+                  ) : (
+                    <span className="text-gray-400 text-xs">—</span>
                   )}
                 </td>
                 <td className="px-3 py-3 text-muted-foreground">

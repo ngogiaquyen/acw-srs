@@ -3,8 +3,13 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { CountdownTimer } from "@/components/ui/countdown-timer";
 import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
 import { getDeviceByIdAndTenantId } from "@/lib/db/devices";
+import {
+  getActiveTransactionByDeviceId,
+  computeRemainingSeconds,
+} from "@/lib/db/transactions";
 
 interface Props {
   params: Promise<{
@@ -25,6 +30,9 @@ export default async function TenantDeviceDetailPage({ params }: Props) {
 
   const device = await getDeviceByIdAndTenantId(id, auth.user.tenantId);
   if (!device) notFound();
+
+  const activeTx = await getActiveTransactionByDeviceId(device.id);
+  const remainingSeconds = activeTx ? computeRemainingSeconds(activeTx) : null;
 
   return (
     <div className="space-y-4">
@@ -59,6 +67,16 @@ export default async function TenantDeviceDetailPage({ params }: Props) {
               <Badge variant={device.status === "online" ? "default" : "outline"}>
                 {device.status}
               </Badge>
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Còn lại trước khi tắt</dt>
+            <dd>
+              {remainingSeconds != null && remainingSeconds > 0 ? (
+                <CountdownTimer initialSeconds={remainingSeconds} />
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              )}
             </dd>
           </div>
           <div>

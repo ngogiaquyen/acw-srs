@@ -101,13 +101,26 @@ export async function POST(request: Request) {
         paymentTransactionId: body.id ? String(body.id) : activeTransaction.payment_transaction_id,
       });
 
+      // Gửi lệnh add_time để ESP32 cộng dồn thời gian trực tiếp
+      const command = await createDeviceCommand({
+        deviceId: device.id,
+        commandType: "add_time",
+        commandData: {
+          transactionId: activeTransaction.id,
+          addedMinutes,
+          amount: transferAmount,
+          paymentCode,
+        },
+      });
+
       return NextResponse.json(
         {
-          message: "Đã cộng dồn tiền/phút vào transaction đang chạy",
+          message: "Dã cộng dồn tiền/phút và gửi lệnh add_time tới thiết bị",
           deviceId: device.device_id,
           paymentCode,
           addedMinutes,
           transaction: updatedTransaction,
+          command,
         },
         { status: 200 },
       );

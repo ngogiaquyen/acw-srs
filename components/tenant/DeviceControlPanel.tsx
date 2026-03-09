@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CountdownTimer } from "@/components/ui/countdown-timer";
 import { Power, PowerOff, Loader2 } from "lucide-react";
 
 interface DeviceData {
@@ -32,6 +33,7 @@ export function DeviceControlPanel({ device: initialDevice, initialLogs }: Devic
   const [isRunning, setIsRunning] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingLogs, setLoadingLogs] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
 
   // Check device running status from logs - check latest command
   const checkRunningStatus = useCallback(() => {
@@ -83,6 +85,7 @@ export function DeviceControlPanel({ device: initialDevice, initialLogs }: Devic
             last_heartbeat: data.device.last_heartbeat,
           }));
           setLogs(data.logs || []);
+          setRemainingSeconds(data.remainingSeconds ?? null);
         }
       } catch (error) {
         console.error("Error fetching device data:", error);
@@ -160,6 +163,17 @@ export function DeviceControlPanel({ device: initialDevice, initialLogs }: Devic
             ? new Date(device.last_heartbeat).toLocaleString("vi-VN")
             : "-"}
         </p>
+
+        {remainingSeconds != null && (
+          <div className="mb-4 flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Còn lại trước khi tắt:</span>
+            {remainingSeconds > 0 ? (
+              <CountdownTimer initialSeconds={remainingSeconds} />
+            ) : (
+              <span className="text-sm text-gray-400">Đã hết thời gian</span>
+            )}
+          </div>
+        )}
 
         <div className="flex items-center gap-4">
           <Button

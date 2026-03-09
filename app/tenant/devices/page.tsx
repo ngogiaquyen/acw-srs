@@ -1,12 +1,28 @@
 import { DeviceList } from "@/components/tenant/DeviceList";
 import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
 import { getDevicesByTenantId } from "@/lib/db/devices";
+import {
+  getActiveTransactionsByDeviceIds,
+  computeRemainingSeconds,
+} from "@/lib/db/transactions";
 
 export default async function TenantDevicesPage() {
   const auth = await getCurrentUserFromCookies();
   const tenantId = auth.isAuthenticated ? auth.user.tenantId : null;
 
-  const devices = tenantId ? await getDevicesByTenantId(tenantId) : [];
+  const rawDevices = tenantId ? await getDevicesByTenantId(tenantId) : [];
+
+  const activeTxMap = await getActiveTransactionsByDeviceIds(
+    rawDevices.map((d) => d.id),
+  );
+
+  const devices = rawDevices.map((d) => {
+    const tx = activeTxMap.get(d.id);
+    return {
+      ...d,
+      remainingSeconds: tx ? computeRemainingSeconds(tx) : null,
+    };
+  });
 
   return (
     <div className="space-y-4">

@@ -6,7 +6,7 @@
 
 // ========== CẤU HÌNH PHẦN CỨNG ==========
 #define RELAY_PIN 5           // Chân điều khiển relay
-#define RELAY_ACTIVE_LOW true // true: LOW=ON, false: HIGH=ON
+#define RELAY_ACTIVE_LOW false // true: LOW=ON, false: HIGH=ON
 
 // ========== GIÁ TRỊ MẶC ĐỊNH ==========
 #define DEFAULT_WIFI_SSID       "XOM TRO BAT ON 5"
@@ -38,6 +38,12 @@ WebServer   configServer(80);
 // ========== THỜI GIAN LẶP ==========
 unsigned long lastHeartbeatMs = 0;
 unsigned long lastCommandMs   = 0;
+
+// ========== HẸN GIỌ TỰ TẮT (overflow-safe) ==========
+// Lưu thời gian CÒN LẠI (ms) thay vì thời điểm tắt.
+// Phép trừ unsigned long luôn đúng dù millis() wrap-around ~49 ngày.
+unsigned long relayRemainingMs = 0; // 0 = không hẹn
+unsigned long lastLoopMs       = 0; // millis() của lần loop trước
 
 // ========== NVS: ĐỌC / LƯU CẤU HÌNH ==========
 
@@ -253,10 +259,10 @@ void handleConfigSave() {
     cfg_device_db_id = configServer.arg("device_db_id").toInt();
 
   if (configServer.hasArg("hb_interval_s"))
-    cfg_hb_interval_s = max(5, configServer.arg("hb_interval_s").toInt());
+    cfg_hb_interval_s = max(5, (int)configServer.arg("hb_interval_s").toInt());
 
   if (configServer.hasArg("cmd_interval_s"))
-    cfg_cmd_interval_s = max(1, configServer.arg("cmd_interval_s").toInt());
+    cfg_cmd_interval_s = max(1, (int)configServer.arg("cmd_interval_s").toInt());
 
   saveConfig();
 
@@ -386,9 +392,46 @@ void handleCommand(const String& type, const String& data, int cmdId) {
   if (type == "start") {
     relayOn();
     sendLog("info", "May rua bat dau hoat dong");
+
+    // Đọc durationMinutes từ commandData JSON để hẹn giờ tự tắt
+    if (data.length() > 0) {
+      StaticJsonDocument<256> dataDoc;
+      if (deserializeJson(dataDoc, data) == DeserializationError::Ok) {
+        int durMin = dataDoc["durationMinutes"] | 0;
+        if (durMin > 0) {
+          relayRemainingMs = (unsigned long)durMin * 60000UL;
+          lastLoopMs = millis();
+          Serial.printf("[TIMER] Tu tat sau %d phut\n", durMin);
+        }
+      }
+    }
   } else if (type == "stop") {
     relayOff();
+    relayRemainingMs = 0;
     sendLog("info", "May rua da dung");
+  } else if (type == "add_time") {
+    // Cộng dồn thêm thời gian khi người dùng nạp tiền lần 2+
+    if (data.length() > 0) {
+      StaticJsonDocument<256> dataDoc;
+      if (deserializeJson(dataDoc, data) == DeserializationError::Ok) {
+        int addMin = dataDoc["addedMinutes"] | 0;
+        if (addMin > 0) {
+          unsigned long addMs = (unsigned long)addMin * 60000UL;
+          if (relayRemainingMs == 0) {
+            // Relay đang tắt (hết giờ trước đó), bật lại và đặt timer mới
+            relayOn();
+            relayRemainingMs = addMs;
+            lastLoopMs = millis();
+            sendLog("info", "May rua bat dau hoat dong (nap them)");
+          } else {
+            // Relay đang chạy, cộng dồn thêm giờ
+            relayRemainingMs += addMs;
+            sendLog("info", "Da cong don them thoi gian");
+          }
+          Serial.printf("[TIMER] Cong them %d phut, con lai ~%lu giay\n", addMin, relayRemainingMs / 1000);
+        }
+      }
+    }
   } else if (type == "restart") {
     sendLog("info", "Nhan lenh restart (chua thuc hien)");
   } else if (type == "update_firmware") {
@@ -476,7 +519,21 @@ void setup() {
 void loop() {
   configServer.handleClient(); // xử lý web request
 
-  unsigned long now = millis();
+  unsigned long now     = millis();
+  unsigned long elapsed = now - lastLoopMs; // an toàn với wrap-around
+  lastLoopMs = now;
+
+  // Đếm ngược thời gian relay
+  if (relayRemainingMs > 0) {
+    if (elapsed >= relayRemainingMs) {
+      relayRemainingMs = 0;
+      relayOff();
+      sendLog("info", "May rua da dung tu dong sau het gio");
+      Serial.println("[TIMER] Het gio, relay OFF");
+    } else {
+      relayRemainingMs -= elapsed;
+    }
+  }
 
   if (now - lastHeartbeatMs > (unsigned long)cfg_hb_interval_s * 1000UL) {
     lastHeartbeatMs = now;

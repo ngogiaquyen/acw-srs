@@ -3,6 +3,7 @@ import { pool } from "./connection";
 export type DeviceCommandType =
   | "start"
   | "stop"
+  | "add_time"
   | "restart"
   | "update_firmware"
   | "config";

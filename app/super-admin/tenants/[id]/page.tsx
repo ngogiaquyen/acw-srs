@@ -8,6 +8,10 @@ import { getDevicesByTenantId } from "@/lib/db/devices";
 import { getStationsByTenantId } from "@/lib/db/stations";
 import { DeviceList } from "@/components/tenant/DeviceList";
 import { StationList } from "@/components/tenant/StationList";
+import {
+  getActiveTransactionsByDeviceIds,
+  computeRemainingSeconds,
+} from "@/lib/db/transactions";
 
 interface Props {
   params: Promise<{
@@ -29,10 +33,22 @@ export default async function SuperAdminTenantDetailPage({ params }: Props) {
     notFound();
   }
 
-  const [devices, stations] = await Promise.all([
+  const [rawDevices, stations] = await Promise.all([
     getDevicesByTenantId(id),
     getStationsByTenantId(id),
   ]);
+
+  const activeTxMap = await getActiveTransactionsByDeviceIds(
+    rawDevices.map((d) => d.id),
+  );
+
+  const devices = rawDevices.map((d) => {
+    const tx = activeTxMap.get(d.id);
+    return {
+      ...d,
+      remainingSeconds: tx ? computeRemainingSeconds(tx) : null,
+    };
+  });
 
   const tenantData: TenantDetailData = {
     id: tenant.id,

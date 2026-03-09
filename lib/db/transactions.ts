@@ -78,6 +78,39 @@ export async function getActiveTransactionByDeviceId(deviceId: number): Promise<
   return result[0] ?? null;
 }
 
+export async function getActiveTransactionsByDeviceIds(
+  deviceIds: number[],
+): Promise<Map<number, TransactionRecord>> {
+  if (deviceIds.length === 0) return new Map();
+
+  const placeholders = deviceIds.map(() => "?").join(", ");
+  const [rows] = await pool.query(
+    `
+      SELECT * FROM transactions
+      WHERE device_id IN (${placeholders})
+        AND status = 'completed'
+        AND started_at IS NOT NULL
+        AND ended_at IS NULL
+      ORDER BY device_id, started_at DESC
+    `,
+    deviceIds,
+  );
+
+  const result = new Map<number, TransactionRecord>();
+  for (const row of rows as TransactionRecord[]) {
+    if (!result.has(row.device_id)) {
+      result.set(row.device_id, row);
+    }
+  }
+  return result;
+}
+
+export function computeRemainingSeconds(tx: TransactionRecord): number {
+  const startedAt = new Date(tx.started_at!).getTime();
+  const endAt = startedAt + tx.duration_minutes * 60 * 1000;
+  return Math.max(0, Math.floor((endAt - Date.now()) / 1000));
+}
+
 export async function createTransaction(input: CreateTransactionInput): Promise<TransactionRecord> {
   const {
     tenantId,
