@@ -99,6 +99,22 @@ export async function markCommandsAsSent(commandIds: number[]): Promise<void> {
   );
 }
 
+export async function getRecentCommandsByDeviceId(
+  deviceId: number,
+  limit = 20,
+): Promise<DeviceCommandRecord[]> {
+  const [rows] = await pool.query(
+    `
+    SELECT * FROM device_commands
+    WHERE device_id = ?
+    ORDER BY created_at DESC
+    LIMIT ?
+  `,
+    [deviceId, limit],
+  );
+  return rows as DeviceCommandRecord[];
+}
+
 export async function completeDeviceCommand(
   id: number,
   status: "executed" | "failed",

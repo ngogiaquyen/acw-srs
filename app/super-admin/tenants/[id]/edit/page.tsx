@@ -52,6 +52,7 @@ export default async function SuperAdminEditTenantPage({ params }: Props) {
           subscriptionStatus: tenant.subscription_status,
           subscriptionStartDate: toDateInputValue(tenant.subscription_start_date),
           subscriptionEndDate: toDateInputValue(tenant.subscription_end_date),
+          allowExpiredAccess: Boolean(tenant.allow_expired_access),
           isActive: Boolean(tenant.is_active),
           sepayBankAccount: tenant.sepay_bank_account ?? "",
           sepayBankCode: tenant.sepay_bank_code ?? "",

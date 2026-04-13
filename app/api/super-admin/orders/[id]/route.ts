@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
 import { deleteOrder, getOrderById, updateOrder } from "@/lib/db/orders";
 import { createTenant } from "@/lib/db/tenants";
-import { createSubscription } from "@/lib/db/subscriptions";
 
 async function ensureSuperAdmin() {
   const auth = await getCurrentUserFromCookies();
@@ -73,19 +72,6 @@ export async function PUT(request: Request, { params }: Params) {
           subscriptionStatus: "active",
           subscriptionStartDate: new Date(),
           subscriptionEndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
-          isActive: true,
-        });
-
-        // Tạo subscription cho tenant
-        const subscription = await createSubscription({
-          tenantId: tenant.id,
-          planName: body.packageName || existingOrder.package_name,
-          billingCycle: "yearly",
-          amount: Number(body.totalAmount || existingOrder.total_amount),
-          startDate: new Date(),
-          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
-          status: "active",
-          autoRenew: true,
           isActive: true,
         });
 

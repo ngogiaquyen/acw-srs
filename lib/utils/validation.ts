@@ -1,5 +1,4 @@
 import type { SubscriptionStatus } from "../db/tenants";
-import type { DeviceStatus } from "../db/devices";
 
 export interface TenantPayload {
   name?: string;
@@ -10,6 +9,7 @@ export interface TenantPayload {
   subscriptionStatus?: SubscriptionStatus;
   subscriptionStartDate?: string | null;
   subscriptionEndDate?: string | null;
+  allowExpiredAccess?: boolean;
   isActive?: boolean;
   // SePay configuration
   sepayBankAccount?: string | null;
@@ -30,7 +30,8 @@ export interface DevicePayload {
   deviceId?: string;
   name?: string;
   paymentCode?: string | null;
-  status?: DeviceStatus;
+  webUsername?: string | null;
+  webPassword?: string | null;
   firmwareVersion?: string | null;
   pricePerMinute?: number | null;
   isActive?: boolean;
@@ -167,11 +168,6 @@ export function validateDevicePayload(
 
   if (payload.name && (payload.name.length < 2 || payload.name.length > 255)) {
     errors.push("Tên thiết bị phải từ 2 đến 255 ký tự");
-  }
-
-  const VALID_DEVICE_STATUSES: DeviceStatus[] = ["online", "offline", "maintenance"];
-  if (payload.status && !VALID_DEVICE_STATUSES.includes(payload.status)) {
-    errors.push("status thiết bị không hợp lệ");
   }
 
   if (

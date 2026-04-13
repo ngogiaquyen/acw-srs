@@ -12,6 +12,7 @@ export interface TenantRecord {
   subscription_status: SubscriptionStatus;
   subscription_start_date: Date | null;
   subscription_end_date: Date | null;
+  allow_expired_access: number | boolean;
   is_active: number | boolean;
   // SePay configuration
   sepay_bank_account: string | null;
@@ -31,6 +32,7 @@ export interface CreateTenantInput {
   subscriptionStatus?: SubscriptionStatus;
   subscriptionStartDate?: Date | null;
   subscriptionEndDate?: Date | null;
+  allowExpiredAccess?: boolean;
   isActive?: boolean;
   // SePay configuration
   sepayBankAccount?: string | null;
@@ -48,6 +50,7 @@ export interface UpdateTenantInput {
   subscriptionStatus?: SubscriptionStatus;
   subscriptionStartDate?: Date | null;
   subscriptionEndDate?: Date | null;
+  allowExpiredAccess?: boolean;
   isActive?: boolean;
   // SePay configuration
   sepayBankAccount?: string | null;
@@ -81,6 +84,7 @@ export async function createTenant(
     subscriptionStatus = "active",
     subscriptionStartDate = null,
     subscriptionEndDate = null,
+    allowExpiredAccess = false,
     isActive = true,
     sepayBankAccount = null,
     sepayBankCode = null,
@@ -99,6 +103,7 @@ export async function createTenant(
       subscription_status,
       subscription_start_date,
       subscription_end_date,
+      allow_expired_access,
       is_active,
       sepay_bank_account,
       sepay_bank_code,
@@ -116,6 +121,7 @@ export async function createTenant(
       subscriptionStatus,
       subscriptionStartDate,
       subscriptionEndDate,
+      allowExpiredAccess ? 1 : 0,
       isActive ? 1 : 0,
       sepayBankAccount,
       sepayBankCode,
@@ -173,6 +179,10 @@ export async function updateTenant(
   if (input.subscriptionEndDate !== undefined) {
     fields.push("subscription_end_date = ?");
     values.push(input.subscriptionEndDate);
+  }
+  if (input.allowExpiredAccess !== undefined) {
+    fields.push("allow_expired_access = ?");
+    values.push(input.allowExpiredAccess ? 1 : 0);
   }
   if (input.isActive !== undefined) {
     fields.push("is_active = ?");

@@ -48,7 +48,6 @@ export async function POST(request: Request) {
       tenantId: body.tenantId,
       deviceId: body.deviceId,
       name: body.name,
-      status: "online",
       firmwareVersion: body.firmwareVersion ?? null,
       lastHeartbeat: new Date(),
       isActive: true,

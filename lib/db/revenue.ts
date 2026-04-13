@@ -40,7 +40,7 @@ export async function getSuperAdminRevenueSummary(): Promise<SuperAdminRevenueSu
     `
     SELECT
       COUNT(*) AS totalDevices,
-      SUM(CASE WHEN status = 'online' THEN 1 ELSE 0 END) AS onlineDevices
+      COUNT(*) AS onlineDevices
     FROM devices
     WHERE is_active = 1
   `,

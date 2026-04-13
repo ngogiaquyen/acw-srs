@@ -5,9 +5,7 @@ import {
 } from "@/components/super-admin/TenantDetail";
 import { getTenantById } from "@/lib/db/tenants";
 import { getDevicesByTenantId } from "@/lib/db/devices";
-import { getStationsByTenantId } from "@/lib/db/stations";
 import { DeviceList } from "@/components/tenant/DeviceList";
-import { StationList } from "@/components/tenant/StationList";
 import { getDeviceRemainingSecondsMap } from "@/lib/device-state";
 
 interface Props {
@@ -30,10 +28,7 @@ export default async function SuperAdminTenantDetailPage({ params }: Props) {
     notFound();
   }
 
-  const [rawDevices, stations] = await Promise.all([
-    getDevicesByTenantId(id),
-    getStationsByTenantId(id),
-  ]);
+  const rawDevices = await getDevicesByTenantId(id);
 
   const remainingMap = getDeviceRemainingSecondsMap(rawDevices.map((d) => d.id));
 
@@ -56,6 +51,7 @@ export default async function SuperAdminTenantDetailPage({ params }: Props) {
     subscription_end_date: tenant.subscription_end_date
       ? tenant.subscription_end_date.toISOString().slice(0, 10)
       : null,
+    allow_expired_access: tenant.allow_expired_access,
     is_active: tenant.is_active,
     sepay_bank_account: tenant.sepay_bank_account,
     sepay_bank_code: tenant.sepay_bank_code,
@@ -85,19 +81,7 @@ export default async function SuperAdminTenantDetailPage({ params }: Props) {
             Danh sách thiết bị ESP32 mà tenant này đang quản lý.
           </p>
         </div>
-        <DeviceList devices={devices} />
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <h3 className="text-xl font-semibold tracking-tight">
-            Trạm rửa xe của tenant
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Danh sách các trạm thuộc về tenant này.
-          </p>
-        </div>
-        <StationList stations={stations} />
+        <DeviceList devices={devices} deviceDetailBase={`/super-admin/tenants/${id}/devices`} />
       </div>
     </div>
   );

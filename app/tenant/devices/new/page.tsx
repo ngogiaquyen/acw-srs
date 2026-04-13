@@ -1,17 +1,6 @@
-import { DeviceForm } from "@/components/tenant/DeviceForm";
+import { redirect } from "next/navigation";
 
 export default async function TenantNewDevicePage() {
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Đăng ký thiết bị</h2>
-        <p className="text-sm text-muted-foreground">
-          Thêm thiết bị ESP32 mới.
-        </p>
-      </div>
-
-      <DeviceForm mode="create" />
-    </div>
-  );
+  // Tenants are not allowed to create devices — only Super Admin can register devices.
+  redirect("/tenant/devices");
 }

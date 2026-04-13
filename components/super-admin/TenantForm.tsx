@@ -19,6 +19,7 @@ export interface TenantFormData {
   subscriptionStatus: SubscriptionStatus;
   subscriptionStartDate: string;
   subscriptionEndDate: string;
+  allowExpiredAccess: boolean;
   isActive: boolean;
   // SePay configuration
   sepayBankAccount: string;
@@ -42,6 +43,7 @@ const defaultValues: TenantFormData = {
   subscriptionStatus: "active",
   subscriptionStartDate: "",
   subscriptionEndDate: "",
+  allowExpiredAccess: false,
   isActive: true,
   sepayBankAccount: "",
   sepayBankCode: "",
@@ -178,6 +180,24 @@ export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
               <option value="active">active</option>
               <option value="suspended">suspended</option>
               <option value="expired">expired</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="allowExpiredAccess">Cho phép dùng khi hết hạn</Label>
+            <select
+              id="allowExpiredAccess"
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+              value={String(formData.allowExpiredAccess)}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  allowExpiredAccess: e.target.value === "true",
+                }))
+              }
+            >
+              <option value="true">Cho phép</option>
+              <option value="false">Không cho phép</option>
             </select>
           </div>
 

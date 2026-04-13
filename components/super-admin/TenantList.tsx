@@ -176,7 +176,7 @@ export function TenantList({ tenants }: TenantListProps) {
                 </td>
                 <td className="px-3 py-3">
                   <Badge variant={tenant.is_active ? "default" : "outline"}>
-                    {tenant.is_active ? "Đang hoạt động" : "Vô hiệu hóa"}
+                    {tenant.is_active ? "Đang kích hoạt" : "Vô hiệu hóa"}
                   </Badge>
                 </td>
                 <td className="px-3 py-3">

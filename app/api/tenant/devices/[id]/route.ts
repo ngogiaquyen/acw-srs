@@ -109,7 +109,8 @@ export async function PUT(request: Request, { params }: Params) {
     const input: UpdateDeviceInput = {
       name: body.name,
       paymentCode: body.paymentCode,
-      status: body.status,
+      webUsername: body.webUsername,
+      webPassword: body.webPassword,
       firmwareVersion: body.firmwareVersion,
       isActive: body.isActive,
       pricePerMinute: body.pricePerMinute,

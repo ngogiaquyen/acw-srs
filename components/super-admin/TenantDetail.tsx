@@ -12,6 +12,7 @@ export interface TenantDetailData {
   subscription_status: "active" | "suspended" | "expired";
   subscription_start_date: string | null;
   subscription_end_date: string | null;
+  allow_expired_access: number | boolean;
   is_active: number | boolean;
   // SePay configuration
   sepay_bank_account: string | null;
@@ -66,9 +67,15 @@ export function TenantDetail({ tenant }: TenantDetailProps) {
           <dd className="font-medium">{tenant.subscription_end_date ?? "-"}</dd>
         </div>
         <div>
+          <dt className="text-xs text-muted-foreground">Cho phép dùng khi hết hạn</dt>
+          <dd className="font-medium">
+            {tenant.allow_expired_access ? "Cho phép" : "Không cho phép"}
+          </dd>
+        </div>
+        <div>
           <dt className="text-xs text-muted-foreground">Trạng thái hoạt động</dt>
           <dd className="font-medium">
-            {tenant.is_active ? "Đang hoạt động" : "Vô hiệu hóa"}
+            {tenant.is_active ? "Đang kích hoạt" : "Vô hiệu hóa"}
           </dd>
         </div>
         <div>

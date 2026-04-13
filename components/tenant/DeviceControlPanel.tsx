@@ -11,7 +11,6 @@ interface DeviceData {
   id: number;
   name: string;
   device_id: string;
-  status: string;
   last_heartbeat: Date | null;
 }
 
@@ -81,7 +80,6 @@ export function DeviceControlPanel({ device: initialDevice, initialLogs }: Devic
           const data = await res.json();
           setDevice((prev) => ({
             ...prev,
-            status: data.device.status,
             last_heartbeat: data.device.last_heartbeat,
           }));
           setLogs(data.logs || []);
@@ -146,9 +144,6 @@ export function DeviceControlPanel({ device: initialDevice, initialLogs }: Devic
 
       <Card className="p-6">
         <div className="flex flex-wrap items-center gap-2 mb-4">
-          <Badge variant={device.status === "online" ? "default" : "outline"}>
-            {device.status}
-          </Badge>
           <Badge variant={isOfflineOver5m ? "destructive" : "secondary"}>
             {isOfflineOver5m ? "Offline > 5 phút" : "Ổn định"}
           </Badge>
@@ -166,7 +161,7 @@ export function DeviceControlPanel({ device: initialDevice, initialLogs }: Devic
 
         {remainingSeconds != null && (
           <div className="mb-4 flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Còn lại trước khi tắt:</span>
+            <span className="text-sm text-muted-foreground">Thời gian đếm ngược tắt thiết bị:</span>
             {remainingSeconds > 0 ? (
               <CountdownTimer initialSeconds={remainingSeconds} />
             ) : (
@@ -182,7 +177,10 @@ export function DeviceControlPanel({ device: initialDevice, initialLogs }: Devic
             variant={isRunning ? "destructive" : "default"}
           >
             {loading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isRunning ? "Đang tắt..." : "Đang bật..."}
+              </>
             ) : isRunning ? (
               <>
                 <PowerOff className="mr-2 h-4 w-4" />

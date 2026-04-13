@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CountdownTimer } from "@/components/ui/countdown-timer";
+import { DeviceCountdown } from "@/components/tenant/DeviceCountdown";
+import { PasswordField } from "@/components/tenant/PasswordField";
 import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
 import { getDeviceByIdAndTenantId } from "@/lib/db/devices";
 import { getDeviceRemainingSeconds } from "@/lib/device-state";
@@ -58,21 +59,9 @@ export default async function TenantDeviceDetailPage({ params }: Props) {
             <dd className="font-medium">{device.name}</dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">Trạng thái</dt>
+            <dt className="text-xs text-muted-foreground">Thời gian đếm ngược tắt thiết bị</dt>
             <dd>
-              <Badge variant={device.status === "online" ? "default" : "outline"}>
-                {device.status}
-              </Badge>
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">Còn lại trước khi tắt</dt>
-            <dd>
-              {remainingSeconds != null && remainingSeconds > 0 ? (
-                <CountdownTimer initialSeconds={remainingSeconds} />
-              ) : (
-                <span className="text-muted-foreground">—</span>
-              )}
+              <DeviceCountdown deviceId={device.id} initialSeconds={remainingSeconds} />
             </dd>
           </div>
           <div>
@@ -92,10 +81,37 @@ export default async function TenantDeviceDetailPage({ params }: Props) {
             <dd className="font-medium">{device.payment_code ?? "(Dùng mặc định theo device)"}</dd>
           </div>
           <div>
+            <dt className="text-xs text-muted-foreground">Username đăng nhập web ESP</dt>
+            <dd className="font-medium">{device.web_username ?? "-"}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Password đăng nhập web ESP</dt>
+            <dd>
+              <PasswordField value={device.web_password} />
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">URL trang cấu hình ESP</dt>
+            <dd className="font-medium">
+              {device.last_ip ? (
+                <a
+                  href={`http://${device.last_ip}/`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  http://{device.last_ip}/
+                </a>
+              ) : (
+                <span className="text-muted-foreground">Chưa có heartbeat</span>
+              )}
+            </dd>
+          </div>
+          <div>
             <dt className="text-xs text-muted-foreground">Kích hoạt</dt>
             <dd>
               <Badge variant={device.is_active ? "default" : "outline"}>
-                {device.is_active ? "Đang hoạt động" : "Vô hiệu hóa"}
+                {device.is_active ? "Đang kích hoạt" : "Vô hiệu hóa"}
               </Badge>
             </dd>
           </div>

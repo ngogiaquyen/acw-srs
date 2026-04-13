@@ -13,7 +13,7 @@ async function ensureSuperAdmin() {
 }
 
 export async function GET(request: Request) {
-  const currentUser = ensureSuperAdmin();
+  const currentUser = await ensureSuperAdmin();
 
   if (!currentUser) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });

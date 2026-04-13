@@ -10,6 +10,7 @@ import {
   getDeviceByDeviceId,
   type CreateDeviceInput,
 } from "@/lib/db/devices";
+import { findTenantAdminByTenantId } from "@/lib/db/users";
 import { validateDevicePayload, type DevicePayload } from "@/lib/utils/validation";
 
 async function ensureAuthenticated() {
@@ -50,6 +51,13 @@ export async function POST(request: Request) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (user.role === "TENANT_ADMIN") {
+    return NextResponse.json(
+      { error: "Tenant không có quyền tạo thiết bị. Vui lòng liên hệ Super Admin." },
+      { status: 403 },
+    );
   }
 
   try {
@@ -94,7 +102,8 @@ export async function POST(request: Request) {
       deviceId: body.deviceId!,
       name: body.name!,
       paymentCode: body.paymentCode ?? null,
-      status: body.status,
+      webUsername: body.webUsername ?? (await findTenantAdminByTenantId(tenantId))?.email ?? null,
+      webPassword: body.webPassword ?? null,
       firmwareVersion: body.firmwareVersion ?? null,
       isActive: body.isActive ?? true,
       pricePerMinute: body.pricePerMinute ?? null,

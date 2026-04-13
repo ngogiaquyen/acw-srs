@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS tenants (
   subscription_status ENUM('active', 'suspended', 'expired') DEFAULT 'active',
   subscription_start_date DATE,
   subscription_end_date DATE,
+  allow_expired_access BOOLEAN DEFAULT FALSE,
   is_active BOOLEAN DEFAULT TRUE,
   -- SePay configuration per tenant
   sepay_bank_account VARCHAR(50) DEFAULT NULL,

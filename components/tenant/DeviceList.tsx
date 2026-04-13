@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CountdownTimer } from "@/components/ui/countdown-timer";
@@ -13,22 +13,25 @@ export interface DeviceItem {
   id: number;
   device_id: string;
   name: string;
-  status: "online" | "offline" | "maintenance";
   last_heartbeat: Date | string | null;
   firmware_version: string | null;
   price_per_minute: number | null;
   is_active: number | boolean;
+  web_username: string | null;
+  last_ip?: string | null;
   remainingSeconds?: number | null;
 }
 
 interface DeviceListProps {
   devices: DeviceItem[];
+  deviceDetailBase?: string;
 }
 
-function statusVariant(status: DeviceItem["status"]) {
-  if (status === "online") return "default" as const;
-  if (status === "maintenance") return "secondary" as const;
-  return "outline" as const;
+function isOnline(lastHeartbeat: Date | string | null): boolean {
+  if (!lastHeartbeat) return false;
+  const date = typeof lastHeartbeat === "string" ? new Date(lastHeartbeat) : lastHeartbeat;
+  const diffMs = new Date().getTime() - date.getTime();
+  return diffMs / 60000 <= 5;
 }
 
 function formatLastHeartbeat(lastHeartbeat: Date | string | null): string {
@@ -51,10 +54,34 @@ function formatLastHeartbeat(lastHeartbeat: Date | string | null): string {
   return date.toLocaleDateString("vi-VN");
 }
 
-export function DeviceList({ devices }: DeviceListProps) {
+export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: DeviceListProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [liveRemaining, setLiveRemaining] = useState<Record<number, number | null>>(
+    () => Object.fromEntries(devices.map((d) => [d.id, d.remainingSeconds ?? null])),
+  );
+
+  useEffect(() => {
+    if (devices.length === 0) return;
+    const ids = devices.map((d) => d.id).join(",");
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/tenant/devices/remaining?ids=${ids}`);
+        if (res.ok) {
+          const data = await res.json();
+          setLiveRemaining(data.remaining);
+        }
+      } catch {
+        // ignore network errors
+      }
+    };
+
+    poll();
+    const interval = setInterval(poll, 5000);
+    return () => clearInterval(interval);
+  }, [devices]);
 
   const filtered = devices.filter((device) =>
     [device.device_id, device.name, device.firmware_version ?? ""]
@@ -93,19 +120,15 @@ export function DeviceList({ devices }: DeviceListProps) {
           onChange={(e) => setKeyword(e.target.value)}
           className="sm:max-w-md"
         />
-        <Button asChild>
-          <Link href="/tenant/devices/new">Đăng ký thiết bị</Link>
-        </Button>
       </div>
 
       <div className="overflow-x-auto">
-          <table className="w-full min-w-250 text-sm">
+        <table className="w-full min-w-250 text-sm">
           <thead>
             <tr className="border-b text-left">
               <th className="px-3 py-2">ID</th>
               <th className="px-3 py-2">Device ID</th>
               <th className="px-3 py-2">Tên</th>
-              <th className="px-3 py-2">Trạng thái</th>
               <th className="px-3 py-2">Hoạt động</th>
               <th className="px-3 py-2">Còn lại</th>
               <th className="px-3 py-2">Lần cuối</th>
@@ -122,23 +145,22 @@ export function DeviceList({ devices }: DeviceListProps) {
                 <td className="px-3 py-3 font-medium">{device.device_id}</td>
                 <td className="px-3 py-3">{device.name}</td>
                 <td className="px-3 py-3">
-                  <Badge variant={statusVariant(device.status)}>{device.status}</Badge>
-                </td>
-                <td className="px-3 py-3">
-                  {device.status === "online" ? (
-                    <span className="text-green-600">Đang hoạt động</span>
-                  ) : device.status === "maintenance" ? (
-                    <span className="text-yellow-600">Bảo trì</span>
-                  ) : (
-                    <span className="text-gray-500">Ngừng hoạt động</span>
+                  <span className={isOnline(device.last_heartbeat) ? "text-green-600" : "text-gray-500"}>
+                    {isOnline(device.last_heartbeat) ? "Đang hoạt động" : "Offline"}
+                  </span>
+                  {device.last_ip && (
+                    <p className="text-xs text-muted-foreground">IP: {device.last_ip}</p>
                   )}
                 </td>
                 <td className="px-3 py-3">
-                  {device.remainingSeconds != null && device.remainingSeconds > 0 ? (
-                    <CountdownTimer initialSeconds={device.remainingSeconds} />
-                  ) : (
-                    <span className="text-gray-400 text-xs">—</span>
-                  )}
+                  {(() => {
+                    const secs = liveRemaining[device.id];
+                    return secs != null && secs > 0 ? (
+                      <CountdownTimer initialSeconds={secs} />
+                    ) : (
+                      <span className="text-gray-400 text-xs">—</span>
+                    );
+                  })()}
                 </td>
                 <td className="px-3 py-3 text-muted-foreground">
                   {formatLastHeartbeat(device.last_heartbeat)}
@@ -151,16 +173,16 @@ export function DeviceList({ devices }: DeviceListProps) {
                 </td>
                 <td className="px-3 py-3">
                   <Badge variant={device.is_active ? "default" : "outline"}>
-                    {device.is_active ? "Đang hoạt động" : "Vô hiệu hóa"}
+                    {device.is_active ? "Đang kích hoạt" : "Vô hiệu hóa"}
                   </Badge>
                 </td>
                 <td className="px-3 py-3">
                   <div className="flex gap-2">
                     <Button asChild variant="outline" size="sm">
-                      <Link href={`/tenant/devices/${device.id}`}>Xem</Link>
+                      <Link href={`${deviceDetailBase}/${device.id}`}>Xem</Link>
                     </Button>
                     <Button asChild variant="outline" size="sm">
-                      <Link href={`/tenant/devices/${device.id}/edit`}>Sửa</Link>
+                      <Link href={`${deviceDetailBase}/${device.id}/edit`}>Sửa</Link>
                     </Button>
                     <Button
                       variant="destructive"

@@ -7,8 +7,7 @@ const navItems = [
   { href: "/super-admin/dashboard", label: "Dashboard" },
   { href: "/super-admin/tenants", label: "Tenants" },
   { href: "/super-admin/revenue", label: "Doanh thu" },
-  { href: "/super-admin/subscriptions", label: "Subscriptions" },
-  { href: "/super-admin/billing", label: "Billing" },
+  { href: "/super-admin/simulate-payment", label: "🧪 Giả lập thanh toán" },
 ];
 
 interface SuperAdminLayoutProps {
@@ -29,7 +28,7 @@ export async function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
   return (
     <div className="min-h-screen bg-muted/20">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl">
-        <aside className="w-64 border-r bg-white px-4 py-6">
+        <aside className="sticky top-0 h-screen w-64 border-r bg-white px-4 py-6">
           <div className="mb-6">
             <h2 className="text-lg font-bold">Super Admin</h2>
             <p className="text-xs text-muted-foreground">ACW-SRS Console</p>

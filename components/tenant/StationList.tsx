@@ -85,7 +85,7 @@ export function StationList({ stations }: StationListProps) {
                 <td className="px-3 py-3">{station.address ?? "-"}</td>
                 <td className="px-3 py-3">
                   <Badge variant={station.is_active ? "default" : "outline"}>
-                    {station.is_active ? "Đang hoạt động" : "Vô hiệu hóa"}
+                    {station.is_active ? "Đang kích hoạt" : "Vô hiệu hóa"}
                   </Badge>
                 </td>
                 <td className="px-3 py-3">

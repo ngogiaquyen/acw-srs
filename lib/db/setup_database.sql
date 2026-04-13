@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS tenants (
   subscription_status ENUM('active', 'suspended', 'expired') DEFAULT 'active',
   subscription_start_date DATE,
   subscription_end_date DATE,
+  allow_expired_access BOOLEAN DEFAULT FALSE,
   is_active BOOLEAN DEFAULT TRUE,
   sepay_bank_account VARCHAR(50) DEFAULT NULL,
   sepay_bank_code VARCHAR(20) DEFAULT NULL,
@@ -53,12 +54,14 @@ CREATE TABLE IF NOT EXISTS devices (
   tenant_id INT NOT NULL,
   device_id VARCHAR(255) UNIQUE NOT NULL,
   name VARCHAR(255) NOT NULL,
-  status ENUM('online', 'offline', 'maintenance') DEFAULT 'offline',
   last_heartbeat TIMESTAMP NULL,
+  last_ip VARCHAR(45) DEFAULT NULL,
   firmware_version VARCHAR(50),
   is_active BOOLEAN DEFAULT TRUE,
   price_per_minute DECIMAL(10, 2) DEFAULT NULL,
   payment_code VARCHAR(50) DEFAULT NULL,
+  web_username VARCHAR(255) DEFAULT NULL,
+  web_password VARCHAR(255) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
@@ -120,53 +123,7 @@ CREATE TABLE IF NOT EXISTS device_logs (
 );
 
 -- ============================================
--- 7) SUBSCRIPTIONS
--- ============================================
-CREATE TABLE IF NOT EXISTS subscriptions (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  tenant_id INT NOT NULL,
-  plan_name VARCHAR(100) NOT NULL,
-  billing_cycle ENUM('monthly', 'yearly') NOT NULL DEFAULT 'monthly',
-  amount DECIMAL(12, 2) NOT NULL DEFAULT 0,
-  start_date DATE NOT NULL,
-  end_date DATE NOT NULL,
-  status ENUM('active', 'past_due', 'cancelled', 'expired') NOT NULL DEFAULT 'active',
-  auto_renew BOOLEAN DEFAULT TRUE,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-  INDEX idx_subscriptions_tenant_id (tenant_id),
-  INDEX idx_subscriptions_status (status),
-  INDEX idx_subscriptions_end_date (end_date)
-);
-
--- ============================================
--- 8) INVOICES
--- ============================================
-CREATE TABLE IF NOT EXISTS invoices (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  tenant_id INT NOT NULL,
-  subscription_id INT NULL,
-  invoice_number VARCHAR(50) NOT NULL UNIQUE,
-  amount DECIMAL(12, 2) NOT NULL,
-  currency VARCHAR(10) NOT NULL DEFAULT 'VND',
-  due_date DATE NOT NULL,
-  paid_at DATETIME NULL,
-  status ENUM('pending', 'paid', 'overdue', 'cancelled') NOT NULL DEFAULT 'pending',
-  description TEXT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-  FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE SET NULL,
-  INDEX idx_invoices_tenant_id (tenant_id),
-  INDEX idx_invoices_status (status),
-  INDEX idx_invoices_due_date (due_date)
-);
-
--- ============================================
--- 9) LEADS
+-- 7) LEADS
 -- ============================================
 CREATE TABLE IF NOT EXISTS leads (
   id INT PRIMARY KEY AUTO_INCREMENT,

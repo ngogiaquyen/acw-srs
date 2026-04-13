@@ -89,6 +89,7 @@ export async function PUT(request: Request, { params }: Params) {
       subscriptionEndDate: body.subscriptionEndDate
         ? new Date(body.subscriptionEndDate)
         : undefined,
+      allowExpiredAccess: body.allowExpiredAccess,
       isActive: body.isActive,
       sepayBankAccount: body.sepayBankAccount,
       sepayBankCode: body.sepayBankCode,

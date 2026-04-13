@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { RevenueChart } from "@/components/tenant/RevenueChart";
 import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
-import { getTenantRevenueSummary } from "@/lib/db/tenant-revenue";
+import { getTenantRevenueAnalytics, getTenantRevenueSummary } from "@/lib/db/tenant-revenue";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("vi-VN", {
@@ -16,29 +15,26 @@ export default async function TenantRevenuePage() {
   const auth = await getCurrentUserFromCookies();
   const tenantId = auth.isAuthenticated ? auth.user.tenantId : null;
 
-  const summary = tenantId
-    ? await getTenantRevenueSummary(tenantId)
-    : {
-        tenantId: 0,
-        totalRevenue: 0,
-        revenueToday: 0,
-        totalTransactions: 0,
-        transactionsToday: 0,
-      };
+  const [summary, analytics] = tenantId
+    ? await Promise.all([getTenantRevenueSummary(tenantId), getTenantRevenueAnalytics(tenantId, 30)])
+    : [
+        {
+          tenantId: 0,
+          totalRevenue: 0,
+          revenueToday: 0,
+          totalTransactions: 0,
+          transactionsToday: 0,
+        },
+        [],
+      ];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Doanh thu tenant</h2>
-          <p className="text-sm text-muted-foreground">
-            Tổng quan doanh thu và giao dịch của tenant.
-          </p>
-        </div>
-
-        <Button asChild variant="outline" size="sm">
-          <Link href="/tenant/revenue/analytics">Xem analytics</Link>
-        </Button>
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">Doanh thu tenant</h2>
+        <p className="text-sm text-muted-foreground">
+          Tổng quan doanh thu và giao dịch của tenant.
+        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -62,6 +58,10 @@ export default async function TenantRevenuePage() {
           <p className="mt-2 text-2xl font-bold">{summary.totalTransactions}</p>
         </Card>
       </div>
+
+      <Card className="p-4">
+        <RevenueChart data={analytics} />
+      </Card>
     </div>
   );
 }

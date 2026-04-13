@@ -27,12 +27,6 @@ export async function POST(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
     }
 
-    if (device.status !== "online") {
-      return NextResponse.json(
-        { error: "Thiết bị không online" },
-        { status: 400 },
-      );
-    }
 
     const active = await getActiveTransactionByDeviceId(device.id);
     if (active) {

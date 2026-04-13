@@ -5,6 +5,7 @@ import { setDeviceRemainingSeconds } from "@/lib/device-state";
 interface HeartbeatPayload {
   deviceId?: string;
   remainingSeconds?: number;
+  localIp?: string;
 }
 
 export async function POST(request: Request) {
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const updated = await updateDeviceHeartbeat(body.deviceId);
+    const updated = await updateDeviceHeartbeat(body.deviceId, undefined, body.localIp ?? null);
 
     // Lưu remainingSeconds từ ESP32 vào in-memory store (không cần DB)
     if (typeof body.remainingSeconds === "number") {

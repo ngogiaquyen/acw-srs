@@ -40,6 +40,15 @@ export async function findUserById(id: number): Promise<UserRecord | null> {
   return result[0] ?? null;
 }
 
+export async function findTenantAdminByTenantId(tenantId: number): Promise<UserRecord | null> {
+  const [rows] = await pool.query(
+    "SELECT * FROM users WHERE tenant_id = ? AND role = 'TENANT_ADMIN' AND is_active = 1 LIMIT 1",
+    [tenantId],
+  );
+  const result = rows as UserRecord[];
+  return result[0] ?? null;
+}
+
 export async function createUser(input: CreateUserInput): Promise<UserRecord> {
   const { email, passwordHash, role, tenantId = null, name, phone = null } = input;
 

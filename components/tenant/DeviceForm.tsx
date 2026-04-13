@@ -11,7 +11,8 @@ export interface DeviceFormData {
   deviceId: string;
   name: string;
   paymentCode: string;
-  status: "online" | "offline" | "maintenance";
+  webUsername: string;
+  webPassword: string;
   firmwareVersion: string;
   pricePerMinute: string;
   isActive: boolean;
@@ -27,7 +28,8 @@ const defaultValues: DeviceFormData = {
   deviceId: "",
   name: "",
   paymentCode: "",
-  status: "offline",
+  webUsername: "",
+  webPassword: "",
   firmwareVersion: "",
   pricePerMinute: "",
   isActive: true,
@@ -68,6 +70,8 @@ export function DeviceForm({ mode, deviceIdParam, initialData }: DeviceFormProps
         firmwareVersion: formData.firmwareVersion || null,
         pricePerMinute: formData.pricePerMinute ? Number(formData.pricePerMinute) : null,
         paymentCode: formData.paymentCode || null,
+        webUsername: formData.webUsername || null,
+        webPassword: formData.webPassword || null,
       };
 
       const res = await fetch(endpoint, {
@@ -143,32 +147,12 @@ export function DeviceForm({ mode, deviceIdParam, initialData }: DeviceFormProps
 
 
           <div className="space-y-2">
-            <Label htmlFor="status">Trạng thái</Label>
-            <select
-              id="status"
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-              value={formData.status}
-              onChange={(e) =>
-                setFormData((p) => ({
-                  ...p,
-                  status: e.target.value as "online" | "offline" | "maintenance",
-                }))
-              }
-            >
-              <option value="online">online</option>
-              <option value="offline">offline</option>
-              <option value="maintenance">maintenance</option>
-            </select>
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="firmwareVersion">Firmware version</Label>
             <Input
               id="firmwareVersion"
               value={formData.firmwareVersion}
-              onChange={(e) =>
-                setFormData((p) => ({ ...p, firmwareVersion: e.target.value }))
-              }
+              readOnly
+              disabled
             />
           </div>
 
@@ -200,6 +184,29 @@ export function DeviceForm({ mode, deviceIdParam, initialData }: DeviceFormProps
               <option value="true">Đang hoạt động</option>
               <option value="false">Vô hiệu hóa</option>
             </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="webUsername">Username đăng nhập web ESP</Label>
+            <Input
+              id="webUsername"
+              value={formData.webUsername}
+              onChange={(e) => setFormData((p) => ({ ...p, webUsername: e.target.value }))}
+              placeholder="Mặc định theo email tenant admin"
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="webPassword">Password đăng nhập web ESP</Label>
+            <Input
+              id="webPassword"
+              type="password"
+              value={formData.webPassword}
+              onChange={(e) => setFormData((p) => ({ ...p, webPassword: e.target.value }))}
+              placeholder="Nhập mật khẩu cho web ESP"
+              autoComplete="new-password"
+            />
           </div>
         </div>
 

@@ -29,7 +29,7 @@ export async function TenantLayout({ children }: TenantLayoutProps) {
   return (
     <div className="min-h-screen bg-muted/20">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl">
-        <aside className="w-64 border-r bg-white px-4 py-6">
+        <aside className="sticky top-0 h-screen w-64 border-r bg-white px-4 py-6">
           <div className="mb-6">
             <h2 className="text-lg font-bold">Tenant Admin</h2>
             <p className="text-xs text-muted-foreground">ACW-SRS Tenant Console</p>

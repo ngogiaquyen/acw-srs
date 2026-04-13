@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
 import { createDeviceLog, getDeviceLogsByDeviceId } from "@/lib/db/device-logs";
-import {
-  getDeviceById,
-  getDeviceByIdAndTenantId,
-  updateDeviceStatus,
-} from "@/lib/db/devices";
+import { getDeviceById, getDeviceByIdAndTenantId } from "@/lib/db/devices";
 import { getDeviceRemainingSeconds } from "@/lib/device-state";
 
 async function ensureAuthenticated() {
@@ -65,28 +61,28 @@ export async function GET(_request: Request, { params }: Params) {
     heartbeatTime === null || now - heartbeatTime > offlineThresholdMs;
 
   let alertCreated = false;
+  let shouldCreateAlert = true;
 
-  if (isOfflineOver5m && device.status !== "offline") {
-    await updateDeviceStatus(device.device_id, "offline");
+  if (isOfflineOver5m) {
+    const latestLogs = await getDeviceLogsByDeviceId(device.id, 1);
+    if (latestLogs.length > 0) {
+      shouldCreateAlert = latestLogs[0].message !== "ALERT: Device offline quá 5 phút";
+    }
 
-    await createDeviceLog({
-      deviceId: device.id,
-      logLevel: "warning",
-      message: "ALERT: Device offline quá 5 phút",
-      metadata: {
-        alertType: "device_offline",
-        offlineThresholdMinutes: 5,
-        lastHeartbeat: device.last_heartbeat,
-      },
-    });
+    if (shouldCreateAlert) {
+      await createDeviceLog({
+        deviceId: device.id,
+        logLevel: "warning",
+        message: "ALERT: Device offline quá 5 phút",
+        metadata: {
+          alertType: "device_offline",
+          offlineThresholdMinutes: 5,
+          lastHeartbeat: device.last_heartbeat,
+        },
+      });
 
-    alertCreated = true;
-
-    device = await getDeviceById(device.id);
-  }
-
-  if (!device) {
-    return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
+      alertCreated = true;
+    }
   }
 
   const logs = await getDeviceLogsByDeviceId(device.id, 50);

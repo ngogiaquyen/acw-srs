@@ -47,6 +47,10 @@ export async function POST(request: Request) {
     }
 
     const tenant = await getTenantById(device.tenant_id);
+    if (tenant && !tenant.allow_expired_access && tenant.subscription_status === "expired") {
+      return NextResponse.json({ error: "Tenant đã hết hạn sử dụng" }, { status: 403 });
+    }
+
     let tenantSePayConfig: TenantSePayConfig | null = null;
 
     if (tenant?.sepay_bank_account && tenant?.sepay_bank_code) {

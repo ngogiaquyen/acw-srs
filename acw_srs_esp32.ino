@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <HTTPUpdate.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
 #include <WebServer.h>
@@ -31,6 +32,8 @@ int  cfg_tenant_id;
 int  cfg_device_db_id;
 int  cfg_hb_interval_s;
 int  cfg_cmd_interval_s;
+char cfg_web_username[128];
+char cfg_web_password[128];
 
 Preferences prefs;
 WebServer   configServer(80);
@@ -73,6 +76,12 @@ void loadConfig() {
   cfg_hb_interval_s  = prefs.getInt("hb_interval_s",  DEFAULT_HB_INTERVAL_S);
   cfg_cmd_interval_s = prefs.getInt("cmd_interval_s",  DEFAULT_CMD_INTERVAL_S);
 
+  prefs.getString("web_user", cfg_web_username, sizeof(cfg_web_username));
+  // Không có default - credentials phải được push từ server
+
+  prefs.getString("web_pass", cfg_web_password, sizeof(cfg_web_password));
+  // Không có default - credentials phải được push từ server
+
   prefs.end();
 
   Serial.println("[CFG] Config loaded:");
@@ -97,13 +106,15 @@ void saveConfig() {
   prefs.putInt("device_db_id",    cfg_device_db_id);
   prefs.putInt("hb_interval_s",   cfg_hb_interval_s);
   prefs.putInt("cmd_interval_s",  cfg_cmd_interval_s);
+  prefs.putString("web_user",     cfg_web_username);
+  prefs.putString("web_pass",     cfg_web_password);
   prefs.end();
   Serial.println("[CFG] Config saved to NVS");
 }
 
 // ========== WEB CONFIG SERVER ==========
 
-static const char CONFIG_HTML[] PROGMEM = R"rawhtml(
+static const char CONFIG_HTML[] PROGMEM = R"ACWHTML(
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -121,6 +132,10 @@ static const char CONFIG_HTML[] PROGMEM = R"rawhtml(
     width:100%;box-sizing:border-box;padding:7px 10px;border:1px solid #ccc;
     border-radius:5px;font-size:14px;margin-top:3px}
   input:focus{outline:none;border-color:#1a73e8}
+  .pw-wrap{position:relative;margin-top:3px}
+  .pw-wrap input{width:100%;box-sizing:border-box;padding:7px 36px 7px 10px;border:1px solid #ccc;border-radius:5px;font-size:14px;margin-top:0}
+  .pw-wrap input:focus{outline:none;border-color:#1a73e8}
+  .pw-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;color:#888;font-size:16px;line-height:1}
   .row{display:flex;gap:10px}
   .row input{flex:1}
   button{
@@ -134,7 +149,7 @@ static const char CONFIG_HTML[] PROGMEM = R"rawhtml(
 </style>
 </head>
 <body>
-<h2>&#9881; ACW ESP32 Cấu hình</h2>
+<h2>&#9881; ACW ESP32 Cấu hình123</h2>
 <p class="sub">Thay đổi rồi nhấn <b>Lưu &amp; Khởi động lại</b></p>
 <form id="f" method="POST" action="/save">
 
@@ -144,7 +159,10 @@ static const char CONFIG_HTML[] PROGMEM = R"rawhtml(
       <input type="text" name="wifi_ssid" value="{{wifi_ssid}}" maxlength="63">
     </label>
     <label>Mật khẩu
-      <input type="password" name="wifi_pass" value="{{wifi_pass}}" maxlength="63">
+      <div class="pw-wrap">
+        <input type="password" id="wifi_pass" name="wifi_pass" value="{{wifi_pass}}" maxlength="63">
+        <button type="button" class="pw-eye" onclick="togglePw('wifi_pass',this)" title="Hiện/ẩn mật khẩu">&#128065;</button>
+      </div>
     </label>
   </fieldset>
 
@@ -207,10 +225,16 @@ static const char CONFIG_HTML[] PROGMEM = R"rawhtml(
   const p = new URLSearchParams(location.search);
   if(p.get('saved')==='1') { document.getElementById('ok').style.display='block'; }
   if(p.get('err')==='1')   { document.getElementById('err').style.display='block'; }
+  function togglePw(id,btn){
+    const inp=document.getElementById(id);
+    const show=inp.type==='password';
+    inp.type=show?'text':'password';
+    btn.style.color=show?'#1a73e8':'#888';
+  }
 </script>
 </body>
 </html>
-)rawhtml";
+)ACWHTML";
 
 String buildConfigPage() {
   String html = String(CONFIG_HTML);
@@ -228,11 +252,27 @@ String buildConfigPage() {
   return html;
 }
 
+bool checkWebAuth() {
+  // Nếu chưa được cấu hình credentials (chưa push từ server), khóa hoàn toàn
+  if (strlen(cfg_web_username) == 0 || strlen(cfg_web_password) == 0) {
+    configServer.send(403, "text/plain; charset=utf-8",
+      "Truy cap bi tu choi. Credentials chua duoc cau hinh. Lien he Super Admin.");
+    return false;
+  }
+  if (!configServer.authenticate(cfg_web_username, cfg_web_password)) {
+    configServer.requestAuthentication(BASIC_AUTH, "ACW ESP32 Config", "Authentication required");
+    return false;
+  }
+  return true;
+}
+
 void handleConfigGet() {
+  if (!checkWebAuth()) return;
   configServer.send(200, "text/html; charset=utf-8", buildConfigPage());
 }
 
 void handleConfigSave() {
+  if (!checkWebAuth()) return;
   // Đọc từng field; nếu rỗng giữ nguyên giá trị cũ
   if (configServer.hasArg("wifi_ssid") && configServer.arg("wifi_ssid").length() > 0)
     strlcpy(cfg_wifi_ssid, configServer.arg("wifi_ssid").c_str(), sizeof(cfg_wifi_ssid));
@@ -337,9 +377,10 @@ bool registerDevice() {
 // ========== HEARTBEAT ==========
 
 void sendHeartbeat() {
-  StaticJsonDocument<128> doc;
+  StaticJsonDocument<256> doc;
   doc["deviceId"]        = cfg_device_id;
   doc["remainingSeconds"] = (int)(relayRemainingMs / 1000);
+  doc["localIp"]         = WiFi.localIP().toString();
 
   String body;
   serializeJson(doc, body);
@@ -436,9 +477,62 @@ void handleCommand(const String& type, const String& data, int cmdId) {
   } else if (type == "restart") {
     sendLog("info", "Nhan lenh restart (chua thuc hien)");
   } else if (type == "update_firmware") {
-    sendLog("info", "Nhan lenh update_firmware (chua thuc hien)");
+    // OTA qua HTTP
+    String firmwareUrl = "";
+    if (data.length() > 0) {
+      StaticJsonDocument<512> otaDoc;
+      if (deserializeJson(otaDoc, data) == DeserializationError::Ok) {
+        firmwareUrl = otaDoc["firmwareUrl"] | "";
+      }
+    }
+    if (firmwareUrl.length() == 0) {
+      sendLog("error", "update_firmware: firmwareUrl is empty");
+      sendCommandResponse(cmdId, false, "firmwareUrl is required");
+      return;
+    }
+    Serial.printf("[OTA] Starting update from: %s\n", firmwareUrl.c_str());
+    sendLog("info", "OTA: bat dau tai firmware...");
+    // Gửi phản hồi trước khi reboot
+    sendCommandResponse(cmdId, true, "OTA started");
+    WiFiClient otaClient;
+    httpUpdate.rebootOnUpdate(true);
+    t_httpUpdate_return ret = httpUpdate.update(otaClient, firmwareUrl);
+    // Chỉ chạy đến đây nếu OTA thất bại (thành công thì reboot tự động)
+    switch (ret) {
+      case HTTP_UPDATE_FAILED:
+        Serial.printf("[OTA] FAILED (%d): %s\n",
+          httpUpdate.getLastError(),
+          httpUpdate.getLastErrorString().c_str());
+        sendLog("error", ("OTA failed: " + httpUpdate.getLastErrorString()).c_str());
+        break;
+      case HTTP_UPDATE_NO_UPDATES:
+        Serial.println("[OTA] No update");
+        sendLog("info", "OTA: no update available");
+        break;
+      default:
+        break;
+    }
   } else if (type == "config") {
-    sendLog("info", "Nhan lenh config (chua thuc hien)");
+    // Cập nhật credentials web UI từ server
+    if (data.length() > 0) {
+      StaticJsonDocument<256> cfgDoc;
+      if (deserializeJson(cfgDoc, data) == DeserializationError::Ok) {
+        bool changed = false;
+        if (cfgDoc.containsKey("webUsername") && cfgDoc["webUsername"].as<String>().length() > 0) {
+          strlcpy(cfg_web_username, cfgDoc["webUsername"].as<String>().c_str(), sizeof(cfg_web_username));
+          changed = true;
+        }
+        if (cfgDoc.containsKey("webPassword") && cfgDoc["webPassword"].as<String>().length() > 0) {
+          strlcpy(cfg_web_password, cfgDoc["webPassword"].as<String>().c_str(), sizeof(cfg_web_password));
+          changed = true;
+        }
+        if (changed) {
+          saveConfig();
+          Serial.printf("[CFG] Web credentials updated: user=%s\n", cfg_web_username);
+          sendLog("info", "Web credentials updated");
+        }
+      }
+    }
   } else {
     success = false;
   }

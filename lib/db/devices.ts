@@ -1,15 +1,15 @@
 import { pool } from "./connection";
 
-export type DeviceStatus = "online" | "offline" | "maintenance";
-
 export interface DeviceRecord {
   id: number;
   tenant_id: number;
   device_id: string;
   name: string;
   payment_code: string | null;
-  status: DeviceStatus;
+  web_username: string | null;
+  web_password: string | null;
   last_heartbeat: Date | null;
+  last_ip: string | null;
   firmware_version: string | null;
   price_per_minute: number | null;
   is_active: number | boolean;
@@ -22,7 +22,8 @@ export interface CreateDeviceInput {
   deviceId: string;
   name: string;
   paymentCode?: string | null;
-  status?: DeviceStatus;
+  webUsername?: string | null;
+  webPassword?: string | null;
   lastHeartbeat?: Date | null;
   firmwareVersion?: string | null;
   pricePerMinute?: number | null;
@@ -32,7 +33,8 @@ export interface CreateDeviceInput {
 export interface UpdateDeviceInput {
   name?: string;
   paymentCode?: string | null;
-  status?: DeviceStatus;
+  webUsername?: string | null;
+  webPassword?: string | null;
   firmwareVersion?: string | null;
   pricePerMinute?: number | null;
   isActive?: boolean;
@@ -102,7 +104,8 @@ export async function createDevice(input: CreateDeviceInput): Promise<DeviceReco
     deviceId,
     name,
     paymentCode,
-    status = "offline",
+    webUsername = null,
+    webPassword = null,
     lastHeartbeat = null,
     firmwareVersion = null,
     pricePerMinute = null,
@@ -118,20 +121,22 @@ export async function createDevice(input: CreateDeviceInput): Promise<DeviceReco
       device_id,
       name,
       payment_code,
-      status,
+      web_username,
+      web_password,
       last_heartbeat,
       firmware_version,
       price_per_minute,
       is_active
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
     [
       tenantId,
       deviceId,
       name,
       finalPaymentCode,
-      status,
+      webUsername,
+      webPassword,
       lastHeartbeat,
       firmwareVersion,
       pricePerMinute,
@@ -161,9 +166,13 @@ export async function updateDevice(id: number, input: UpdateDeviceInput): Promis
     fields.push("payment_code = ?");
     values.push(input.paymentCode);
   }
-  if (input.status !== undefined) {
-    fields.push("status = ?");
-    values.push(input.status);
+  if (input.webUsername !== undefined) {
+    fields.push("web_username = ?");
+    values.push(input.webUsername);
+  }
+  if (input.webPassword !== undefined) {
+    fields.push("web_password = ?");
+    values.push(input.webPassword);
   }
   if (input.firmwareVersion !== undefined) {
     fields.push("firmware_version = ?");
@@ -188,34 +197,18 @@ export async function updateDevice(id: number, input: UpdateDeviceInput): Promis
   return getDeviceById(id);
 }
 
-export async function updateDeviceHeartbeat(deviceId: string, heartbeatAt: Date = new Date()): Promise<DeviceRecord | null> {
+export async function updateDeviceHeartbeat(
+  deviceId: string,
+  heartbeatAt: Date = new Date(),
+  lastIp?: string | null,
+): Promise<DeviceRecord | null> {
   await pool.query(
-    "UPDATE devices SET last_heartbeat = ?, status = 'online' WHERE device_id = ?",
-    [heartbeatAt, deviceId],
+    "UPDATE devices SET last_heartbeat = ?, last_ip = COALESCE(?, last_ip) WHERE device_id = ?",
+    [heartbeatAt, lastIp ?? null, deviceId],
   );
-  return getDeviceByDeviceId(deviceId);
-}
-
-export async function updateDeviceStatus(deviceId: string, status: DeviceStatus): Promise<DeviceRecord | null> {
-  await pool.query("UPDATE devices SET status = ? WHERE device_id = ?", [status, deviceId]);
   return getDeviceByDeviceId(deviceId);
 }
 
 export async function deleteDevice(id: number): Promise<void> {
   await pool.query("DELETE FROM devices WHERE id = ?", [id]);
-}
-
-export async function markOfflineDevices(timeoutMinutes = 5): Promise<{ affectedRows: number }> {
-  const [result] = await pool.query(
-    `
-    UPDATE devices
-    SET status = 'offline'
-    WHERE status = 'online'
-      AND last_heartbeat IS NOT NULL
-      AND last_heartbeat < (NOW() - INTERVAL ? MINUTE)
-  `,
-    [timeoutMinutes],
-  );
-
-  return { affectedRows: (result as { affectedRows: number }).affectedRows };
 }

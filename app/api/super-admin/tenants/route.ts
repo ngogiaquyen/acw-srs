@@ -21,7 +21,7 @@ async function ensureSuperAdmin() {
 }
 
 export async function GET() {
-  const currentUser = ensureSuperAdmin();
+  const currentUser = await ensureSuperAdmin();
 
   if (!currentUser) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -33,7 +33,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const currentUser = ensureSuperAdmin();
+  const currentUser = await ensureSuperAdmin();
 
   if (!currentUser) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -64,6 +64,7 @@ export async function POST(request: Request) {
       subscriptionEndDate: body.subscriptionEndDate
         ? new Date(body.subscriptionEndDate)
         : null,
+      allowExpiredAccess: body.allowExpiredAccess ?? false,
       isActive: body.isActive ?? true,
       sepayBankAccount: body.sepayBankAccount ?? null,
       sepayBankCode: body.sepayBankCode ?? null,

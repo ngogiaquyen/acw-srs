@@ -9,8 +9,6 @@
     "lint": "eslint",
     "migrate": "node lib/db/migrate.js",
     "seed": "node lib/db/seed.js",
-    "device:offline:once": "node lib/db/device-status-worker.js once",
-    "device:offline:worker": "node lib/db/device-status-worker.js",
     "billing:once": "node lib/db/billing-worker.js once",
     "billing:worker": "node lib/db/billing-worker.js worker"
   },

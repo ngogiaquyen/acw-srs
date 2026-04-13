@@ -53,7 +53,7 @@ export default async function SuperAdminDashboardPage() {
         </Card>
 
         <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Thiết bị online</p>
+          <p className="text-sm text-muted-foreground">Thiết bị đang hoạt động</p>
           <p className="mt-2 text-2xl font-bold">{summary.onlineDevices}</p>
           <p className="mt-1 text-xs text-muted-foreground">
             Tổng thiết bị: {summary.totalDevices}

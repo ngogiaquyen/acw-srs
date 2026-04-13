@@ -49,7 +49,7 @@ export default async function TenantStationDetailPage({ params }: Props) {
             <dt className="text-xs text-muted-foreground">Trạng thái</dt>
             <dd>
               <Badge variant={station.is_active ? "default" : "outline"}>
-                {station.is_active ? "Đang hoạt động" : "Vô hiệu hóa"}
+                {station.is_active ? "Đang kích hoạt" : "Vô hiệu hóa"}
               </Badge>
             </dd>
           </div>
