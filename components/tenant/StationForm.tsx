@@ -84,7 +84,7 @@ export function StationForm({ mode, stationId, initialData }: StationFormProps) 
   }
 
   return (
-    <Card className="p-6">
+    <Card className="p-3 md:p-6">
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">

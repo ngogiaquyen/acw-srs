@@ -89,7 +89,7 @@ export function SettingsForm() {
 
   if (loadingInitial) {
     return (
-      <Card className="p-6">
+      <Card className="p-3 md:p-6">
         <p className="text-center text-muted-foreground">Đang tải...</p>
       </Card>
     );

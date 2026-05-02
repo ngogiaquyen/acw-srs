@@ -38,6 +38,8 @@ WebServer   configServer(80);
 // ========== THỜI GIAN LẶP ==========
 unsigned long lastHeartbeatMs = 0;
 unsigned long lastCommandMs   = 0;
+unsigned long lastWifiConnectedMs = 0; // Thời điểm cuối cùng còn thấy WiFi
+bool isAPActive = false;               // Trạng thái AP đang bật hay không
 
 // ========== HẸN GIỌ TỰ TẮT (overflow-safe) ==========
 // Lưu thời gian CÒN LẠI (ms) thay vì thời điểm tắt.
@@ -110,49 +112,136 @@ static const char CONFIG_HTML[] PROGMEM = R"rawliteral(
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ACW ESP32 Config</title>
 <style>
-  body{font-family:sans-serif;max-width:520px;margin:30px auto;padding:0 16px;background:#f5f5f5}
-  h2{color:#1a73e8;margin-bottom:4px}
-  p.sub{color:#888;font-size:13px;margin-top:0}
-  fieldset{border:1px solid #ccc;border-radius:8px;padding:14px 18px;margin-bottom:16px;background:#fff}
-  legend{font-weight:bold;color:#333;padding:0 6px}
-  label{display:block;font-size:13px;color:#555;margin-top:10px}
-  input[type=text],input[type=password],input[type=number]{
-    width:100%;box-sizing:border-box;padding:7px 10px;border:1px solid #ccc;
-    border-radius:5px;font-size:14px;margin-top:3px}
-  input:focus{outline:none;border-color:#1a73e8}
-  .pw-wrap{position:relative;margin-top:3px}
-  .pw-wrap input{width:100%;box-sizing:border-box;padding:7px 36px 7px 10px;border:1px solid #ccc;border-radius:5px;font-size:14px;margin-top:0}
-  .pw-wrap input:focus{outline:none;border-color:#1a73e8}
-  .pw-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;color:#888;font-size:16px;line-height:1}
-  .row{display:flex;gap:10px}
-  .row input{flex:1}
-  button{
-    display:inline-block;padding:9px 22px;background:#1a73e8;color:#fff;
-    border:none;border-radius:6px;cursor:pointer;font-size:14px;margin-top:8px}
-  button:hover{background:#1558b0}
-  .msg{margin-top:14px;padding:10px 14px;border-radius:6px;font-size:14px;display:none}
-  .ok{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
-  .err{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
-  .ip{font-size:12px;color:#888;margin-top:6px}
-  .status-box{padding:12px;border-radius:8px;margin-bottom:16px;font-size:14px;line-height:1.5}
-  .status-ok{background:#e6fffa;color:#2c7a7b;border:1px solid #b2f5ea}
-  .status-err{background:#fff5f5;color:#c53030;border:1px solid #fed7d7}
+  :root {
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --border: #e2e8f0;
+    --success-bg: #f0fdf4;
+    --success-text: #166534;
+    --error-bg: #fef2f2;
+    --error-text: #991b1b;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 20px 16px;
+    line-height: 1.5;
+  }
+  .container {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  header { margin-bottom: 24px; text-align: center; }
+  h2 { margin: 0; font-size: 24px; color: var(--text); letter-spacing: -0.025em; }
+  p.sub { margin: 4px 0 0; color: var(--text-light); font-size: 14px; }
+  
+  .status-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .status-box b { display: block; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-light); }
+  .status-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 15px; }
+  .status-item:last-child { margin-bottom: 0; }
+  .status-val { font-weight: 500; }
+  
+  .status-ok { border-left: 4px solid #22c55e; }
+  .status-err { border-left: 4px solid #ef4444; }
+
+  fieldset {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: var(--card);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  legend { font-weight: 600; font-size: 14px; color: var(--primary); padding: 0 8px; }
+  
+  label { display: block; font-size: 13px; font-weight: 500; color: var(--text-light); margin-bottom: 6px; }
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    transition: all 0.2s;
+    background: #fff;
+  }
+  input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  
+  .pw-wrap { position: relative; }
+  .pw-eye {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: var(--text-light);
+    padding: 4px; display: flex; align-items: center;
+  }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  
+  .actions { margin-top: 32px; }
+  button {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  button:hover { background: var(--primary-hover); }
+  button:active { transform: scale(0.98); }
+
+  .msg {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    width: 90%; max-width: 400px;
+    padding: 16px; border-radius: 12px;
+    font-size: 14px; font-weight: 500;
+    text-align: center; z-index: 1000;
+    display: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+  }
+  .msg.ok { display: block; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+  .msg.err { display: block; background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+  
+  .footer { text-align: center; margin-top: 32px; font-size: 12px; color: var(--text-light); }
 </style>
 </head>
 <body>
-<h2>⚙️ ACW ESP32 Cấu hình</h2>
-<p class="sub">Thay đổi rồi nhấn <b>Lưu & Khởi động lại</b></p>
+<div class="container">
+  <header>
+    <h2>⚙️ ACW ESP32 Config</h2>
+    <p class="sub">Quản lý và cấu hình thiết bị IoT</p>
+  </header>
 
-<div class="status-box {{status_class}}">
-  <b>📊 Trạng thái hiện tại:</b><br>
-  • WiFi: {{status_wifi}}<br>
-  • Server: {{status_server}}
-</div>
+  <div class="status-box {{status_class}}">
+    <b>📊 Trạng thái hệ thống</b>
+    <div class="status-item">
+      <span>WiFi</span>
+      <span class="status-val">{{status_wifi}}</span>
+    </div>
+    <div class="status-item">
+      <span>Server</span>
+      <span class="status-val">{{status_server}}</span>
+    </div>
+  </div>
 
-<form id="f" method="POST" action="/save">
+  <form id="f" method="POST" action="/save">
 
   <fieldset>
     <legend>WiFi</legend>
@@ -190,17 +279,25 @@ static const char CONFIG_HTML[] PROGMEM = R"rawliteral(
   <fieldset>
     <legend>Thời gian lặp</legend>
     <div class="row">
-      <div style="flex:1"><label>Heartbeat (giây) <input type="number" name="hb_interval_s" value="{{hb_interval_s}}" min="5" max="3600"></label></div>
-      <div style="flex:1"><label>Lấy lệnh (giây) <input type="number" name="cmd_interval_s" value="{{cmd_interval_s}}" min="1" max="60"></label></div>
+      <div><label>Heartbeat (giây) <input type="number" name="hb_interval_s" value="{{hb_interval_s}}" min="5" max="3600"></label></div>
+      <div><label>Lấy lệnh (giây) <input type="number" name="cmd_interval_s" value="{{cmd_interval_s}}" min="1" max="60"></label></div>
     </div>
   </fieldset>
 
-  <button type="submit">💾 Lưu & Khởi động lại</button>
+  <div class="actions">
+    <button type="submit">💾 Lưu & Khởi động lại</button>
+  </div>
 </form>
 
-<div class="ip">IP hiện tại: {{local_ip}} &nbsp;|&nbsp; Truy cập: http://{{local_ip}}/</div>
+<div class="footer">
+  IP hiện tại: {{local_ip}}<br>
+  ACW-SRS IoT Platform &copy; 2024
+</div>
+
 <div class="msg ok" id="ok">Đã lưu! ESP32 đang khởi động lại...</div>
-<div class="msg err" id="err">Lỗi khi lưu.</div>
+<div class="msg err" id="err">Lỗi khi lưu dữ liệu.</div>
+
+</div> <!-- end container -->
 
 <script>
   function togglePw(id,btn){
@@ -209,6 +306,9 @@ static const char CONFIG_HTML[] PROGMEM = R"rawliteral(
     inp.type = show ? 'text' : 'password';
     btn.textContent = show ? '🙈' : '👁';
   }
+  document.getElementById('f').onsubmit = function() {
+    document.getElementById('ok').style.display = 'block';
+  };
 </script>
 </body>
 </html>
@@ -440,15 +540,25 @@ void handleCommand(const String& type, const String& data, int cmdId) {
     relayOn();
     sendLog("info", "May rua bat dau hoat dong");
 
-    // Đọc durationMinutes từ commandData JSON để hẹn giờ tự tắt
+    // Đọc thời gian từ commandData JSON để hẹn giờ tự tắt
     if (data.length() > 0) {
-      StaticJsonDocument<256> dataDoc;
+      StaticJsonDocument<512> dataDoc;
       if (deserializeJson(dataDoc, data) == DeserializationError::Ok) {
-        int durMin = dataDoc["durationMinutes"] | 0;
-        if (durMin > 0) {
-          relayRemainingMs = (unsigned long)durMin * 60000UL;
-          lastLoopMs = millis();
-          Serial.printf("[TIMER] Tu tat sau %d phut\n", durMin);
+        int durMin  = dataDoc["durationMinutes"] | 0;
+        int seconds = dataDoc["seconds"] | 0;
+        bool isResume = dataDoc["isResume"] | false;
+
+        if (seconds > 0) {
+           relayRemainingMs = (unsigned long)seconds * 1000UL;
+           Serial.printf("[TIMER] Tu tat sau %d giay (Resume)\n", seconds);
+        } else if (durMin > 0) {
+           relayRemainingMs = (unsigned long)durMin * 60000UL;
+           Serial.printf("[TIMER] Tu tat sau %d phut\n", durMin);
+        }
+        
+        lastLoopMs = millis();
+        if (isResume) {
+          sendLog("info", "Resume may rua sau khi reboot");
         }
       }
     }
@@ -579,9 +689,11 @@ void fetchCommands() {
 // ========== WIFI KẾT NỐI & AP ==========
 
 void startAP() {
+  if (isAPActive) return; // Đã bật rồi thì thôi
   String apSSID = "ACW_Setup_" + String(cfg_device_id);
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(apSSID.c_str(), DEFAULT_AP_PASSWORD);
+  isAPActive = true;
   Serial.println("[WIFI] Auto-AP Started");
   Serial.printf("  SSID: %s\n", apSSID.c_str());
   Serial.printf("  PASS: %s\n", DEFAULT_AP_PASSWORD);
@@ -602,6 +714,8 @@ void connectWifi() {
   Serial.println();
 
   if (WiFi.status() == WL_CONNECTED) {
+    lastWifiConnectedMs = millis();
+    isAPActive = false;
     Serial.print("[WIFI] Connected! IP: ");
     Serial.println(WiFi.localIP());
   } else {
@@ -655,5 +769,23 @@ void loop() {
   if (now - lastCommandMs > (unsigned long)cfg_cmd_interval_s * 1000UL) {
     lastCommandMs = now;
     fetchCommands();
+  }
+
+  // Giám sát kết nối WiFi
+  if (WiFi.status() == WL_CONNECTED) {
+    lastWifiConnectedMs = now;
+    if (isAPActive) {
+      // Nếu đã có lại WiFi nhà, có thể tắt AP sau một lúc hoặc cứ để đó.
+      // Ở đây ta cứ để đó để người dùng vẫn vào được qua AP nếu cần.
+      // Nhưng ta reset flag để không gọi startAP liên tục.
+    }
+  } else {
+    // Nếu mất kết nối quá 60 giây, tự động bật AP để sửa config
+    if (now - lastWifiConnectedMs > 60000UL) {
+      if (!isAPActive) {
+        Serial.println("[WIFI] Connection lost for 60s. Enabling AP...");
+        startAP();
+      }
+    }
   }
 }

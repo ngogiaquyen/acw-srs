@@ -37,25 +37,25 @@ export default async function TenantRevenuePage() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Doanh thu hôm nay</p>
-          <p className="mt-2 text-2xl font-bold">{formatCurrency(summary.revenueToday)}</p>
+      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+        <Card className="p-3 md:p-4 border-l-4 border-l-blue-500">
+          <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-wider font-semibold">Hôm nay</p>
+          <p className="mt-1 md:mt-2 text-lg md:text-2xl font-bold text-blue-600">{formatCurrency(summary.revenueToday)}</p>
         </Card>
 
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Tổng doanh thu</p>
-          <p className="mt-2 text-2xl font-bold">{formatCurrency(summary.totalRevenue)}</p>
+        <Card className="p-3 md:p-4 border-l-4 border-l-slate-400">
+          <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-wider font-semibold">Tổng doanh thu</p>
+          <p className="mt-1 md:mt-2 text-lg md:text-2xl font-bold">{formatCurrency(summary.totalRevenue)}</p>
         </Card>
 
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Giao dịch hôm nay</p>
-          <p className="mt-2 text-2xl font-bold">{summary.transactionsToday}</p>
+        <Card className="p-3 md:p-4 border-l-4 border-l-green-500">
+          <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-wider font-semibold">GD hôm nay</p>
+          <p className="mt-1 md:mt-2 text-lg md:text-2xl font-bold text-green-600">{summary.transactionsToday}</p>
         </Card>
 
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Tổng giao dịch</p>
-          <p className="mt-2 text-2xl font-bold">{summary.totalTransactions}</p>
+        <Card className="p-4 border-l-4 border-l-slate-400">
+          <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-wider font-semibold">Tổng giao dịch</p>
+          <p className="mt-1 md:mt-2 text-lg md:text-2xl font-bold">{summary.totalTransactions}</p>
         </Card>
       </div>
 

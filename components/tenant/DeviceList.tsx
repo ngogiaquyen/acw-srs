@@ -112,7 +112,7 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
   }
 
   return (
-    <Card className="p-4">
+    <Card className="p-3 md:p-6">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Input
           placeholder="Tìm theo Device ID, tên, firmware..."
@@ -122,8 +122,9 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
         />
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-250 text-sm">
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left">
               <th className="px-3 py-2">ID</th>
@@ -140,17 +141,14 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
           </thead>
           <tbody>
             {filtered.map((device) => (
-              <tr key={device.id} className="border-b">
-                <td className="px-3 py-3">#{device.id}</td>
+              <tr key={device.id} className="border-b hover:bg-slate-50 transition-colors">
+                <td className="px-3 py-3 text-xs text-muted-foreground">#{device.id}</td>
                 <td className="px-3 py-3 font-medium">{device.device_id}</td>
                 <td className="px-3 py-3">{device.name}</td>
                 <td className="px-3 py-3">
-                  <span className={isOnline(device.last_heartbeat) ? "text-green-600" : "text-gray-500"}>
-                    {isOnline(device.last_heartbeat) ? "Đang hoạt động" : "Offline"}
+                  <span className={isOnline(device.last_heartbeat) ? "text-green-600 font-medium" : "text-gray-400"}>
+                    {isOnline(device.last_heartbeat) ? "● Online" : "● Offline"}
                   </span>
-                  {device.last_ip && (
-                    <p className="text-xs text-muted-foreground">IP: {device.last_ip}</p>
-                  )}
                 </td>
                 <td className="px-3 py-3">
                   {(() => {
@@ -162,35 +160,37 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
                     );
                   })()}
                 </td>
-                <td className="px-3 py-3 text-muted-foreground">
+                <td className="px-3 py-3 text-xs text-muted-foreground">
                   {formatLastHeartbeat(device.last_heartbeat)}
                 </td>
-                <td className="px-3 py-3">{device.firmware_version ?? "-"}</td>
+                <td className="px-3 py-3 text-xs">{device.firmware_version ?? "-"}</td>
                 <td className="px-3 py-3">
                   {device.price_per_minute
                     ? `${Number(device.price_per_minute).toLocaleString("vi-VN")}đ`
                     : "-"}
                 </td>
                 <td className="px-3 py-3">
-                  <Badge variant={device.is_active ? "default" : "outline"}>
-                    {device.is_active ? "Đang kích hoạt" : "Vô hiệu hóa"}
+                  <Badge variant={device.is_active ? "default" : "outline"} className="text-[10px]">
+                    {device.is_active ? "Active" : "Disabled"}
                   </Badge>
                 </td>
                 <td className="px-3 py-3">
                   <div className="flex gap-2">
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`${deviceDetailBase}/${device.id}`}>Xem</Link>
+                    <Button asChild variant="outline" size="sm" className="h-8 w-8 p-0" title="Xem">
+                      <Link href={`${deviceDetailBase}/${device.id}`}>👁</Link>
                     </Button>
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`${deviceDetailBase}/${device.id}/edit`}>Sửa</Link>
+                    <Button asChild variant="outline" size="sm" className="h-8 w-8 p-0" title="Sửa">
+                      <Link href={`${deviceDetailBase}/${device.id}/edit`}>✎</Link>
                     </Button>
                     <Button
                       variant="destructive"
                       size="sm"
+                      className="h-8 w-8 p-0"
                       onClick={() => handleDelete(device.id)}
                       disabled={deletingId === device.id}
+                      title="Xóa"
                     >
-                      {deletingId === device.id ? "Đang xóa..." : "Xóa"}
+                      {deletingId === device.id ? "..." : "🗑"}
                     </Button>
                   </div>
                 </td>
@@ -200,8 +200,74 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
         </table>
       </div>
 
+      {/* Mobile Card View */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {filtered.map((device) => (
+          <div key={device.id} className="rounded-xl border bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-400">#{device.id}</span>
+                <h4 className="font-bold text-slate-800">{device.name}</h4>
+              </div>
+              <Badge variant={device.is_active ? "default" : "outline"}>
+                {device.is_active ? "Active" : "Disabled"}
+              </Badge>
+            </div>
+
+            <div className="space-y-2 text-sm mb-4">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Device ID:</span>
+                <span className="font-mono font-medium">{device.device_id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Trạng thái:</span>
+                <span className={isOnline(device.last_heartbeat) ? "text-green-600 font-bold" : "text-slate-400"}>
+                  {isOnline(device.last_heartbeat) ? "Đang hoạt động" : "Ngoại tuyến"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Thời gian còn lại:</span>
+                <span>
+                  {(() => {
+                    const secs = liveRemaining[device.id];
+                    return secs != null && secs > 0 ? (
+                      <CountdownTimer initialSeconds={secs} />
+                    ) : (
+                      <span className="text-slate-300">Không có</span>
+                    );
+                  })()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Lần cuối thấy:</span>
+                <span className="text-xs">{formatLastHeartbeat(device.last_heartbeat)}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 border-t pt-3">
+              <Button asChild variant="outline" className="w-full text-xs h-9">
+                <Link href={`${deviceDetailBase}/${device.id}`}>Xem chi tiết</Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full text-xs h-9">
+                <Link href={`${deviceDetailBase}/${device.id}/edit`}>Chỉnh sửa</Link>
+              </Button>
+              <Button
+                variant="destructive"
+                className="w-full text-xs h-9"
+                onClick={() => handleDelete(device.id)}
+                disabled={deletingId === device.id}
+              >
+                {deletingId === device.id ? "..." : "Xóa"}
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {filtered.length === 0 && (
-        <p className="py-6 text-center text-sm text-muted-foreground">Không có thiết bị phù hợp.</p>
+        <p className="py-12 text-center text-sm text-muted-foreground">
+          Không tìm thấy thiết bị nào phù hợp với từ khóa của bạn.
+        </p>
       )}
     </Card>
   );

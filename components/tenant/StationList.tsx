@@ -53,7 +53,7 @@ export function StationList({ stations }: StationListProps) {
   }
 
   return (
-    <Card className="p-4">
+    <Card className="p-3 md:p-6">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Input
           placeholder="Tìm theo tên trạm, địa chỉ..."

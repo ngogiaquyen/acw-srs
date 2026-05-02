@@ -142,7 +142,7 @@ export function DeviceControlPanel({ device: initialDevice, initialLogs }: Devic
         </p>
       </div>
 
-      <Card className="p-6">
+      <Card className="p-3 md:p-6">
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <Badge variant={isOfflineOver5m ? "destructive" : "secondary"}>
             {isOfflineOver5m ? "Offline > 5 phút" : "Ổn định"}
@@ -202,7 +202,7 @@ export function DeviceControlPanel({ device: initialDevice, initialLogs }: Devic
         </div>
       </Card>
 
-      <Card className="p-4">
+      <Card className="p-3 md:p-6">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-medium">Logs gần nhất</h3>
           {loadingLogs && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}

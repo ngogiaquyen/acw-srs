@@ -52,25 +52,25 @@ export default async function TenantDashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Doanh thu hôm nay</p>
-          <p className="mt-2 text-2xl font-bold">{formatCurrency(summary.revenueToday)}</p>
+      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+        <Card className="p-3 md:p-4">
+          <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-wider font-semibold">Doanh thu hôm nay</p>
+          <p className="mt-1 md:mt-2 text-lg md:text-2xl font-bold text-blue-600">{formatCurrency(summary.revenueToday)}</p>
         </Card>
 
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Giao dịch hôm nay</p>
-          <p className="mt-2 text-2xl font-bold">{summary.transactionsToday}</p>
+        <Card className="p-3 md:p-4">
+          <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-wider font-semibold">Giao dịch</p>
+          <p className="mt-1 md:mt-2 text-lg md:text-2xl font-bold">{summary.transactionsToday}</p>
         </Card>
 
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Thiết bị đang hoạt động</p>
-          <p className="mt-2 text-2xl font-bold">{onlineDevices}</p>
+        <Card className="p-3 md:p-4">
+          <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-wider font-semibold">Đang Online</p>
+          <p className="mt-1 md:mt-2 text-lg md:text-2xl font-bold text-green-600">{onlineDevices}</p>
         </Card>
 
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Tổng thiết bị</p>
-          <p className="mt-2 text-2xl font-bold">{devices.length}</p>
+        <Card className="p-3 md:p-4">
+          <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-wider font-semibold">Tổng thiết bị</p>
+          <p className="mt-1 md:mt-2 text-lg md:text-2xl font-bold">{devices.length}</p>
         </Card>
       </div>
 
