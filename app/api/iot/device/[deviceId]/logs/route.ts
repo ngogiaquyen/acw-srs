@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { createDeviceLog, type DeviceLogLevel } from "@/lib/db/device-logs";
-import { getDeviceById } from "@/lib/db/devices";
+import { getDeviceByDeviceId } from "@/lib/db/devices";
 
 interface Params {
   params: Promise<{
-    id: string;
+    deviceId: string;
   }>;
 }
 
@@ -17,14 +17,13 @@ interface DeviceLogPayload {
 const ALLOWED_LOG_LEVELS: DeviceLogLevel[] = ["info", "warning", "error"];
 
 export async function POST(request: Request, { params }: Params) {
-  const { id: idParam } = await params;
-  const deviceId = Number.parseInt(idParam, 10);
+  const { deviceId: deviceIdParam } = await params;
 
-  if (Number.isNaN(deviceId)) {
-    return NextResponse.json({ error: "ID thiết bị không hợp lệ" }, { status: 400 });
+  if (!deviceIdParam) {
+    return NextResponse.json({ error: "deviceId không hợp lệ" }, { status: 400 });
   }
 
-  const device = await getDeviceById(deviceId);
+  const device = await getDeviceByDeviceId(deviceIdParam);
   if (!device || !device.is_active) {
     return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
   }
@@ -41,7 +40,7 @@ export async function POST(request: Request, { params }: Params) {
     }
 
     const log = await createDeviceLog({
-      deviceId,
+      deviceId: device.id,
       logLevel: body.logLevel ?? "info",
       message: body.message,
       metadata: body.metadata ?? null,
@@ -49,7 +48,7 @@ export async function POST(request: Request, { params }: Params) {
 
     return NextResponse.json({ log }, { status: 201 });
   } catch (error) {
-    console.error("Error in POST /api/iot/device/[id]/logs:", error);
+    console.error("Error in POST /api/iot/device/[deviceId]/logs:", error);
     return NextResponse.json(
       { error: "Đã xảy ra lỗi khi gửi log từ thiết bị" },
       { status: 500 },

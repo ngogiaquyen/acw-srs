@@ -3,29 +3,28 @@ import {
   getPendingCommandsByDeviceId,
   markCommandsAsSent,
 } from "@/lib/db/device-commands";
-import { getDeviceById } from "@/lib/db/devices";
+import { getDeviceByDeviceId } from "@/lib/db/devices";
 
 interface Params {
   params: Promise<{
-    id: string;
+    deviceId: string;
   }>;
 }
 
 export async function GET(_request: Request, { params }: Params) {
-  const { id: idParam } = await params;
-  const deviceId = Number.parseInt(idParam, 10);
+  const { deviceId: deviceIdParam } = await params;
 
-  if (Number.isNaN(deviceId)) {
-    return NextResponse.json({ error: "ID thiết bị không hợp lệ" }, { status: 400 });
+  if (!deviceIdParam) {
+    return NextResponse.json({ error: "deviceId không hợp lệ" }, { status: 400 });
   }
 
-  const device = await getDeviceById(deviceId);
+  const device = await getDeviceByDeviceId(deviceIdParam);
 
   if (!device || !device.is_active) {
     return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
   }
 
-  const commands = await getPendingCommandsByDeviceId(deviceId, 20);
+  const commands = await getPendingCommandsByDeviceId(device.id, 20);
 
   await markCommandsAsSent(commands.map((command) => command.id));
 

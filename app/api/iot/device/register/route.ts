@@ -17,12 +17,14 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as RegisterPayload;
 
-    if (!body.deviceId || !body.tenantId || !body.name) {
+    if (!body.deviceId || !body.name) {
       return NextResponse.json(
-        { error: "deviceId, tenantId, name là bắt buộc" },
+        { error: "deviceId và name là bắt buộc" },
         { status: 400 },
       );
     }
+
+    const tenantId = body.tenantId ?? 1; // Default tenant ID
 
     const existed = await getDeviceByDeviceId(body.deviceId);
 
@@ -45,7 +47,7 @@ export async function POST(request: Request) {
     }
 
     const device = await createDevice({
-      tenantId: body.tenantId,
+      tenantId: tenantId,
       deviceId: body.deviceId,
       name: body.name,
       firmwareVersion: body.firmwareVersion ?? null,

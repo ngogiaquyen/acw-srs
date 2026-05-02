@@ -3,11 +3,11 @@ import {
   completeDeviceCommand,
   getDeviceCommandById,
 } from "@/lib/db/device-commands";
-import { getDeviceById } from "@/lib/db/devices";
+import { getDeviceByDeviceId } from "@/lib/db/devices";
 
 interface Params {
   params: Promise<{
-    id: string;
+    deviceId: string;
   }>;
 }
 
@@ -18,14 +18,13 @@ interface CommandResponsePayload {
 }
 
 export async function POST(request: Request, { params }: Params) {
-  const { id: idParam } = await params;
-  const deviceId = Number.parseInt(idParam, 10);
+  const { deviceId: deviceIdParam } = await params;
 
-  if (Number.isNaN(deviceId)) {
-    return NextResponse.json({ error: "ID thiết bị không hợp lệ" }, { status: 400 });
+  if (!deviceIdParam) {
+    return NextResponse.json({ error: "deviceId không hợp lệ" }, { status: 400 });
   }
 
-  const device = await getDeviceById(deviceId);
+  const device = await getDeviceByDeviceId(deviceIdParam);
 
   if (!device || !device.is_active) {
     return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
@@ -47,7 +46,7 @@ export async function POST(request: Request, { params }: Params) {
 
     const command = await getDeviceCommandById(body.commandId);
 
-    if (!command || command.device_id !== deviceId) {
+    if (!command || command.device_id !== device.id) {
       return NextResponse.json({ error: "Command không tồn tại" }, { status: 404 });
     }
 
@@ -59,7 +58,7 @@ export async function POST(request: Request, { params }: Params) {
 
     return NextResponse.json({ command: updated }, { status: 200 });
   } catch (error) {
-    console.error("Error in POST /api/iot/device/[id]/response:", error);
+    console.error("Error in POST /api/iot/device/[deviceId]/response:", error);
     return NextResponse.json(
       { error: "Đã xảy ra lỗi khi cập nhật phản hồi lệnh" },
       { status: 500 },

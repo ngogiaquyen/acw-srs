@@ -10,16 +10,15 @@
 #define RELAY_ACTIVE_LOW false // true: LOW=ON, false: HIGH=ON
 
 // ========== GIÁ TRỊ MẶC ĐỊNH ==========
-#define DEFAULT_WIFI_SSID       "XOM TRO BAT ON 5"
-#define DEFAULT_WIFI_PASSWORD   "khongchodau@"
-#define DEFAULT_SERVER_BASE     "http://192.168.1.91:3000"
+#define DEFAULT_WIFI_SSID       "GIA QUYEN 2.4G"
+#define DEFAULT_WIFI_PASSWORD   "diem2025"
+#define DEFAULT_SERVER_BASE     "http://192.168.1.3:3000"
 #define DEFAULT_DEVICE_ID       "1"
 #define DEFAULT_DEVICE_NAME     "May rua ESP32"
 #define DEFAULT_FIRMWARE_VER    "1.0.0"
-#define DEFAULT_TENANT_ID       1
-#define DEFAULT_DEVICE_DB_ID    1
 #define DEFAULT_HB_INTERVAL_S   30
 #define DEFAULT_CMD_INTERVAL_S  5
+#define DEFAULT_AP_PASSWORD     "12345678"
 
 // ========== CẦU HÌNH RUNTIME (đọc từ NVS) ==========
 char cfg_wifi_ssid[64];
@@ -28,8 +27,6 @@ char cfg_server_base[128];
 char cfg_device_id[64];
 char cfg_device_name[64];
 char cfg_firmware_ver[32];
-int  cfg_tenant_id;
-int  cfg_device_db_id;
 int  cfg_hb_interval_s;
 int  cfg_cmd_interval_s;
 char cfg_web_username[128];
@@ -71,8 +68,6 @@ void loadConfig() {
   prefs.getString("firmware_ver",  cfg_firmware_ver,  sizeof(cfg_firmware_ver));
   if (strlen(cfg_firmware_ver) == 0) strlcpy(cfg_firmware_ver, DEFAULT_FIRMWARE_VER, sizeof(cfg_firmware_ver));
 
-  cfg_tenant_id      = prefs.getInt("tenant_id",      DEFAULT_TENANT_ID);
-  cfg_device_db_id   = prefs.getInt("device_db_id",   DEFAULT_DEVICE_DB_ID);
   cfg_hb_interval_s  = prefs.getInt("hb_interval_s",  DEFAULT_HB_INTERVAL_S);
   cfg_cmd_interval_s = prefs.getInt("cmd_interval_s",  DEFAULT_CMD_INTERVAL_S);
 
@@ -88,8 +83,6 @@ void loadConfig() {
   Serial.printf("  WiFi SSID:      %s\n", cfg_wifi_ssid);
   Serial.printf("  Server:         %s\n", cfg_server_base);
   Serial.printf("  Device ID:      %s\n", cfg_device_id);
-  Serial.printf("  Tenant ID:      %d\n", cfg_tenant_id);
-  Serial.printf("  Device DB ID:   %d\n", cfg_device_db_id);
   Serial.printf("  HB Interval:    %ds\n", cfg_hb_interval_s);
   Serial.printf("  CMD Interval:   %ds\n", cfg_cmd_interval_s);
 }
@@ -102,8 +95,6 @@ void saveConfig() {
   prefs.putString("device_id",    cfg_device_id);
   prefs.putString("device_name",  cfg_device_name);
   prefs.putString("firmware_ver", cfg_firmware_ver);
-  prefs.putInt("tenant_id",       cfg_tenant_id);
-  prefs.putInt("device_db_id",    cfg_device_db_id);
   prefs.putInt("hb_interval_s",   cfg_hb_interval_s);
   prefs.putInt("cmd_interval_s",  cfg_cmd_interval_s);
   prefs.putString("web_user",     cfg_web_username);
@@ -114,7 +105,7 @@ void saveConfig() {
 
 // ========== WEB CONFIG SERVER ==========
 
-static const char CONFIG_HTML[] PROGMEM = R"ACWHTML(
+static const char CONFIG_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -146,11 +137,21 @@ static const char CONFIG_HTML[] PROGMEM = R"ACWHTML(
   .ok{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
   .err{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
   .ip{font-size:12px;color:#888;margin-top:6px}
+  .status-box{padding:12px;border-radius:8px;margin-bottom:16px;font-size:14px;line-height:1.5}
+  .status-ok{background:#e6fffa;color:#2c7a7b;border:1px solid #b2f5ea}
+  .status-err{background:#fff5f5;color:#c53030;border:1px solid #fed7d7}
 </style>
 </head>
 <body>
-<h2>&#9881; ACW ESP32 Cấu hình123</h2>
-<p class="sub">Thay đổi rồi nhấn <b>Lưu &amp; Khởi động lại</b></p>
+<h2>⚙️ ACW ESP32 Cấu hình</h2>
+<p class="sub">Thay đổi rồi nhấn <b>Lưu & Khởi động lại</b></p>
+
+<div class="status-box {{status_class}}">
+  <b>📊 Trạng thái hiện tại:</b><br>
+  • WiFi: {{status_wifi}}<br>
+  • Server: {{status_server}}
+</div>
+
 <form id="f" method="POST" action="/save">
 
   <fieldset>
@@ -161,7 +162,7 @@ static const char CONFIG_HTML[] PROGMEM = R"ACWHTML(
     <label>Mật khẩu
       <div class="pw-wrap">
         <input type="password" id="wifi_pass" name="wifi_pass" value="{{wifi_pass}}" maxlength="63">
-        <button type="button" class="pw-eye" onclick="togglePw('wifi_pass',this)" title="Hiện/ẩn mật khẩu">&#128065;</button>
+        <button type="button" class="pw-eye" onclick="togglePw('wifi_pass',this)" title="Hiện/ẩn mật khẩu">👁</button>
       </div>
     </label>
   </fieldset>
@@ -169,14 +170,13 @@ static const char CONFIG_HTML[] PROGMEM = R"ACWHTML(
   <fieldset>
     <legend>Server Backend</legend>
     <label>Server Base URL
-      <input type="text" name="server_base" value="{{server_base}}" maxlength="127"
-             placeholder="http://192.168.1.x:3000">
+      <input type="text" name="server_base" value="{{server_base}}" maxlength="127" placeholder="http://192.168.1.x:3000">
     </label>
   </fieldset>
 
   <fieldset>
-    <legend>Thiết bị</legend>
-    <label>Device ID (chuỗi device_id trong DB)
+    <legend>Thiết thiết bị</legend>
+    <label>Device ID
       <input type="text" name="device_id" value="{{device_id}}" maxlength="63">
     </label>
     <label>Tên thiết bị
@@ -185,67 +185,74 @@ static const char CONFIG_HTML[] PROGMEM = R"ACWHTML(
     <label>Firmware Version
       <input type="text" name="firmware_ver" value="{{firmware_ver}}" maxlength="31">
     </label>
-    <div class="row">
-      <div style="flex:1">
-        <label>Tenant ID
-          <input type="number" name="tenant_id" value="{{tenant_id}}" min="1">
-        </label>
-      </div>
-      <div style="flex:1">
-        <label>Device DB ID
-          <input type="number" name="device_db_id" value="{{device_db_id}}" min="1">
-        </label>
-      </div>
-    </div>
   </fieldset>
 
   <fieldset>
     <legend>Thời gian lặp</legend>
     <div class="row">
-      <div style="flex:1">
-        <label>Heartbeat (giây)
-          <input type="number" name="hb_interval_s" value="{{hb_interval_s}}" min="5" max="3600">
-        </label>
-      </div>
-      <div style="flex:1">
-        <label>Lấy lệnh (giây)
-          <input type="number" name="cmd_interval_s" value="{{cmd_interval_s}}" min="1" max="60">
-        </label>
-      </div>
+      <div style="flex:1"><label>Heartbeat (giây) <input type="number" name="hb_interval_s" value="{{hb_interval_s}}" min="5" max="3600"></label></div>
+      <div style="flex:1"><label>Lấy lệnh (giây) <input type="number" name="cmd_interval_s" value="{{cmd_interval_s}}" min="1" max="60"></label></div>
     </div>
   </fieldset>
 
-  <button type="submit">&#128190; Lưu &amp; Khởi động lại</button>
+  <button type="submit">💾 Lưu & Khởi động lại</button>
 </form>
 
 <div class="ip">IP hiện tại: {{local_ip}} &nbsp;|&nbsp; Truy cập: http://{{local_ip}}/</div>
 <div class="msg ok" id="ok">Đã lưu! ESP32 đang khởi động lại...</div>
 <div class="msg err" id="err">Lỗi khi lưu.</div>
+
 <script>
-  const p = new URLSearchParams(location.search);
-  if(p.get('saved')==='1') { document.getElementById('ok').style.display='block'; }
-  if(p.get('err')==='1')   { document.getElementById('err').style.display='block'; }
   function togglePw(id,btn){
-    const inp=document.getElementById(id);
-    const show=inp.type==='password';
-    inp.type=show?'text':'password';
-    btn.style.color=show?'#1a73e8':'#888';
+    const inp = document.getElementById(id);
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    btn.textContent = show ? '🙈' : '👁';
   }
 </script>
 </body>
 </html>
-)ACWHTML";
+)rawliteral";
 
 String buildConfigPage() {
   String html = String(CONFIG_HTML);
+
+  // Kiểm tra trạng thái WiFi
+  String statusWifi = (WiFi.status() == WL_CONNECTED) ? "✅ Đã kết nối (" + WiFi.localIP().toString() + ")" : "❌ Chưa kết nối";
+  String statusServer = "Chờ kiểm tra...";
+  String statusClass = "status-ok";
+
+  // Kiểm tra trạng thái Server
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    // Thử gửi một request nhanh tới server
+    String checkUrl = String(cfg_server_base) + "/api/iot/device/heartbeat";
+    http.begin(checkUrl);
+    http.setTimeout(2000); // Timeout 2s để không treo trang web
+    int code = http.GET(); // Chỉ kiểm tra khả năng kết nối
+    
+    if (code > 0) {
+      statusServer = "✅ Đã thấy Server (HTTP " + String(code) + ")";
+    } else {
+      statusServer = "❌ Lỗi kết nối: " + HTTPClient::errorToString(code);
+      statusClass = "status-err";
+    }
+    http.end();
+  } else {
+    statusServer = "⚠️ Đợi WiFi kết nối...";
+    statusClass = "status-err";
+  }
+
+  html.replace("{{status_wifi}}",   statusWifi);
+  html.replace("{{status_server}}", statusServer);
+  html.replace("{{status_class}}",  statusClass);
+
   html.replace("{{wifi_ssid}}",     String(cfg_wifi_ssid));
   html.replace("{{wifi_pass}}",     String(cfg_wifi_password));
   html.replace("{{server_base}}",   String(cfg_server_base));
   html.replace("{{device_id}}",     String(cfg_device_id));
   html.replace("{{device_name}}",   String(cfg_device_name));
   html.replace("{{firmware_ver}}",  String(cfg_firmware_ver));
-  html.replace("{{tenant_id}}",     String(cfg_tenant_id));
-  html.replace("{{device_db_id}}",  String(cfg_device_db_id));
   html.replace("{{hb_interval_s}}", String(cfg_hb_interval_s));
   html.replace("{{cmd_interval_s}}",String(cfg_cmd_interval_s));
   html.replace("{{local_ip}}",      WiFi.localIP().toString());
@@ -253,10 +260,16 @@ String buildConfigPage() {
 }
 
 bool checkWebAuth() {
-  // Nếu chưa được cấu hình credentials (chưa push từ server), khóa hoàn toàn
+  // Nếu chưa kết nối WiFi (đang ở chế độ AP/Setup), cho phép vào thẳng để cấu hình
+  if (WiFi.status() != WL_CONNECTED) {
+    return true;
+  }
+
+  // Nếu đã kết nối WiFi, yêu cầu mật khẩu để bảo mật
+  // Nếu chưa được cấu hình credentials từ server, khóa để bảo vệ
   if (strlen(cfg_web_username) == 0 || strlen(cfg_web_password) == 0) {
     configServer.send(403, "text/plain; charset=utf-8",
-      "Truy cap bi tu choi. Credentials chua duoc cau hinh. Lien he Super Admin.");
+      "Truy cap bi tu choi. Credentials chua duoc cau hinh tu Server.");
     return false;
   }
   if (!configServer.authenticate(cfg_web_username, cfg_web_password)) {
@@ -291,12 +304,6 @@ void handleConfigSave() {
 
   if (configServer.hasArg("firmware_ver") && configServer.arg("firmware_ver").length() > 0)
     strlcpy(cfg_firmware_ver, configServer.arg("firmware_ver").c_str(), sizeof(cfg_firmware_ver));
-
-  if (configServer.hasArg("tenant_id"))
-    cfg_tenant_id = configServer.arg("tenant_id").toInt();
-
-  if (configServer.hasArg("device_db_id"))
-    cfg_device_db_id = configServer.arg("device_db_id").toInt();
 
   if (configServer.hasArg("hb_interval_s"))
     cfg_hb_interval_s = max(5, (int)configServer.arg("hb_interval_s").toInt());
@@ -357,10 +364,9 @@ bool httpPostJson(const String& url, const String& body, String* respOut = nullp
 
 // ========== ĐĂNG KÝ THIẾT BỊ ==========
 
-bool registerDevice() {
+void registerDevice() {
   StaticJsonDocument<256> doc;
   doc["deviceId"]        = cfg_device_id;
-  doc["tenantId"]        = cfg_tenant_id;
   doc["name"]            = cfg_device_name;
   doc["firmwareVersion"] = cfg_firmware_ver;
 
@@ -371,7 +377,6 @@ bool registerDevice() {
   String resp;
   bool ok = httpPostJson(url, body, &resp);
   Serial.printf("[REGISTER] ok=%d, resp=%s\n", ok, resp.c_str());
-  return ok;
 }
 
 // ========== HEARTBEAT ==========
@@ -401,7 +406,7 @@ void sendLog(const char* level, const char* message) {
   String body;
   serializeJson(doc, body);
 
-  String url = String(cfg_server_base) + "/api/iot/device/" + String(cfg_device_db_id) + "/logs";
+  String url = String(cfg_server_base) + "/api/iot/device/" + String(cfg_device_id) + "/logs";
   String resp;
   bool ok = httpPostJson(url, body, &resp);
   Serial.printf("[LOG] ok=%d, resp=%s\n", ok, resp.c_str());
@@ -418,7 +423,7 @@ void sendCommandResponse(int commandId, bool okExec, const char* msg) {
   String body;
   serializeJson(doc, body);
 
-  String url = String(cfg_server_base) + "/api/iot/device/" + String(cfg_device_db_id) + "/response";
+  String url = String(cfg_server_base) + "/api/iot/device/" + String(cfg_device_id) + "/response";
   String resp;
   bool ok = httpPostJson(url, body, &resp);
   Serial.printf("[CMD-RESP] ok=%d, resp=%s\n", ok, resp.c_str());
@@ -544,7 +549,7 @@ void fetchCommands() {
   if (WiFi.status() != WL_CONNECTED) return;
 
   HTTPClient http;
-  String url = String(cfg_server_base) + "/api/iot/device/" + String(cfg_device_db_id) + "/commands";
+  String url = String(cfg_server_base) + "/api/iot/device/" + String(cfg_device_id) + "/commands";
   http.begin(url);
   int code = http.GET();
   String payload = http.getString();
@@ -571,15 +576,25 @@ void fetchCommands() {
   }
 }
 
-// ========== WIFI KẾT NỐI ==========
+// ========== WIFI KẾT NỐI & AP ==========
+
+void startAP() {
+  String apSSID = "ACW_Setup_" + String(cfg_device_id);
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.softAP(apSSID.c_str(), DEFAULT_AP_PASSWORD);
+  Serial.println("[WIFI] Auto-AP Started");
+  Serial.printf("  SSID: %s\n", apSSID.c_str());
+  Serial.printf("  PASS: %s\n", DEFAULT_AP_PASSWORD);
+  Serial.println("  URL:  http://192.168.4.1/");
+}
 
 void connectWifi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(cfg_wifi_ssid, cfg_wifi_password);
-  Serial.printf("Connecting to WiFi %s", cfg_wifi_ssid);
+  Serial.printf("[WIFI] Connecting to %s", cfg_wifi_ssid);
 
   int retry = 0;
-  while (WiFi.status() != WL_CONNECTED && retry < 40) {
+  while (WiFi.status() != WL_CONNECTED && retry < 30) { // Đợi tối đa 15s
     delay(500);
     Serial.print(".");
     retry++;
@@ -587,10 +602,11 @@ void connectWifi() {
   Serial.println();
 
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.print("WiFi connected, IP: ");
+    Serial.print("[WIFI] Connected! IP: ");
     Serial.println(WiFi.localIP());
   } else {
-    Serial.println("WiFi connect failed");
+    Serial.println("[WIFI] Connect failed. Starting AP mode...");
+    startAP();
   }
 }
 
@@ -604,8 +620,9 @@ void setup() {
   loadConfig();
   connectWifi();
 
+  startConfigServer(); // Luôn khởi động server để có thể cấu hình qua IP hoặc AP
+
   if (WiFi.status() == WL_CONNECTED) {
-    startConfigServer();
     registerDevice();
     sendLog("info", "ESP32 started & registered");
   }
