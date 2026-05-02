@@ -143,7 +143,11 @@ export function TenantList({ tenants }: TenantListProps) {
         </div>
 
         <Button asChild>
-          <Link href="/super-admin/tenants/new">Tạo tenant mới</L      {/* Desktop Table View */}
+          <Link href="/super-admin/tenants/new">Tạo tenant mới</Link>
+        </Button>
+      </div>
+
+      {/* Desktop Table View */}
       <div className="hidden lg:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
