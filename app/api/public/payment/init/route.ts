@@ -5,23 +5,15 @@ import { initPayment, type TenantSePayConfig } from "@/lib/payment/sepay";
 
 interface InitPaymentPayload {
   deviceId?: string;
-  amount?: number;
 }
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as InitPaymentPayload;
 
-    if (!body.deviceId || body.amount === undefined) {
+    if (!body.deviceId) {
       return NextResponse.json(
-        { error: "deviceId và amount là bắt buộc" },
-        { status: 400 },
-      );
-    }
-
-    if (body.amount <= 0) {
-      return NextResponse.json(
-        { error: "Số tiền phải lớn hơn 0" },
+        { error: "deviceId là bắt buộc" },
         { status: 400 },
       );
     }
@@ -34,14 +26,6 @@ export async function POST(request: Request) {
     if (!device.price_per_minute || device.price_per_minute <= 0) {
       return NextResponse.json(
         { error: "Thiết bị chưa thiết lập giá/phút" },
-        { status: 400 },
-      );
-    }
-
-    const addedMinutes = Math.floor(body.amount / device.price_per_minute);
-    if (addedMinutes <= 0) {
-      return NextResponse.json(
-        { error: "Số tiền không đủ để sử dụng thiết bị" },
         { status: 400 },
       );
     }
@@ -67,7 +51,7 @@ export async function POST(request: Request) {
 
     const payment = initPayment(
       {
-        amount: body.amount,
+        amount: 0,
         transferContent,
       },
       tenantSePayConfig,
@@ -76,12 +60,13 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         paymentUrl: payment.paymentUrl,
+        // Static QR does not represent a payment session; keep this field for backward compatibility.
         paymentTransactionId: payment.paymentTransactionId,
         transferContent,
         paymentCode: transferContent,
         deviceId: device.device_id,
-        amount: body.amount,
-        addedMinutes,
+        pricePerMinute: device.price_per_minute,
+        mode: "static_qr",
       },
       { status: 200 },
     );

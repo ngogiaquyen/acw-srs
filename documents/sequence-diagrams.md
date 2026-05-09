@@ -128,20 +128,24 @@ sequenceDiagram
     W-->>A: 6. Hiển thị Form với thông tin cũ
 
     A->>W: 7. Chỉnh sửa thông tin và bấm "Cập nhật tenant"
+    W->>B: 8. Gửi dữ liệu (PUT /api/super-admin/tenants/{id})
+    B->>B: 9. Kiểm tra dữ liệu (Validate)
 
-    alt Thông tin không hợp lệ (Trống hoặc sai định dạng)
-        Note over W: Browser hoặc Web chặn lại
-        W-->>A: 7.1 Hiển thị lỗi các trường tương ứng
-    else Thông tin hợp lệ
-        W->>B: 8. Gửi dữ liệu (PUT /api/super-admin/tenants/{id})
+    alt Dữ liệu không hợp lệ
+        B-->>W: 9.1 Phản hồi lỗi (400 Bad Request)
+        W-->>A: 9.2 Hiển thị thông báo lỗi
+    else Dữ liệu hợp lệ
+        B->>D: 10. Cập nhật thông tin vào DB (UPDATE)
 
         alt Lỗi cập nhật (False)
-            B-->>W: 9.1 Phản hồi lỗi (404/500)
-            W-->>A: 10.1 Hiển thị thông báo thất bại
+            D-->>B: 10.1 Trả về lỗi
+            B-->>W: 11.1 Phản hồi lỗi (404/500)
+            W-->>A: 12.1 Hiển thị thông báo thất bại
         else Thành công (True)
-            B-->>W: 9.2 Phản hồi thành công (200 OK)
-            W->>W: 10.2 Điều hướng về trang chi tiết
-            W-->>A: 11.2 Hiển thị trang chi tiết đã cập nhật
+            D-->>B: 10.2 Xác nhận thành công
+            B-->>W: 11.2 Phản hồi thành công (200 OK)
+            W->>W: 12.2 Điều hướng về trang chi tiết
+            W-->>A: 13.2 Hiển thị trang chi tiết đã cập nhật
         end
     end
 ```
@@ -206,42 +210,126 @@ sequenceDiagram
 ### UC-3.2: Xem doanh thu
 ```mermaid
 sequenceDiagram
-    participant U as Người dùng
-    participant W as Revenue Page (Web)
-    participant B as Controller (Backend)
-    participant D as Model (Database)
+    participant U as User
+    participant W as Revenue Page
+    participant B as Backend (API)
+    participant D as Database
 
-    U->>W: 1. Chọn bộ lọc thời gian
-    W->>B: 2. GET /api/revenue
-    B->>D: 3. Query DB
-    D-->>B: 4. Trả về số liệu
-    B-->>W: 5. JSON dữ liệu biểu đồ
-    W-->>U: 6. Vẽ biểu đồ và cập nhật thẻ tổng kết
+    U->>W: 1. Truy cập & Lựa chọn khoảng thời gian
+    W->>B: 2. Yêu cầu truy xuất dữ liệu (GET /api/tenant/revenue)
+    B->>B: 3. Xác thực & Kiểm tra quyền truy cập (Middleware)
+    
+    B->>D: 4. Truy vấn tổng hợp doanh thu (Aggregate Query)
+    D-->>B: 5. Trả về tập dữ liệu thô (Raw Data)
+    
+    B->>B: 6. Xử lý & Chuẩn hóa dữ liệu (Data Processing)
+    B-->>W: 7. Phản hồi dữ liệu JSON (200 OK)
+    
+    W->>W: 8. Khởi tạo biểu đồ & Gán dữ liệu (Recharts)
+    W-->>U: 9. Hiển thị Dashboard & Cập nhật các chỉ số (Stats Cards)
 ```
+
+
 
 ---
 
 ### UC-3.3: Gửi báo cáo doanh thu
 ```mermaid
 sequenceDiagram
-    participant A as Admin
-    participant W as Report Page (Web)
-    participant B as Controller (Backend)
+    participant U as User (Admin/Tenant)
+    participant W as Report Page
+    participant B as Backend (API)
+    participant D as Database
     participant M as Mail Service
 
-    A->>W: 1. Bấm nút "Gửi báo cáo"
-    W-->>A: 2. Hiển thị Popup
-    A->>W: 3. Điền thông tin và bấm "Gửi"
-    W->>B: 4. POST /api/revenue/report
+    U->>W: 1. Bấm nút "Gửi báo cáo"
+    W-->>U: 2. Hiển thị Popup cấu hình (Email, Thời gian)
+    U->>W: 3. Điền thông tin và bấm "Gửi"
+    W->>B: 4. Yêu cầu khởi tạo báo cáo (POST /api/revenue/report)
     
-    alt Gửi thất bại (False)
-        B-->>W: 5.1 Lỗi Mail Service (500)
-        W-->>A: 6.1 Thông báo lỗi gửi email
-    else Thành công (True)
-        B-->>W: 5.2 Phản hồi thành công (200 OK)
-        W-->>A: 6.2 Thông báo báo cáo đã gửi
+    B->>B: 5. Xác thực & Phân lọc phạm vi dữ liệu (Middleware)
+    B->>D: 6. Truy vấn dữ liệu doanh thu tương ứng (Aggregate Data)
+    D-->>B: 7. Trả về tập dữ liệu (Dataset)
+    
+    B->>B: 8. Tổng hợp & Tạo nội dung báo cáo (Generate Content)
+    
+    B->>M: 9. Gửi yêu cầu chuyển tiếp Email (Send Mail)
+    
+    alt Gửi thất bại
+        M-->>B: 10.1 Phản hồi lỗi từ Mail Server
+        B-->>W: 11.1 Phản hồi lỗi hệ thống (500)
+        W-->>U: 12.1 Thông báo lỗi gửi email
+    else Thành công
+        M-->>B: 10.2 Xác nhận gửi thành công
+        B-->>W: 11.2 Phản hồi thành công (200 OK)
+        W-->>U: 12.2 Thông báo báo cáo đã gửi tới Email
     end
 ```
+
+### UC-3.4: Xem danh sách giao dịch
+```mermaid
+sequenceDiagram
+    participant U as Người dùng
+    participant W as Transaction Page (Web)
+    participant B as Controller (Backend)
+    participant D as Model (Database)
+
+    U->>W: 1. Truy cập trang Lịch sử giao dịch
+    W->>B: 2. Lấy CurrentUser từ cookies và kiểm tra quyền tenant
+    B->>D: 3. Truy vấn danh sách giao dịch theo tenantId (getTransactionsByTenantId)
+
+    alt Lỗi hệ thống (False)
+        D-->>B: 4.1 Trả về lỗi Database
+        B-->>W: 5.1 Thông báo lỗi lấy dữ liệu (500)
+        W-->>U: 6.1 Hiển thị thông báo tải giao dịch thất bại
+    else Thành công (True)
+        D-->>B: 4.2 Trả về danh sách giao dịch kèm thông tin thiết bị
+        B-->>W: 5.2 Trả về dữ liệu cho page
+        W->>W: 6. Render TransactionList (Table desktop / Card mobile)
+        W-->>U: 7. Hiển thị danh sách giao dịch
+    end
+
+    opt Không có giao dịch
+        W-->>U: 8. Hiển thị thông báo "Chưa có giao dịch"
+    end
+```
+
+### UC-3.5: Xuất file thống kê
+```mermaid
+sequenceDiagram
+    participant U as Người dùng
+    participant W as Revenue Page (Web)
+    participant B as Controller (Backend)
+    participant D as Model (Database)
+
+    U->>W: 1. Chọn khoảng thời gian và bấm "Xuất file thống kê"
+    W->>B: 2. Lấy CurrentUser từ cookies và kiểm tra quyền tenant
+    B->>D: 3. Truy vấn dữ liệu thống kê (Summary + Analytics)
+
+    alt Lỗi hệ thống (False)
+        D-->>B: 4.1 Trả về lỗi Database
+        B-->>W: 5.1 Thông báo lỗi xuất file (500)
+        W-->>U: 6.1 Hiển thị thông báo xuất file thất bại
+    else Thành công (True)
+        D-->>B: 4.2 Trả về dữ liệu thống kê
+        B->>B: 5.2 Tạo file xuất (CSV/PDF)
+
+        alt Tạo file thất bại
+            B-->>B: 6.1 Phát sinh lỗi tạo file
+            B-->>W: 7.1 Thông báo lỗi xuất file (500)
+            W-->>U: 8.1 Hiển thị thông báo xuất file thất bại
+        else Tạo file thành công
+            B-->>B: 6.2 Tạo buffer/file đã xuất
+            B-->>W: 7.2 Phản hồi file download (attachment)
+            W->>W: 8.2 Trình duyệt tải file về máy
+            W-->>U: 9.2 Hiển thị thông báo xuất file thành công
+        end
+    end
+```
+
+
+
+
 
 ---
 
@@ -256,12 +344,106 @@ sequenceDiagram
     participant D as Model (Database)
 
     U->>W: 1. Truy cập tab Thiết bị
-    W->>B: 2. GET /api/device
-    B->>D: 3. Truy vấn DB
-    D-->>B: 4. Trả về danh sách
-    B->>B: 5. Tính Online/Offline
-    B-->>W: 6. Trả về JSON kèm status
-    W-->>U: 7. Hiển thị danh sách thiết bị
+    W->>B: 2. Server component lấy CurrentUser từ cookies và kiểm tra quyền tenant
+    B->>D: 3. Truy vấn danh sách thiết bị theo tenantId (getDevicesByTenantId)
+
+    alt Lỗi hệ thống (False)
+        D-->>B: 4.1 Trả về lỗi Database
+        B-->>W: 5.1 Thông báo lỗi lấy dữ liệu thiết bị (500)
+        W-->>U: 6.1 Hiển thị thông báo tải danh sách thất bại
+    else Thành công (True)
+        D-->>B: 4.2 Trả về danh sách thiết bị
+        B-->>W: 5.2 Truyền dữ liệu vào DeviceList
+        W->>W: 6. Tính Online/Offline từ last_heartbeat trên frontend
+        W->>B: 7. Poll /api/tenant/devices/remaining để cập nhật thời gian còn lại
+        B-->>W: 8. Trả về remaining seconds
+        W-->>U: 9. Hiển thị danh sách thiết bị và trạng thái hiện tại
+    end
+```
+
+### UC-5.3: Thêm thiết bị
+```mermaid
+sequenceDiagram
+    participant U as Người dùng
+    participant W as Device Page (Web)
+    participant B as Controller (Backend)
+    participant D as Model (Database)
+
+    U->>W: 1. Bấm "Thêm thiết bị mới"
+    W-->>U: 2. Hiển thị form nhập (MAC Address, Tên, Chọn trạm)
+    U->>W: 3. Điền thông tin và bấm "Lưu"
+    W->>B: 4. Gửi POST /api/tenant/devices (payload: MAC, name, station)
+    B->>D: 5. Kiểm tra trùng MAC và lưu vào DB
+
+    alt MAC trùng lặp
+        D-->>B: 6.a Trả về lỗi (409)
+        B-->>W: 7.a Phản hồi lỗi "MAC ID không hợp lệ"
+        W-->>U: 8.a Hiển thị lỗi trên form
+    else Tạo thành công
+        D-->>B: 6. Trả về device mới
+        B-->>W: 7. Phản hồi thành công (201)
+        W-->>U: 8. Hiển thị thông báo thêm thành công
+    end
+```
+
+### UC-5.4: Sửa cấu hình thiết bị
+```mermaid
+sequenceDiagram
+    participant U as Người dùng
+    participant W as Device Page (Web)
+    participant B as Controller (Backend)
+    participant D as Model (Database)
+
+    U->>W: 1. Bấm nút "Sửa" cho thiết bị
+    W->>B: 2. Lấy dữ liệu hiện tại (GET /api/tenant/devices/{id})
+    B->>D: 3. Truy vấn theo id
+    D-->>B: 4. Trả về dữ liệu thiết bị
+    B-->>W: 5. Hiển thị form với dữ liệu cũ
+
+    U->>W: 6. Chỉnh sửa (tên, giá/phút...) và bấm "Cập nhật"
+    W->>B: 7. Gửi PUT /api/tenant/devices/{id}
+    B->>B: 8. Validate dữ liệu (vd. giá >= 0)
+
+    alt Dữ liệu không hợp lệ
+        B-->>W: 9.a Trả về lỗi 400 (ví dụ: Đơn giá phải lớn hơn 0)
+        W-->>U: 10.a Hiển thị lỗi trên form
+    else Cập nhật thành công
+        B->>D: 9. Cập nhật vào DB
+        D-->>B: 10. Trả về thiết bị đã cập nhật
+        B-->>W: 11. Phản hồi thành công (200)
+        W-->>U: 12. Hiển thị thông báo cập nhật thành công
+    end
+```
+
+### UC-5.5: Xóa thiết bị
+```mermaid
+sequenceDiagram
+    participant U as Người dùng
+    participant W as Device Page (Web)
+    participant B as Controller (Backend)
+    participant D as Model (Database)
+
+    U->>W: 1. Bấm "Xóa" trên dòng thiết bị
+    W-->>U: 2. Hiển thị popup xác nhận
+    alt Người dùng bấm "Hủy"
+        U->>W: 3.1 Bấm "Hủy"
+        W-->>U: 4.1 Đóng popup, giữ nguyên danh sách thiết bị
+    else Người dùng bấm "Xác nhận"
+        U->>W: 3.2 Xác nhận xóa
+        W->>B: 4.2 Gửi DELETE /api/tenant/devices/{id}
+        B->>D: 5.2 Kiểm tra trạng thái thiết bị (BUSY/ACTIVE)
+
+        alt Thiết bị đang BUSY
+            D-->>B: 6.a Trả về trạng thái BUSY
+            B-->>W: 7.a Phản hồi lỗi (400) - không cho xóa
+            W-->>U: 8.a Hiển thị thông báo "Hãy chờ chu kỳ hoàn tất"
+        else Có thể xóa
+            D->>D: 6.2 Xóa bản ghi device (cấu trúc dữ liệu liên quan giữ lại)
+            D-->>B: 7.2 Xác nhận xóa
+            B-->>W: 8.2 Phản hồi thành công (200)
+            W-->>U: 9.2 Hiển thị thông báo xóa thành công
+        end
+    end
 ```
 
 ---
@@ -272,43 +454,34 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant C as Khách hàng
-    participant W as Payment Page (Web)
     participant B as Controller (Backend)
     participant SP as SePay (Bank Gateway)
     participant D as Model (Database)
     participant IOT as ESP32 (IoT Device)
 
-    C->>W: 1. Quét mã QR tại trạm
-    W->>B: 2. GET /api/public/device/{id}
-    B-->>W: 3. Hiển thị các gói dịch vụ
-    
-    C->>W: 4. Chọn gói và bấm "Thanh toán"
-    W->>B: 5. Tạo giao dịch PENDING
-    B-->>W: 6. Hiển thị QR Code ngân hàng
-    
-    C->>SP: 7. Khách hàng chuyển khoản
-    SP->>B: 8. Webhook báo biến động số dư
-    
-    alt Thanh toán sai (False)
-        B->>D: 9.1 Cập nhật Transaction = FAILED
-        W-->>C: 10.1 Thông báo lỗi thanh toán
-    else Thanh toán đúng (True)
-        B->>D: 9.2 Cập nhật Transaction = COMPLETED
-        B->>D: 10.2 Tạo lệnh START trong DB
-        W-->>C: 11.2 Thông báo thành công
-        
-        IOT->>B: 12. ESP32 fetch lệnh mới
-        B->>D: 13. Tìm lệnh PENDING
-        D-->>B: 14. Trả về lệnh START + Timer
-        B-->>IOT: 15. Gửi JSON lệnh cho ESP32
-        
-        IOT->>IOT: 16. Bật Relay (Máy bơm chạy)
-        IOT->>B: 17. Cập nhật Command = EXECUTED
-        
-        IOT->>IOT: 18. Chạy Countdown Timer
+    C->>SP: 1. Quét QR cố định của thiết bị và chuyển khoản
+    SP->>B: 2. Webhook gửi giao dịch (kèm mã tham chiếu thiết bị)
+    B->>D: 3. Đối chiếu thiết bị theo mã tham chiếu
+
+    alt Không tìm thấy thiết bị hoặc sai số tiền
+        B->>D: 4.1 Ghi nhận giao dịch lỗi (FAILED)
+        B-->>SP: 5.1 Phản hồi lỗi xác thực giao dịch
+    else Giao dịch hợp lệ
+        B->>D: 4.2 Lưu giao dịch COMPLETED
+        B->>D: 5.2 Tạo lệnh START cho thiết bị
+
+        IOT->>B: 6. ESP32 fetch lệnh mới
+        B->>D: 7. Tìm lệnh PENDING
+        D-->>B: 8. Trả về lệnh START + Timer
+        B-->>IOT: 9. Gửi JSON lệnh cho ESP32
+
+        IOT->>IOT: 10. Bật Relay (Máy bơm chạy)
+        IOT->>B: 11. Cập nhật Command = EXECUTED
+
+        IOT->>IOT: 12. Chạy Countdown Timer
         Note over IOT: Hết thời gian
-        IOT->>IOT: 19. Tắt Relay (Máy bơm dừng)
-        IOT->>B: 20. Báo cáo trạng thái = STOPPED
+        IOT->>IOT: 13. Tắt Relay (Máy bơm dừng)
+        IOT->>B: 14. Báo cáo trạng thái = STOPPED
     end
 ```
 

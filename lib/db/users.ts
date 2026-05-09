@@ -71,3 +71,12 @@ export async function createUser(input: CreateUserInput): Promise<UserRecord> {
   return created;
 }
 
+export async function updateUserPassword(email: string, passwordHash: string): Promise<boolean> {
+  const [result] = await pool.query(
+    "UPDATE users SET password_hash = ? WHERE email = ?",
+    [passwordHash, email]
+  );
+  const updateResult = result as { affectedRows: number };
+  return updateResult.affectedRows > 0;
+}
+
