@@ -64,10 +64,7 @@ export default async function TenantDeviceDetailPage({ params }: Props) {
               <DeviceCountdown deviceId={device.id} initialSeconds={remainingSeconds} />
             </dd>
           </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">Firmware</dt>
-            <dd className="font-medium">{device.firmware_version ?? "-"}</dd>
-          </div>
+
           <div>
             <dt className="text-xs text-muted-foreground">Giá mỗi phút</dt>
             <dd className="font-medium">

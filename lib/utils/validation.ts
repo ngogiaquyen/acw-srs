@@ -16,7 +16,10 @@ export interface TenantPayload {
   sepayBankCode?: string | null;
   sepayAccountName?: string | null;
   sepayWebhookSecret?: string | null;
+  // Admin credentials
+  adminPassword?: string;
 }
+
 
 export interface StationPayload {
   name?: string;
@@ -98,6 +101,15 @@ export function validateTenantPayload(
     if (Number.isNaN(d.getTime())) {
       errors.push("subscriptionEndDate không phải là ngày hợp lệ");
     }
+  }
+
+  // Admin credentials validation
+  if (isCreate && !payload.adminPassword) {
+    errors.push("Mật khẩu admin là bắt buộc");
+  }
+
+  if (payload.adminPassword && payload.adminPassword.length < 6) {
+    errors.push("Mật khẩu admin phải từ 6 ký tự trở lên");
   }
 
   return {

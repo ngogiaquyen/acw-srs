@@ -147,16 +147,6 @@ export function DeviceForm({ mode, deviceIdParam, initialData }: DeviceFormProps
 
 
           <div className="space-y-2">
-            <Label htmlFor="firmwareVersion">Firmware version</Label>
-            <Input
-              id="firmwareVersion"
-              value={formData.firmwareVersion}
-              readOnly
-              disabled
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="pricePerMinute">Giá mỗi phút (VNĐ)</Label>
             <Input
               id="pricePerMinute"

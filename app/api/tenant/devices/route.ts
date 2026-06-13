@@ -53,13 +53,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (user.role === "TENANT_ADMIN") {
-    return NextResponse.json(
-      { error: "Tenant không có quyền tạo thiết bị. Vui lòng liên hệ Super Admin." },
-      { status: 403 },
-    );
-  }
-
   try {
     const body = (await request.json()) as DevicePayload & {
       tenantId?: number;
@@ -91,6 +84,23 @@ export async function POST(request: Request) {
     }
 
     const tenantId = access.tenantId;
+
+    const { getTenantById } = await import("@/lib/db/tenants");
+    const tenant = await getTenantById(tenantId);
+    if (!tenant) {
+      return NextResponse.json({ error: "Tenant không tồn tại" }, { status: 404 });
+    }
+
+    // Check device limit for TENANT_ADMIN
+    if (user.role === "TENANT_ADMIN") {
+      const currentDevices = await getDevicesByTenantId(tenantId);
+      if (currentDevices.length >= tenant.license_max_devices) {
+        return NextResponse.json(
+          { error: `Số lượng thiết bị của bạn đã đạt giới hạn tối đa của giấy phép (${tenant.license_max_devices} thiết bị). Vui lòng liên hệ Super Admin để nâng cấp.` },
+          { status: 403 },
+        );
+      }
+    }
 
     const existed = await getDeviceByDeviceId(body.deviceId!);
     if (existed) {

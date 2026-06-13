@@ -52,10 +52,7 @@ export default async function SuperAdminDeviceDetailPage({ params }: Props) {
             <dt className="text-xs text-muted-foreground">Tên</dt>
             <dd className="font-medium">{device.name}</dd>
           </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">Firmware</dt>
-            <dd className="font-medium">{device.firmware_version ?? "-"}</dd>
-          </div>
+
           <div>
             <dt className="text-xs text-muted-foreground">Giá/phút</dt>
             <dd className="font-medium">

@@ -26,6 +26,8 @@ export interface TenantFormData {
   sepayBankCode: string;
   sepayAccountName: string;
   sepayWebhookSecret: string;
+  // Admin credentials
+  adminPassword: string;
 }
 
 interface TenantFormProps {
@@ -49,6 +51,7 @@ const defaultValues: TenantFormData = {
   sepayBankCode: "",
   sepayAccountName: "",
   sepayWebhookSecret: "",
+  adminPassword: "",
 };
 
 export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
@@ -83,6 +86,7 @@ export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
         sepayBankCode: formData.sepayBankCode || null,
         sepayAccountName: formData.sepayAccountName || null,
         sepayWebhookSecret: formData.sepayWebhookSecret || null,
+        adminPassword: formData.adminPassword || undefined,
       };
 
       const res = await fetch(endpoint, {
@@ -252,6 +256,28 @@ export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
             onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
             rows={3}
           />
+        </div>
+
+        <div className="rounded-md border p-4 space-y-4 bg-gray-50/50">
+          <h3 className="text-sm font-medium text-primary">Mật khẩu tài khoản quản trị (Tenant Admin)</h3>
+          <p className="text-xs text-muted-foreground -mt-2">
+            Tài khoản đăng nhập của tenant sẽ sử dụng tên và email của tenant ở trên.
+          </p>
+          <div className="space-y-2">
+            <Label htmlFor="adminPassword">
+              {mode === "create" ? "Mật khẩu quản trị" : "Mật khẩu quản trị mới (để trống nếu không đổi)"}
+            </Label>
+            <Input
+              id="adminPassword"
+              type="password"
+              value={formData.adminPassword}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, adminPassword: e.target.value }))
+              }
+              required={mode === "create"}
+              placeholder={mode === "create" ? "Tối thiểu 6 ký tự" : "Nhập mật khẩu mới để thay đổi"}
+            />
+          </div>
         </div>
 
         <div className="rounded-md border p-4 space-y-4">

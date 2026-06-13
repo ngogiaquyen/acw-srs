@@ -80,3 +80,38 @@ export async function updateUserPassword(email: string, passwordHash: string): P
   return updateResult.affectedRows > 0;
 }
 
+export async function updateOrCreateTenantAdmin(
+  tenantId: number,
+  input: { name: string; email: string; passwordHash?: string }
+): Promise<UserRecord> {
+  const existing = await findTenantAdminByTenantId(tenantId);
+  if (existing) {
+    const fields: string[] = ["name = ?", "email = ?"];
+    const values: unknown[] = [input.name, input.email];
+    if (input.passwordHash) {
+      fields.push("password_hash = ?");
+      values.push(input.passwordHash);
+    }
+    values.push(existing.id);
+    await pool.query(
+      `UPDATE users SET ${fields.join(", ")} WHERE id = ?`,
+      values
+    );
+    const updated = await findUserById(existing.id);
+    if (!updated) throw new Error("Không thể tìm thấy tài khoản admin vừa cập nhật");
+    return updated;
+  } else {
+    if (!input.passwordHash) {
+      throw new Error("Mật khẩu là bắt buộc khi tạo tài khoản admin mới");
+    }
+    return createUser({
+      email: input.email,
+      passwordHash: input.passwordHash,
+      role: "TENANT_ADMIN",
+      tenantId,
+      name: input.name,
+    });
+  }
+}
+
+

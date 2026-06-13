@@ -229,40 +229,6 @@ export function DeviceOtaPanel({
         </form>
       </Card>
 
-      {/* OTA Upload & Flash */}
-      <Card className="p-6 space-y-4">
-        <h3 className="font-semibold text-base">Cập nhật firmware (OTA)</h3>
-        <p className="text-xs text-muted-foreground">
-          Chọn file <code>.bin</code> từ máy. File sẽ được upload lên server, ESP tải về và tự flash rồi reboot.
-          File sẽ bị xóa ngay sau khi ESP tải xong (hoặc sau 30 phút nếu ESP không nhận).
-        </p>
-        <form className="space-y-4" onSubmit={handleUploadAndFlash}>
-          <div className="space-y-1">
-            <Label htmlFor="binFile">Chọn file firmware (.bin, tối đa 4 MB)</Label>
-            <input
-              ref={fileInputRef}
-              id="binFile"
-              type="file"
-              accept=".bin"
-              className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border file:border-input file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-muted cursor-pointer"
-              onChange={(e) => setOtaFile(e.target.files?.[0] ?? null)}
-            />
-            {otaFile && (
-              <p className="text-xs text-muted-foreground">
-                {otaFile.name} — {(otaFile.size / 1024).toFixed(1)} KB
-              </p>
-            )}
-          </div>
-          {otaMsg && (
-            <p className={`text-sm ${otaMsg.ok ? "text-green-600" : "text-red-500"}`}>
-              {otaMsg.text}
-            </p>
-          )}
-          <Button type="submit" disabled={otaLoading || !otaFile}>
-            {otaLoading ? "Đang upload & gửi lệnh..." : "🚀 Upload & Flash OTA"}
-          </Button>
-        </form>
-      </Card>
 
       {/* Command history */}
       <Card className="p-6 space-y-3">

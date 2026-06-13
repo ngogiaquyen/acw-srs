@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 
-export async function POST() {
-  const response = NextResponse.json(
-    { message: "Đăng xuất thành công" },
-    { status: 200 },
-  );
+export async function POST(request: Request) {
+  const response = NextResponse.redirect(new URL("/login", request.url), 303);
 
   response.headers.append(
     "Set-Cookie",
@@ -15,4 +12,5 @@ export async function POST() {
 
   return response;
 }
+
 

@@ -84,7 +84,7 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
   }, [devices]);
 
   const filtered = devices.filter((device) =>
-    [device.device_id, device.name, device.firmware_version ?? ""]
+    [device.device_id, device.name]
       .join(" ")
       .toLowerCase()
       .includes(keyword.trim().toLowerCase()),
@@ -115,11 +115,16 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
     <Card className="p-3 md:p-6">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Input
-          placeholder="Tìm theo Device ID, tên, firmware..."
+          placeholder="Tìm theo Device ID, tên..."
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           className="sm:max-w-md"
         />
+        {deviceDetailBase === "/tenant/devices" && (
+          <Button asChild>
+            <Link href="/tenant/devices/new">+ Thêm thiết bị</Link>
+          </Button>
+        )}
       </div>
 
       {/* Desktop Table View */}
@@ -133,7 +138,6 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
               <th className="px-3 py-2">Hoạt động</th>
               <th className="px-3 py-2">Còn lại</th>
               <th className="px-3 py-2">Lần cuối</th>
-              <th className="px-3 py-2">Firmware</th>
               <th className="px-3 py-2">Giá/phút</th>
               <th className="px-3 py-2">Kích hoạt</th>
               <th className="px-3 py-2">Thao tác</th>
@@ -163,7 +167,6 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
                 <td className="px-3 py-3 text-xs text-muted-foreground">
                   {formatLastHeartbeat(device.last_heartbeat)}
                 </td>
-                <td className="px-3 py-3 text-xs">{device.firmware_version ?? "-"}</td>
                 <td className="px-3 py-3">
                   {device.price_per_minute
                     ? `${Number(device.price_per_minute).toLocaleString("vi-VN")}đ`

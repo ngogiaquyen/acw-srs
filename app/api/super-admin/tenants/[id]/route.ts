@@ -47,7 +47,13 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Tenant không tồn tại" }, { status: 404 });
   }
 
-  return NextResponse.json({ tenant }, { status: 200 });
+  const { findTenantAdminByTenantId } = await import("@/lib/db/users");
+  const admin = await findTenantAdminByTenantId(id);
+
+  return NextResponse.json({
+    tenant,
+    admin: admin ? { name: admin.name, email: admin.email } : null
+  }, { status: 200 });
 }
 
 export async function PUT(request: Request, { params }: Params) {
@@ -71,7 +77,30 @@ export async function PUT(request: Request, { params }: Params) {
 
     if (!valid) {
       return NextResponse.json(
-        { error: "Dữ liệu không hợp lệ", details: errors },
+        { error: `Dữ liệu không hợp lệ: ${errors.join("; ")}`, details: errors },
+        { status: 400 },
+      );
+    }
+
+    const { findTenantAdminByTenantId, findUserByEmail, updateOrCreateTenantAdmin } = await import("@/lib/db/users");
+    const currentAdmin = await findTenantAdminByTenantId(id);
+
+    // Check if changing email and email is already taken
+    if (body.email) {
+      if (!currentAdmin || currentAdmin.email !== body.email) {
+        const existingUser = await findUserByEmail(body.email);
+        if (existingUser) {
+          return NextResponse.json(
+            { error: "Email này đã được sử dụng bởi một tài khoản khác" },
+            { status: 400 },
+          );
+        }
+      }
+    }
+
+    if (!currentAdmin && !body.adminPassword) {
+      return NextResponse.json(
+        { error: "Mật khẩu admin là bắt buộc khi tạo tài khoản quản trị mới" },
         { status: 400 },
       );
     }
@@ -102,6 +131,21 @@ export async function PUT(request: Request, { params }: Params) {
     if (!updated) {
       return NextResponse.json({ error: "Tenant không tồn tại" }, { status: 404 });
     }
+
+    // Sync admin user details (name, email, and password if provided)
+    const adminName = updated.name;
+    const adminEmail = updated.email;
+    let passwordHash: string | undefined;
+    if (body.adminPassword) {
+      const { hashPassword } = await import("@/lib/auth/password");
+      passwordHash = await hashPassword(body.adminPassword);
+    }
+
+    await updateOrCreateTenantAdmin(id, {
+      name: adminName,
+      email: adminEmail,
+      passwordHash,
+    });
 
     return NextResponse.json({ tenant: updated }, { status: 200 });
   } catch (error) {

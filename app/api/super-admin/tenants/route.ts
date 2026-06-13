@@ -9,6 +9,8 @@ import {
   validateTenantPayload,
   type TenantPayload,
 } from "@/lib/utils/validation";
+import { findUserByEmail, createUser } from "@/lib/db/users";
+import { hashPassword } from "@/lib/auth/password";
 
 async function ensureSuperAdmin() {
   const auth = await getCurrentUserFromCookies();
@@ -46,7 +48,16 @@ export async function POST(request: Request) {
 
     if (!valid) {
       return NextResponse.json(
-        { error: "Dữ liệu không hợp lệ", details: errors },
+        { error: `Dữ liệu không hợp lệ: ${errors.join("; ")}`, details: errors },
+        { status: 400 },
+      );
+    }
+
+    // Check if email is already used by another user
+    const existingUser = await findUserByEmail(body.email!);
+    if (existingUser) {
+      return NextResponse.json(
+        { error: "Email của tenant đã được sử dụng bởi một tài khoản khác" },
         { status: 400 },
       );
     }
@@ -74,6 +85,23 @@ export async function POST(request: Request) {
 
     const tenant = await createTenant(input);
 
+    try {
+      const passwordHash = await hashPassword(body.adminPassword!);
+      await createUser({
+        email: body.email!,
+        passwordHash,
+        role: "TENANT_ADMIN",
+        tenantId: tenant.id,
+        name: body.name!,
+      });
+    } catch (userError) {
+      console.error("Error creating tenant admin, rolling back tenant creation:", userError);
+      // Clean up the created tenant since the admin account creation failed
+      const { pool } = await import("@/lib/db/connection");
+      await pool.query("DELETE FROM tenants WHERE id = ?", [tenant.id]);
+      throw userError;
+    }
+
     return NextResponse.json({ tenant }, { status: 201 });
   } catch (error) {
     console.error("Error in POST /api/super-admin/tenants:", error);
@@ -83,4 +111,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
 

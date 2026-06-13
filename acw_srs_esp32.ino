@@ -11,8 +11,9 @@
 
 // ========== GIÁ TRỊ MẶC ĐỊNH ==========
 #define DEFAULT_WIFI_SSID       "GIA QUYEN 2.4G"
-#define DEFAULT_WIFI_PASSWORD   "diem2025"
-#define DEFAULT_SERVER_BASE     "http://192.168.1.3:3000"
+#define DEFAULT_WIFI_PASSWORD   "diem20255"
+// #define DEFAULT_SERVER_BASE     "http://192.168.1.3:3000"
+#define DEFAULT_SERVER_BASE     "https://wash.wyndev.space"
 #define DEFAULT_DEVICE_ID       "1"
 #define DEFAULT_DEVICE_NAME     "May rua ESP32"
 #define DEFAULT_FIRMWARE_VER    "1.0.0"
@@ -701,12 +702,16 @@ void startAP() {
 }
 
 void connectWifi() {
-  WiFi.mode(WIFI_STA);
+  // Luôn luôn khởi động chế độ AP để người dùng có thể cấu hình bất kỳ lúc nào
+  startAP();
+
+  WiFi.mode(WIFI_AP_STA); // Đảm bảo chế độ vừa phát AP, vừa thu STA
   WiFi.begin(cfg_wifi_ssid, cfg_wifi_password);
   Serial.printf("[WIFI] Connecting to %s", cfg_wifi_ssid);
 
   int retry = 0;
-  while (WiFi.status() != WL_CONNECTED && retry < 30) { // Đợi tối đa 15s
+  // Đợi tối đa 15s
+  while (WiFi.status() != WL_CONNECTED && retry < 30) {
     delay(500);
     Serial.print(".");
     retry++;
@@ -715,12 +720,10 @@ void connectWifi() {
 
   if (WiFi.status() == WL_CONNECTED) {
     lastWifiConnectedMs = millis();
-    isAPActive = false;
     Serial.print("[WIFI] Connected! IP: ");
     Serial.println(WiFi.localIP());
   } else {
-    Serial.println("[WIFI] Connect failed. Starting AP mode...");
-    startAP();
+    Serial.println("[WIFI] Connect failed. AP mode is already active.");
   }
 }
 

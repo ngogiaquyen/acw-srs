@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { TenantForm } from "@/components/super-admin/TenantForm";
 import { getTenantById } from "@/lib/db/tenants";
+import { findTenantAdminByTenantId } from "@/lib/db/users";
 
 interface Props {
   params: Promise<{
@@ -31,6 +32,8 @@ export default async function SuperAdminEditTenantPage({ params }: Props) {
     notFound();
   }
 
+  const admin = await findTenantAdminByTenantId(id);
+
   return (
     <div className="space-y-4">
       <div>
@@ -58,8 +61,10 @@ export default async function SuperAdminEditTenantPage({ params }: Props) {
           sepayBankCode: tenant.sepay_bank_code ?? "",
           sepayAccountName: tenant.sepay_account_name ?? "",
           sepayWebhookSecret: tenant.sepay_webhook_secret ?? "",
+          adminPassword: "",
         }}
       />
     </div>
   );
 }
+
