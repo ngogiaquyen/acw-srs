@@ -86,15 +86,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const addedMinutes = Math.floor(transferAmount / device.price_per_minute);
+    const addedSeconds = Math.round((transferAmount / device.price_per_minute) * 60);
 
-    if (addedMinutes <= 0) {
+    if (addedSeconds <= 0) {
       return NextResponse.json(
         { error: "Số tiền không đủ để sử dụng thiết bị" },
         { status: 400 },
       );
     }
 
+    const addedMinutes = Math.floor(transferAmount / device.price_per_minute);
     const activeTransaction = await getActiveTransactionByDeviceId(device.id);
 
     // Mỗi lần chuyển khoản luôn tạo transaction mới (hiển thị riêng trong danh sách)
@@ -119,6 +120,8 @@ export async function POST(request: Request) {
       commandData: {
         transactionId: transaction.id,
         durationMinutes: transaction.duration_minutes,
+        seconds: addedSeconds,
+        addedSeconds,
         addedMinutes,
         amount: transferAmount,
         paymentCode,
@@ -134,6 +137,7 @@ export async function POST(request: Request) {
         deviceId: device.device_id,
         paymentCode,
         addedMinutes,
+        addedSeconds,
         transaction,
         command,
       },

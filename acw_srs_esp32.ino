@@ -606,8 +606,16 @@ void handleCommand(const String& type, const String& data, int cmdId) {
       StaticJsonDocument<256> dataDoc;
       if (deserializeJson(dataDoc, data) == DeserializationError::Ok) {
         int addMin = dataDoc["addedMinutes"] | 0;
-        if (addMin > 0) {
-          unsigned long addMs = (unsigned long)addMin * 60000UL;
+        int addSec = dataDoc["addedSeconds"] | 0;
+        
+        unsigned long addMs = 0;
+        if (addSec > 0) {
+          addMs = (unsigned long)addSec * 1000UL;
+        } else if (addMin > 0) {
+          addMs = (unsigned long)addMin * 60000UL;
+        }
+
+        if (addMs > 0) {
           if (relayRemainingMs == 0) {
             // Relay đang tắt (hết giờ trước đó), bật lại và đặt timer mới
             relayOn();
@@ -619,7 +627,7 @@ void handleCommand(const String& type, const String& data, int cmdId) {
             relayRemainingMs += addMs;
             sendLog("info", "Da cong don them thoi gian");
           }
-          Serial.printf("[TIMER] Cong them %d phut, con lai ~%lu giay\n", addMin, relayRemainingMs / 1000);
+          Serial.printf("[TIMER] Cong them %lu giay, con lai ~%lu giay\n", addMs / 1000, relayRemainingMs / 1000);
         }
       }
     }

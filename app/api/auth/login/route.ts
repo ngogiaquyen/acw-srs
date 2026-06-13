@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 
     const user = await findUserByEmail(email);
 
-    if (!user || !user.is_active) {
+    if (!user || !user.is_active || (user.role === "TENANT_ADMIN" && !user.tenant_id)) {
       return NextResponse.json(
         { error: "Tài khoản hoặc mật khẩu không đúng" },
         { status: 401 },

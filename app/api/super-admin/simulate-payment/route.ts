@@ -53,8 +53,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const addedMinutes = Math.floor(transferAmount / device.price_per_minute);
-    if (addedMinutes <= 0) {
+    const addedSeconds = Math.round((transferAmount / device.price_per_minute) * 60);
+    if (addedSeconds <= 0) {
       return NextResponse.json(
         {
           error: `Số tiền ${transferAmount.toLocaleString("vi-VN")}đ không đủ để sử dụng thiết bị (giá ${device.price_per_minute.toLocaleString("vi-VN")}đ/phút)`,
@@ -63,6 +63,7 @@ export async function POST(request: Request) {
       );
     }
 
+    const addedMinutes = Math.floor(transferAmount / device.price_per_minute);
     const activeTransaction = await getActiveTransactionByDeviceId(device.id);
 
     const simTxId = body.transactionId || `SIM-${Date.now()}`;
@@ -87,6 +88,8 @@ export async function POST(request: Request) {
       commandData: {
         transactionId: transaction.id,
         durationMinutes: transaction.duration_minutes,
+        seconds: addedSeconds,
+        addedSeconds,
         addedMinutes,
         amount: transferAmount,
         paymentCode,
@@ -96,12 +99,13 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: activeTransaction
-        ? `Đã cộng thêm ${addedMinutes} phút vào thiết bị đang chạy`
-        : `Đã khởi động thiết bị với ${addedMinutes} phút`,
+        ? `Đã cộng thêm ${addedSeconds} giây vào thiết bị đang chạy`
+        : `Đã khởi động thiết bị với ${addedSeconds} giây`,
       device: { id: device.id, name: device.name, device_id: device.device_id },
       paymentCode,
       transferAmount,
       addedMinutes,
+      addedSeconds,
       commandType,
       transactionId: transaction.id,
       commandId: command.id,
