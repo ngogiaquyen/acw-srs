@@ -2,6 +2,8 @@ import { Card } from "@/components/ui/card";
 import { RevenueChart } from "@/components/tenant/RevenueChart";
 import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
 import { getTenantRevenueAnalytics, getTenantRevenueSummary } from "@/lib/db/tenant-revenue";
+import { findUserById } from "@/lib/db/users";
+import { SendReportDialog } from "@/components/tenant/SendReportDialog";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("vi-VN", {
@@ -14,6 +16,13 @@ function formatCurrency(value: number) {
 export default async function TenantRevenuePage() {
   const auth = await getCurrentUserFromCookies();
   const tenantId = auth.isAuthenticated ? auth.user.tenantId : null;
+  const userId = auth.isAuthenticated ? auth.user.userId : null;
+
+  let userEmail = "";
+  if (userId) {
+    const userRecord = await findUserById(userId);
+    userEmail = userRecord?.email || "";
+  }
 
   const [summary, analytics] = tenantId
     ? await Promise.all([getTenantRevenueSummary(tenantId), getTenantRevenueAnalytics(tenantId, 30)])
@@ -30,11 +39,19 @@ export default async function TenantRevenuePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Doanh thu tenant</h2>
-        <p className="text-sm text-muted-foreground">
-          Tổng quan doanh thu và giao dịch của tenant.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Doanh thu người thuê</h2>
+          <p className="text-sm text-muted-foreground">
+            Tổng quan doanh thu và giao dịch của người thuê.
+          </p>
+        </div>
+        {auth.isAuthenticated && (
+          <SendReportDialog
+            endpoint="/api/tenant/revenue/report"
+            defaultEmail={userEmail}
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
