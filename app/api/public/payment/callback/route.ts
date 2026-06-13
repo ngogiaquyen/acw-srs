@@ -81,7 +81,7 @@ export async function POST(request: Request) {
 
     if (transferType === "out" || transferAmount <= 0) {
       return NextResponse.json(
-        { message: "Bỏ qua giao dịch không hợp lệ" },
+        { success: true, message: "Bỏ qua giao dịch không hợp lệ" },
         { status: 200 },
       );
     }
@@ -127,6 +127,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
+        success: true,
         message: activeTransaction
           ? "Đã tạo giao dịch mới và gửi lệnh add_time tới thiết bị"
           : "Đã tạo giao dịch và gửi lệnh start thiết bị",
