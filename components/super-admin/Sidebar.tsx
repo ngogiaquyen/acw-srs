@@ -17,7 +17,7 @@ const navItems: NavItem[] = [
   { href: "/super-admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/super-admin/tenants", label: "Người thuê", icon: Users },
   { href: "/super-admin/revenue", label: "Doanh thu", icon: BarChart },
-  { href: "/super-admin/simulate-payment", label: "Giả lập thanh toán", icon: Zap },
+  // { href: "/super-admin/simulate-payment", label: "Giả lập thanh toán", icon: Zap },
 ];
 
 export function SuperAdminSidebar({ user }: { user: any }) {
@@ -43,8 +43,8 @@ export function SuperAdminSidebar({ user }: { user: any }) {
 
       {/* Overlay */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/50 lg:hidden" 
+        <div
+          className="fixed inset-0 z-50 bg-black/50 lg:hidden"
           onClick={toggleSidebar}
         />
       )}
@@ -67,7 +67,7 @@ export function SuperAdminSidebar({ user }: { user: any }) {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href || (item.href !== "/super-admin/dashboard" && pathname.startsWith(`${item.href}/`));
-              
+
               return (
                 <Link
                   key={item.href}
@@ -75,8 +75,8 @@ export function SuperAdminSidebar({ user }: { user: any }) {
                   onClick={() => setIsOpen(false)}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
-                    isActive 
-                      ? "bg-blue-600 text-white font-medium" 
+                    isActive
+                      ? "bg-blue-600 text-white font-medium"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
