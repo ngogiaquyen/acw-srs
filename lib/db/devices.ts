@@ -81,12 +81,24 @@ export async function getDeviceByDeviceId(deviceId: string): Promise<DeviceRecor
 
 export async function getDeviceByPaymentCode(paymentCode: string): Promise<DeviceRecord | null> {
   const normalized = paymentCode.trim().toUpperCase();
-  const [rows] = await pool.query(
+  
+  // 1. Thử đối soát chính xác tuyệt đối (Exact Match)
+  const [exactRows] = await pool.query(
     "SELECT * FROM devices WHERE UPPER(payment_code) = ? AND is_active = 1 LIMIT 1",
     [normalized],
   );
-  const result = rows as DeviceRecord[];
-  return result[0] ?? null;
+  const exactResult = exactRows as DeviceRecord[];
+  if (exactResult[0]) {
+    return exactResult[0];
+  }
+
+  // 2. Thử đối soát khớp một phần (Substring Match - phòng trường hợp SePay tự động thêm tiền tố như SEVQR)
+  const [likeRows] = await pool.query(
+    "SELECT * FROM devices WHERE ? LIKE CONCAT('%', UPPER(payment_code), '%') AND is_active = 1 ORDER BY LENGTH(payment_code) DESC LIMIT 1",
+    [normalized],
+  );
+  const likeResult = likeRows as DeviceRecord[];
+  return likeResult[0] ?? null;
 }
 
 export async function getDeviceByIdAndTenantId(id: number, tenantId: number): Promise<DeviceRecord | null> {

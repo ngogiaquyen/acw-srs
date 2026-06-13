@@ -20,6 +20,7 @@ export interface DeviceItem {
   web_username: string | null;
   last_ip?: string | null;
   remainingSeconds?: number | null;
+  payment_code?: string | null;
 }
 
 interface DeviceListProps {
@@ -133,8 +134,9 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
           <thead>
             <tr className="border-b text-left">
               <th className="px-3 py-2">ID</th>
-              <th className="px-3 py-2">Device ID</th>
+              <th className="px-3 py-2">ID Thiết bị</th>
               <th className="px-3 py-2">Tên</th>
+              <th className="px-3 py-2">Mã thanh toán</th>
               <th className="px-3 py-2">Hoạt động</th>
               <th className="px-3 py-2">Còn lại</th>
               <th className="px-3 py-2">Lần cuối</th>
@@ -149,6 +151,15 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
                 <td className="px-3 py-3 text-xs text-muted-foreground">#{device.id}</td>
                 <td className="px-3 py-3 font-medium">{device.device_id}</td>
                 <td className="px-3 py-3">{device.name}</td>
+                <td className="px-3 py-3 font-mono font-semibold">
+                  {device.payment_code ? (
+                    <span className="bg-slate-100 text-slate-800 text-xs px-2 py-0.5 rounded border border-slate-200">
+                      {device.payment_code}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400 text-xs">—</span>
+                  )}
+                </td>
                 <td className="px-3 py-3">
                   <span className={isOnline(device.last_heartbeat) ? "text-green-600 font-medium" : "text-gray-400"}>
                     {isOnline(device.last_heartbeat) ? "● Online" : "● Offline"}
@@ -221,6 +232,18 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Device ID:</span>
                 <span className="font-mono font-medium">{device.device_id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Mã thanh toán:</span>
+                <span className="font-mono font-semibold">
+                  {device.payment_code ? (
+                    <span className="bg-slate-100 text-slate-800 text-xs px-2 py-0.5 rounded border border-slate-200">
+                      {device.payment_code}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 text-xs">—</span>
+                  )}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Trạng thái:</span>
