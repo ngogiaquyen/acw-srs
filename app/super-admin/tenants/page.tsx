@@ -6,12 +6,10 @@ export default async function SuperAdminTenantsPage() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Quản lý tenants</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Quản lý người thuê</h2>
         <p className="text-sm text-muted-foreground">
-          Danh sách tenant toàn hệ thống. Bạn có thể tạo mới, chỉnh sửa hoặc vô hiệu hóa tenant.
+          Danh sách người thuê toàn hệ thống. Bạn có thể tạo mới, chỉnh sửa hoặc vô hiệu hóa người thuê.
         </p>
-      </div>
 
       <TenantList tenants={tenants} />
     </div>

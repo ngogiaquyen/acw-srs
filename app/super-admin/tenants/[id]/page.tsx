@@ -64,9 +64,9 @@ export default async function SuperAdminTenantDetailPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Chi tiết tenant</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Chi tiết người thuê</h2>
         <p className="text-sm text-muted-foreground">
-          Xem thông tin chi tiết tenant và trạng thái subscription.
+          Xem thông tin chi tiết người thuê và chu kỳ hợp đồng.
         </p>
       </div>
 
@@ -75,10 +75,10 @@ export default async function SuperAdminTenantDetailPage({ params }: Props) {
       <div className="space-y-4">
         <div>
           <h3 className="text-xl font-semibold tracking-tight">
-            Thiết bị của tenant
+            Thiết bị của người thuê
           </h3>
           <p className="text-sm text-muted-foreground">
-            Danh sách thiết bị ESP32 mà tenant này đang quản lý.
+            Danh sách thiết bị ESP32 mà người thuê này đang quản lý.
           </p>
         </div>
         <DeviceList devices={devices} deviceDetailBase={`/super-admin/tenants/${id}/devices`} />

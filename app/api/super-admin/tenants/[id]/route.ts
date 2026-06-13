@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
 import {
   deactivateTenant,
+  deleteTenant,
   getTenantById,
   updateTenant,
   type UpdateTenantInput,
@@ -177,8 +178,8 @@ export async function DELETE(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Tenant không tồn tại" }, { status: 404 });
   }
 
-  await deactivateTenant(id);
+  await deleteTenant(id);
 
-  return NextResponse.json({ message: "Tenant đã được vô hiệu hóa" }, { status: 200 });
+  return NextResponse.json({ message: "Tenant đã được xóa khỏi hệ thống" }, { status: 200 });
 }
 

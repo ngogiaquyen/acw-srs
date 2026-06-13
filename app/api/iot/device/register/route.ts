@@ -40,6 +40,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           message: "Thiết bị đã tồn tại, cập nhật thông tin và heartbeat thành công",
+          clearCredentials: !existed.tenant_id,
           device: updated,
         },
         { status: 200 },

@@ -21,7 +21,17 @@ export async function GET(_request: Request, { params }: Params) {
   const device = await getDeviceByDeviceId(deviceIdParam);
 
   if (!device || !device.is_active) {
-    return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Thiết bị không tồn tại", clearCredentials: true },
+      { status: 404 },
+    );
+  }
+
+  if (!device.tenant_id) {
+    return NextResponse.json(
+      { error: "Người thuê không tồn tại", clearCredentials: true, commands: [], count: 0 },
+      { status: 200 },
+    );
   }
 
   const commands = await getPendingCommandsByDeviceId(device.id, 20);

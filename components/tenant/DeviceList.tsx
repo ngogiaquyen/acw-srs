@@ -121,9 +121,9 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
           onChange={(e) => setKeyword(e.target.value)}
           className="sm:max-w-md"
         />
-        {deviceDetailBase === "/tenant/devices" && (
+        {(deviceDetailBase === "/tenant/devices" || deviceDetailBase.startsWith("/super-admin/tenants/")) && (
           <Button asChild>
-            <Link href="/tenant/devices/new">+ Thêm thiết bị</Link>
+            <Link href={`${deviceDetailBase}/new`}>+ Thêm thiết bị</Link>
           </Button>
         )}
       </div>

@@ -22,6 +22,7 @@ interface DeviceFormProps {
   mode: "create" | "edit";
   deviceIdParam?: string;
   initialData?: Partial<DeviceFormData>;
+  tenantId?: number;
 }
 
 const defaultValues: DeviceFormData = {
@@ -35,7 +36,7 @@ const defaultValues: DeviceFormData = {
   isActive: true,
 };
 
-export function DeviceForm({ mode, deviceIdParam, initialData }: DeviceFormProps) {
+export function DeviceForm({ mode, deviceIdParam, initialData, tenantId }: DeviceFormProps) {
   const router = useRouter();
   const [formData, setFormData] = useState<DeviceFormData>({
     ...defaultValues,
@@ -67,6 +68,7 @@ export function DeviceForm({ mode, deviceIdParam, initialData }: DeviceFormProps
 
       const payload = {
         ...formData,
+        tenantId,
         firmwareVersion: formData.firmwareVersion || null,
         pricePerMinute: formData.pricePerMinute ? Number(formData.pricePerMinute) : null,
         paymentCode: formData.paymentCode || null,
@@ -87,9 +89,17 @@ export function DeviceForm({ mode, deviceIdParam, initialData }: DeviceFormProps
       }
 
       if (mode === "create") {
-        router.push("/tenant/devices");
+        if (tenantId) {
+          router.push(`/super-admin/tenants/${tenantId}`);
+        } else {
+          router.push("/tenant/devices");
+        }
       } else {
-        router.push(`/tenant/devices/${deviceIdParam}`);
+        if (tenantId) {
+          router.push(`/super-admin/tenants/${tenantId}/devices/${deviceIdParam}`);
+        } else {
+          router.push(`/tenant/devices/${deviceIdParam}`);
+        }
       }
       router.refresh();
     } catch (err) {
@@ -115,25 +125,26 @@ export function DeviceForm({ mode, deviceIdParam, initialData }: DeviceFormProps
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="paymentCode">Mã thanh toán (tự tạo theo PA1)</Label>
-            <div className="flex gap-2">
-              <Input
-                id="paymentCode"
-                value={formData.paymentCode || "Sẽ tự tạo sau khi lưu (DV{tenantId}{deviceId})"}
-                readOnly
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCopyPaymentCode}
-                disabled={!formData.paymentCode}
-              >
-                Copy
-              </Button>
+          {mode === "edit" && (
+            <div className="space-y-2">
+              <Label htmlFor="paymentCode">Mã thanh toán (tự tạo theo PA1)</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="paymentCode"
+                  value={formData.paymentCode || ""}
+                  readOnly
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCopyPaymentCode}
+                  disabled={!formData.paymentCode}
+                >
+                  Copy
+                </Button>
+              </div>
             </div>
-
-          </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="name">Tên thiết bị</Label>

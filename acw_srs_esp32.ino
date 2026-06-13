@@ -32,6 +32,7 @@ int  cfg_hb_interval_s;
 int  cfg_cmd_interval_s;
 char cfg_web_username[128];
 char cfg_web_password[128];
+bool cfg_auth_required = true;
 
 Preferences prefs;
 WebServer   configServer(80);
@@ -80,6 +81,8 @@ void loadConfig() {
   prefs.getString("web_pass", cfg_web_password, sizeof(cfg_web_password));
   // Không có default - credentials phải được push từ server
 
+  cfg_auth_required = prefs.getBool("auth_req", true);
+
   prefs.end();
 
   Serial.println("[CFG] Config loaded:");
@@ -102,6 +105,7 @@ void saveConfig() {
   prefs.putInt("cmd_interval_s",  cfg_cmd_interval_s);
   prefs.putString("web_user",     cfg_web_username);
   prefs.putString("web_pass",     cfg_web_password);
+  prefs.putBool("auth_req",       cfg_auth_required);
   prefs.end();
   Serial.println("[CFG] Config saved to NVS");
 }
@@ -366,6 +370,11 @@ bool checkWebAuth() {
     return true;
   }
 
+  // Nếu không yêu cầu đăng nhập cục bộ (do thiết bị hoặc người thuê bị xóa)
+  if (!cfg_auth_required) {
+    return true;
+  }
+
   // Nếu đã kết nối WiFi, yêu cầu mật khẩu để bảo mật
   // Nếu chưa được cấu hình credentials từ server, khóa để bảo vệ
   if (strlen(cfg_web_username) == 0 || strlen(cfg_web_password) == 0) {
@@ -463,6 +472,24 @@ bool httpPostJson(const String& url, const String& body, String* respOut = nullp
   return code >= 200 && code < 300;
 }
 
+// ========== KIỂM TRA PHẢN HỒI SERVER ==========
+void checkServerResponse(const String& payload) {
+  if (payload.length() == 0) return;
+  
+  DynamicJsonDocument doc(1024);
+  if (deserializeJson(doc, payload) == DeserializationError::Ok) {
+    if (doc.containsKey("clearCredentials") && doc["clearCredentials"].as<bool>() == true) {
+      if (cfg_auth_required || strlen(cfg_web_username) > 0 || strlen(cfg_web_password) > 0) {
+        cfg_web_username[0] = '\0';
+        cfg_web_password[0] = '\0';
+        cfg_auth_required = false;
+        saveConfig();
+        Serial.println("[CFG] Web authentication disabled by server (Device or Tenant deleted)");
+      }
+    }
+  }
+}
+
 // ========== ĐĂNG KÝ THIẾT BỊ ==========
 
 void registerDevice() {
@@ -478,6 +505,9 @@ void registerDevice() {
   String resp;
   bool ok = httpPostJson(url, body, &resp);
   Serial.printf("[REGISTER] ok=%d, resp=%s\n", ok, resp.c_str());
+  if (resp.length() > 0) {
+    checkServerResponse(resp);
+  }
 }
 
 // ========== HEARTBEAT ==========
@@ -495,6 +525,9 @@ void sendHeartbeat() {
   String resp;
   bool ok = httpPostJson(url, body, &resp);
   Serial.printf("[HEARTBEAT] ok=%d, resp=%s\n", ok, resp.c_str());
+  if (resp.length() > 0) {
+    checkServerResponse(resp);
+  }
 }
 
 // ========== GỬI LOG ==========
@@ -643,6 +676,7 @@ void handleCommand(const String& type, const String& data, int cmdId) {
           changed = true;
         }
         if (changed) {
+          cfg_auth_required = true;
           saveConfig();
           Serial.printf("[CFG] Web credentials updated: user=%s\n", cfg_web_username);
           sendLog("info", "Web credentials updated");
@@ -667,6 +701,9 @@ void fetchCommands() {
   http.end();
 
   Serial.printf("[CMD] GET %s -> %d\n", url.c_str(), code);
+  if (payload.length() > 0) {
+    checkServerResponse(payload);
+  }
   if (code != 200) return;
 
   StaticJsonDocument<2048> doc;

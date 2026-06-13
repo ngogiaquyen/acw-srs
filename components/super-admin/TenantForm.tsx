@@ -122,7 +122,7 @@ export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="name">Tên tenant</Label>
+            <Label htmlFor="name">Tên người thuê</Label>
             <Input
               id="name"
               value={formData.name}
@@ -168,6 +168,7 @@ export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
             />
           </div>
 
+          {/* Tạm thời ẩn trạng thái subscription
           <div className="space-y-2">
             <Label htmlFor="subscriptionStatus">Trạng thái subscription</Label>
             <select
@@ -186,6 +187,7 @@ export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
               <option value="expired">expired</option>
             </select>
           </div>
+          */}
 
           <div className="space-y-2">
             <Label htmlFor="allowExpiredAccess">Cho phép dùng khi hết hạn</Label>
@@ -205,6 +207,7 @@ export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
             </select>
           </div>
 
+          {/* Tạm thời ẩn trạng thái hoạt động
           <div className="space-y-2">
             <Label htmlFor="isActive">Hoạt động</Label>
             <select
@@ -222,6 +225,7 @@ export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
               <option value="false">Vô hiệu hóa</option>
             </select>
           </div>
+          */}
 
           <div className="space-y-2">
             <Label htmlFor="subscriptionStartDate">Ngày bắt đầu</Label>
@@ -259,9 +263,9 @@ export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
         </div>
 
         <div className="rounded-md border p-4 space-y-4 bg-gray-50/50">
-          <h3 className="text-sm font-medium text-primary">Mật khẩu tài khoản quản trị (Tenant Admin)</h3>
+          <h3 className="text-sm font-medium text-primary">Mật khẩu tài khoản quản trị (Quản trị người thuê)</h3>
           <p className="text-xs text-muted-foreground -mt-2">
-            Tài khoản đăng nhập của tenant sẽ sử dụng tên và email của tenant ở trên.
+            Tài khoản đăng nhập của người thuê sẽ sử dụng tên và email của người thuê ở trên.
           </p>
           <div className="space-y-2">
             <Label htmlFor="adminPassword">
@@ -340,8 +344,8 @@ export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
             {loading
               ? "Đang lưu..."
               : mode === "create"
-                ? "Tạo tenant"
-                : "Cập nhật tenant"}
+                ? "Tạo người thuê"
+                : "Cập nhật người thuê"}
           </Button>
           <Button
             type="button"

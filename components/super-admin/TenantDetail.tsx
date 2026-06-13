@@ -33,7 +33,7 @@ export function TenantDetail({ tenant }: TenantDetailProps) {
       <div className="mb-6 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold">{tenant.name}</h2>
-          <p className="text-sm text-muted-foreground">Tenant #{tenant.id}</p>
+          <p className="text-sm text-muted-foreground">Người thuê #{tenant.id}</p>
         </div>
 
         <Button asChild variant="outline">

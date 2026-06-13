@@ -85,6 +85,11 @@ export async function PUT(request: Request, { params }: Params) {
       );
     }
 
+    const existingDevice = await getDeviceById(id);
+    if (!existingDevice) {
+      return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
+    }
+
     if (user.role === "TENANT_ADMIN") {
       if (!user.tenantId) {
         return NextResponse.json(
@@ -93,16 +98,10 @@ export async function PUT(request: Request, { params }: Params) {
         );
       }
 
-      const owned = await getDeviceByIdAndTenantId(id, user.tenantId);
-      if (!owned) {
+      if (existingDevice.tenant_id !== user.tenantId) {
         return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
       }
-    } else if (user.role === "SUPER_ADMIN") {
-      const device = await getDeviceById(id);
-      if (!device) {
-        return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
-      }
-    } else {
+    } else if (user.role !== "SUPER_ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -120,6 +119,26 @@ export async function PUT(request: Request, { params }: Params) {
 
     if (!updated) {
       return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
+    }
+
+    // Auto-queue config command on credentials change
+    if (
+      updated.web_username !== existingDevice.web_username ||
+      updated.web_password !== existingDevice.web_password
+    ) {
+      try {
+        const { createDeviceCommand } = await import("@/lib/db/device-commands");
+        await createDeviceCommand({
+          deviceId: updated.id,
+          commandType: "config",
+          commandData: {
+            webUsername: updated.web_username,
+            webPassword: updated.web_password,
+          },
+        });
+      } catch (err) {
+        console.error("Failed to auto-queue config command on device update:", err);
+      }
     }
 
     return NextResponse.json({ device: updated }, { status: 200 });

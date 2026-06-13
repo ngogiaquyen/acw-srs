@@ -227,3 +227,7 @@ export async function deactivateTenant(id: number): Promise<void> {
   await pool.query("UPDATE tenants SET is_active = 0 WHERE id = ?", [id]);
 }
 
+export async function deleteTenant(id: number): Promise<void> {
+  await pool.query("DELETE FROM tenants WHERE id = ?", [id]);
+}
+

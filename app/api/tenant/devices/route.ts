@@ -121,6 +121,22 @@ export async function POST(request: Request) {
 
     const device = await createDevice(input);
 
+    if (device.web_username || device.web_password) {
+      try {
+        const { createDeviceCommand } = await import("@/lib/db/device-commands");
+        await createDeviceCommand({
+          deviceId: device.id,
+          commandType: "config",
+          commandData: {
+            webUsername: device.web_username,
+            webPassword: device.web_password,
+          },
+        });
+      } catch (err) {
+        console.error("Failed to auto-queue config command on device creation:", err);
+      }
+    }
+
     return NextResponse.json({ device }, { status: 201 });
   } catch (error) {
     console.error("Error in POST /api/tenant/devices:", error);

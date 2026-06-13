@@ -24,7 +24,7 @@ export async function TenantLayout({ children }: TenantLayoutProps) {
       <main className="flex-1">
         <header className="hidden lg:flex items-center justify-between border-b bg-white px-8 py-4">
           <div>
-            <h1 className="text-lg font-bold text-slate-800">Bảng điều khiển Tenant</h1>
+            <h1 className="text-lg font-bold text-slate-800">Bảng điều khiển người thuê</h1>
             <p className="text-xs text-slate-500">
               Quản lý trạm rửa xe và thiết bị của bạn
             </p>

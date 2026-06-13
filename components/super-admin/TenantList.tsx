@@ -36,19 +36,6 @@ interface TenantListProps {
 
 const ITEMS_PER_PAGE = 10;
 
-function getSubscriptionBadgeVariant(status: TenantItem["subscription_status"]) {
-  switch (status) {
-    case "active":
-      return "default" as const;
-    case "suspended":
-      return "secondary" as const;
-    case "expired":
-      return "destructive" as const;
-    default:
-      return "outline" as const;
-  }
-}
-
 export function TenantList({ tenants }: TenantListProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState("");
@@ -62,9 +49,9 @@ export function TenantList({ tenants }: TenantListProps) {
     return tenants.filter((tenant) => {
       const matchesKeyword = normalized
         ? [tenant.name, tenant.email, tenant.phone ?? ""]
-            .join(" ")
-            .toLowerCase()
-            .includes(normalized)
+          .join(" ")
+          .toLowerCase()
+          .includes(normalized)
         : true;
 
       const isActive = Boolean(tenant.is_active);
@@ -143,7 +130,7 @@ export function TenantList({ tenants }: TenantListProps) {
         </div>
 
         <Button asChild>
-          <Link href="/super-admin/tenants/new">Tạo tenant mới</Link>
+          <Link href="/super-admin/tenants/new">Tạo người thuê mới</Link>
         </Button>
       </div>
 
@@ -156,8 +143,7 @@ export function TenantList({ tenants }: TenantListProps) {
               <th className="px-3 py-2">Tên</th>
               <th className="px-3 py-2">Email</th>
               <th className="px-3 py-2">SĐT</th>
-              <th className="px-3 py-2">License</th>
-              <th className="px-3 py-2">Subscription</th>
+              <th className="px-3 py-2">Giới hạn thiết bị</th>
               <th className="px-3 py-2">Trạng thái</th>
               <th className="px-3 py-2">Thao tác</th>
             </tr>
@@ -170,11 +156,6 @@ export function TenantList({ tenants }: TenantListProps) {
                 <td className="px-3 py-3 text-xs">{tenant.email}</td>
                 <td className="px-3 py-3 text-xs">{tenant.phone ?? "-"}</td>
                 <td className="px-3 py-3">{tenant.license_max_devices}</td>
-                <td className="px-3 py-3">
-                  <Badge variant={getSubscriptionBadgeVariant(tenant.subscription_status)} className="text-[10px]">
-                    {tenant.subscription_status}
-                  </Badge>
-                </td>
                 <td className="px-3 py-3">
                   <Badge variant={tenant.is_active ? "default" : "outline"} className="text-[10px]">
                     {tenant.is_active ? "Active" : "Disabled"}
@@ -203,9 +184,9 @@ export function TenantList({ tenants }: TenantListProps) {
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Vô hiệu hóa tenant này?</AlertDialogTitle>
+                          <AlertDialogTitle>Vô hiệu hóa người thuê này?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Hành động này sẽ đặt tenant về trạng thái không hoạt động.
+                            Hành động này sẽ đặt người thuê về trạng thái không hoạt động.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -237,9 +218,6 @@ export function TenantList({ tenants }: TenantListProps) {
                 <h4 className="font-bold text-slate-800">{tenant.name}</h4>
               </div>
               <div className="flex gap-1">
-                <Badge variant={getSubscriptionBadgeVariant(tenant.subscription_status)} className="text-[10px]">
-                  {tenant.subscription_status}
-                </Badge>
                 <Badge variant={tenant.is_active ? "default" : "outline"} className="text-[10px]">
                   {tenant.is_active ? "Active" : "Disabled"}
                 </Badge>
@@ -283,7 +261,7 @@ export function TenantList({ tenants }: TenantListProps) {
 
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
-          Hiển thị {paginated.length} / {filtered.length} tenant
+          Hiển thị {paginated.length} / {filtered.length} người thuê
         </p>
 
         <div className="flex items-center gap-2">
@@ -311,7 +289,7 @@ export function TenantList({ tenants }: TenantListProps) {
 
       {filtered.length === 0 && (
         <p className="py-6 text-center text-sm text-muted-foreground">
-          Không có tenant phù hợp.
+          Không có người thuê phù hợp.
         </p>
       )}
     </Card>

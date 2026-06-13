@@ -33,7 +33,7 @@ export default async function SuperAdminDeviceDetailPage({ params }: Props) {
         <div>
           <div className="mb-1 text-sm text-muted-foreground">
             <Link href={`/super-admin/tenants/${tenantIdParam}`} className="hover:underline">
-              ← Quay lại tenant
+              ← Quay lại người thuê
             </Link>
           </div>
           <h2 className="text-2xl font-semibold tracking-tight">Chi tiết thiết bị</h2>

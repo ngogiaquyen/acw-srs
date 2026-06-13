@@ -15,7 +15,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: "/super-admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/super-admin/tenants", label: "Tenants", icon: Users },
+  { href: "/super-admin/tenants", label: "Người thuê", icon: Users },
   { href: "/super-admin/revenue", label: "Doanh thu", icon: BarChart },
   { href: "/super-admin/simulate-payment", label: "Giả lập thanh toán", icon: Zap },
 ];

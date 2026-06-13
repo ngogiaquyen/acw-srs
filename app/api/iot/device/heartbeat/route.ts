@@ -21,8 +21,16 @@ export async function POST(request: Request) {
 
     if (!device) {
       return NextResponse.json(
-        { error: "Thiết bị chưa được đăng ký" },
+        { error: "Thiết bị chưa được đăng ký", clearCredentials: true },
         { status: 404 },
+      );
+    }
+
+    if (!device.tenant_id) {
+      const updated = await updateDeviceHeartbeat(body.deviceId, undefined, body.localIp ?? null);
+      return NextResponse.json(
+        { error: "Người thuê không tồn tại", clearCredentials: true, device: updated },
+        { status: 200 },
       );
     }
 

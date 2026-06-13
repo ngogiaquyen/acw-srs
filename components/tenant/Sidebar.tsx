@@ -33,7 +33,7 @@ export function TenantSidebar({ user }: { user: any }) {
       <header className="sticky top-0 z-40 flex items-center justify-between border-b bg-white px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
           <Menu className="h-6 w-6 cursor-pointer" onClick={toggleSidebar} />
-          <span className="font-bold">Tenant Console</span>
+          <span className="font-bold">Bảng điều khiển người thuê</span>
         </div>
         <form action="/api/auth/logout" method="POST">
           <Button type="submit" variant="ghost" size="icon">
@@ -59,7 +59,7 @@ export function TenantSidebar({ user }: { user: any }) {
           <div className="mb-8 flex items-center justify-between px-2">
             <div>
               <h2 className="text-xl font-bold text-primary">ACW-SRS</h2>
-              <p className="text-xs text-muted-foreground">Tenant Admin Console</p>
+              <p className="text-xs text-muted-foreground">Quản trị người thuê</p>
             </div>
             <X className="h-6 w-6 cursor-pointer lg:hidden" onClick={toggleSidebar} />
           </div>
@@ -93,7 +93,7 @@ export function TenantSidebar({ user }: { user: any }) {
               User #{user.userId}
             </p>
             <p className="text-[10px] text-muted-foreground/60 mb-4">
-              Tenant #{user.tenantId}
+              Người thuê #{user.tenantId}
             </p>
             <form action="/api/auth/logout" method="POST">
               <Button type="submit" variant="outline" className="w-full justify-start gap-2 text-destructive hover:text-destructive" size="sm">
