@@ -1,0 +1,280 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+% ─────────────────────────────────────────────
+\section{Tổng quan về ngôn ngữ lập trình JavaScript}
+
+\subsection{Khái niệm và đặc điểm của JavaScript}
+
+JavaScript là ngôn ngữ lập trình thường được sử dụng khi phát triển website. Ngôn ngữ này ra đời vào những năm 1990 nhằm tăng khả năng tương tác cho các trang web và dần trở thành công nghệ quan trọng trong lập trình hiện đại.
+
+Hiện nay, JavaScript được ứng dụng ở cả Frontend và Backend nhờ khả năng hoạt động linh hoạt trên nhiều nền tảng khác nhau.
+
+Đặc điểm của JavaScript:
+\begin{itemize}
+    \item \textbf{Cú pháp tối giản, thân thiện và dễ tiếp cận:} JavaScript sở hữu cấu trúc mã nguồn tường minh, chịu ảnh hưởng lớn từ ngôn ngữ C nên rất trực quan đối với người mới bắt đầu.
+    \item \textbf{Đa mô hình lập trình, tối ưu hóa hướng đối tượng và xử lý bất đồng bộ:} Không chỉ dừng lại ở một ngôn ngữ kịch bản đơn giản, JavaScript là một ngôn ngữ đa mô hình. Nó hỗ trợ mạnh mẽ lập trình hướng đối tượng (OOP) dựa trên cơ chế Prototype (và cú pháp class hiện đại), kết hợp linh hoạt với lập trình hàm (Functional Programming).
+    \item \textbf{Nền tảng kiến tạo giao diện web tương tác động cao:} JavaScript là ``linh hồn'' tạo nên sự sống động cho thế giới Web. Bằng cách can thiệp và thao tác trực tiếp vào mô hình tài liệu DOM (Document Object Model), ngôn ngữ này cho phép thay đổi nội dung, cấu trúc và định dạng trang web theo thời gian thực dựa trên hành vi của người dùng.
+\end{itemize}
+
+Vai trò của Node.js:
+\begin{itemize}
+    \item \textbf{Nền tảng tối ưu cho các ứng dụng Server-side hiệu năng cao, thời gian thực:} Node.js thay đổi tư duy kiến trúc máy chủ truyền thống bằng cách áp dụng mô hình Kiến trúc hướng sự kiện (Event-driven) và Cơ chế I/O không chặn (Non-blocking I/O) dựa trên một luồng duy nhất (Single-threaded Event Loop). Thay vì tạo ra một luồng mới cho mỗi yêu cầu từ người dùng (gây tốn tài nguyên phần cứng), Node.js xử lý hàng ngàn kết nối đồng thời với mức tiêu hao bộ nhớ cực thấp. Đặc điểm này biến Node.js thành lựa chọn tối ưu hàng đầu để xây dựng các hệ thống API (RESTful, GraphQL) và các ứng dụng trao đổi dữ liệu thời gian thực (Real-time) như hệ thống chat, trò chơi trực tuyến, video streaming hay các nền tảng IoT.
+    \item \textbf{Chuẩn hóa ngôn ngữ toàn diện (Full-stack JavaScript), tối ưu hóa quy trình vận hành:} Trước khi Node.js ra đời, một dự án web bắt buộc phải chia tách nhân sự: Frontend viết bằng JavaScript, còn Backend sử dụng PHP, Java hay Python. Node.js xóa bỏ rào cản này bằng cách kiến tạo xu hướng Full-stack JavaScript.
+\end{itemize}
+
+\subsection{Sự ra đời của TypeScript (TS)}
+
+TypeScript là ngôn ngữ lập trình mã nguồn mở do Microsoft phát triển. Về bản chất, nó được định nghĩa là một ``superset'' của JavaScript, cung cấp hệ thống định kiểu tĩnh (Static Typing) mà JavaScript thuần túy còn thiếu. TypeScript không thay thế JavaScript mà cung cấp thêm một lớp bảo vệ vững chắc, giúp quản lý mã nguồn thống nhất hơn.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.4\textwidth]{tai_nguyen/logo-ngon-ngu-typescript.png}
+\caption{Logo ngôn ngữ TypeScript}
+\label{fig:logo-typescript}
+\end{figure}
+
+TypeScript hỗ trợ phát triển các dự án quy mô lớn:
+\begin{itemize}
+    \item Cho phép kiểm tra lỗi trong quá trình biên dịch trước khi chương trình được thực thi.
+    \item Tăng khả năng phối hợp giữa nhiều lập trình viên và giúp việc bảo trì hệ thống thuận tiện hơn.
+    \item Cơ chế biên dịch và khả năng tương thích:
+    \begin{itemize}
+        \item Mã nguồn TypeScript sẽ được chuyển thành mã JavaScript để trình duyệt có thể thực thi câu lệnh.
+        \item Cung cấp khả năng sử dụng các tính năng mới của ECMAScript nhưng vẫn duy trì tính tương thích trên nhiều môi trường khác nhau.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Các đặc tính kỹ thuật nổi bật của TypeScript}
+
+TypeScript được xây dựng nhằm mở rộng khả năng của JavaScript thông qua việc bổ sung nhiều cơ chế hỗ trợ kiểm soát mã nguồn và phát triển phần mềm hiệu quả hơn. Một số đặc điểm tiêu biểu của TypeScript gồm:
+\begin{itemize}
+    \item \textbf{Hệ thống kiểu dữ liệu (Type System):} Cho phép khai báo kiểu rõ ràng cho biến, tham số và giá trị trả về của hàm. Các kiểu dữ liệu thường dùng gồm: string, number, boolean, array, enum, tuple và any. Việc xác định kiểu giúp hạn chế lỗi trong quá trình phát triển và tăng độ ổn định cho chương trình.
+    \item \textbf{Interfaces và Type Aliases:} Hỗ trợ mô tả cấu trúc dữ liệu và định nghĩa khuôn mẫu cho các đối tượng trong hệ thống. Nhờ đó mã nguồn được tổ chức chặt chẽ và dễ dàng hơn khi mở rộng dự án.
+    \item \textbf{Lập trình hướng đối tượng (OOP):} TypeScript hỗ trợ đầy đủ các thành phần của lập trình hướng đối tượng như Class, Inheritance, Interface và Encapsulation thông qua các phạm vi truy cập như public, private và protected.
+\end{itemize}
+
+\subsection{So sánh JavaScript và TypeScript trong phát triển dự án lớn}
+
+JavaScript có ưu điểm về tính linh hoạt và dễ tiếp cận hơn khi mới học. Tuy nhiên, khi sử dụng ở các hệ thống phức tạp, việc thiếu cơ chế kiểm soát kiểu dữ liệu rõ ràng có thể làm tăng nguy cơ phát sinh lỗi trong quá trình phát triển.
+
+\begin{enumerate}
+    \item \textbf{Cơ chế phát hiện lỗi sớm và tối ưu hóa vận hành:} JavaScript vận hành theo cơ chế thông dịch, nghĩa là mã nguồn chỉ được kiểm tra khi chương trình thực sự chạy trên môi trường thực tế (Runtime). Điều này dễ dẫn đến rủi ro sót lỗi ẩn, gây sập hệ thống bất ngờ khi người dùng cuối tương tác. Trong khi đó, TypeScript sở hữu trình biên dịch mạnh mẽ đóng vai trò như một màng lọc bảo vệ, giúp rà soát toàn bộ cú pháp và cấu trúc dữ liệu ngay trong quá trình phát triển (Compile-time). Nhờ tính năng khai báo kiểu dữ liệu nghiêm ngặt, mọi xung đột hệ thống hay sai sót logic cơ bản đều bị chặn đứng trước khi mã nguồn được đóng gói và triển khai.
+    \item \textbf{Nâng cao trải nghiệm lập trình và tối ưu hóa hiệu suất làm việc nhóm:} Nhờ hệ thống kiểu dữ liệu tường minh, TypeScript cung cấp cho các trình soạn thảo mã nguồn (như VS Code) nền tảng dữ liệu vững chắc để kích hoạt các tính năng thông minh như IntelliSense, tự động gợi ý mã (Auto-complete) và điều hướng nhanh cấu trúc thư mục. Lập trình viên có thể nắm bắt ngay thông số của các hàm hoặc API mà không cần tốn thời gian lật mở lại tài liệu gốc. Đặc biệt trong môi trường làm việc nhóm, các ràng buộc chặt chẽ của TypeScript đóng vai trò như một bản tài liệu sống, giúp giảm thiểu tối đa các hiểu lầm khi tích hợp mã nguồn giữa các thành viên và đẩy nhanh tiến độ review code.
+    \item \textbf{Kiến trúc mở rộng và khả năng duy trì hệ thống dài hạn:} Khi một dự án phần mềm dịch chuyển sang quy mô lớn với hàng trăm nghìn dòng code, JavaScript rất dễ rơi vào tình trạng mất kiểm soát do cấu trúc quá tự do. TypeScript giải quyết triệt để bài toán này bằng cách áp dụng các nguyên lý lập trình hướng đối tượng (OOP) nâng cao như Interface, Namespace và Generics, giúp module hóa hệ thống một cách khoa học. Việc phân tách tường minh các lớp dữ liệu và hành vi không chỉ giữ cho kiến trúc tổng thể luôn đồng nhất, mạch lạc mà còn giúp quá trình tái cấu trúc mã nguồn (Refactoring) trở nên an toàn hơn, biến TypeScript thành lựa chọn chiến lược cho các sản phẩm công nghệ dài hạn.
+\end{enumerate}
+
+% ─────────────────────────────────────────────
+\section{Thư viện ReactJS và Thuật toán Virtual DOM chuyên sâu}
+
+\subsection{Giới thiệu về thư viện ReactJS}
+
+ReactJS là một thư viện của JavaScript được tạo ra bởi Facebook. Trước khi React ra đời, việc quản lý giao diện web dựa trên việc thay đổi trực tiếp cây DOM là một thách thức lớn về hiệu năng. React ra đời với triết lý hoàn toàn mới, tập trung vào lớp hiển thị (View) và mô hình thành phần (Component-based). Nó giúp xây dựng các ứng dụng web với dữ liệu thay đổi liên tục một cách hiệu quả, minh bạch và dễ bảo trì hơn rất nhiều.
+
+Các triết lý cốt lõi của ReactJS:
+\begin{itemize}
+    \item \textbf{Declarative (Lập trình khai báo):}
+    \begin{itemize}
+        \item Lập trình viên chỉ cần mô tả trạng thái mong muốn của giao diện người dùng.
+        \item React sẽ tự động quản lý việc cập nhật và render lại các thành phần tương ứng.
+    \end{itemize}
+    \item \textbf{Cú pháp JSX (JavaScript XML):}
+    \begin{itemize}
+        \item Kết hợp sức mạnh của JavaScript với sự trực quan của cấu trúc HTML.
+        \item Giúp mã nguồn giao diện trở nên mạch lạc, dễ đọc và dễ gỡ lỗi hơn.
+    \end{itemize}
+    \item \textbf{Luồng dữ liệu một chiều (Unidirectional Data Flow):}
+    \begin{itemize}
+        \item Dữ liệu luôn được truyền từ cha xuống con thông qua các thuộc tính (Props).
+        \item Giúp kiểm soát luồng dữ liệu minh bạch và hạn chế các lỗi logic phát sinh.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Kiến trúc thành phần của ReactJS (Component)}
+
+Kiến trúc của ReactJS xoay quanh khái niệm Component, đóng vai trò như các thành phần của ứng dụng:
+\begin{itemize}
+    \item \textbf{Tính đóng gói (Encapsulation):} Mỗi thành phần tự quản lý trạng thái riêng, giúp mã nguồn trở nên sạch sẽ và dễ quản lý.
+    \item \textbf{Tính tái sử dụng (Reusability):} Các component của giao diện có thể được đóng gói và sử dụng lại ở những vị trí khác nhau trong ứng dụng, giúp giảm thiểu trùng lặp mã nguồn.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/so-do-cau-truc-cac-component-cua-ung-dung-frontend.png}
+\caption{Sơ đồ cấu trúc các Component của ứng dụng Frontend}
+\label{fig:component-frontend}
+\end{figure}
+
+\subsection{Quản lý luồng dữ liệu (State và Props)}
+
+\begin{itemize}
+    \item \textbf{Props (Properties):} Là các thuộc tính được truyền từ thành phần cha xuống tới thành phần con. Props là dữ liệu chỉ đọc (Immutable), giúp cho luồng của hệ thống minh bạch.
+    \item \textbf{State:} Là các biến lưu thông tin của Component, có khả năng thay đổi theo thời gian dựa trên các thao tác của người dùng trên trình duyệt hoặc phản hồi từ hệ thống. Khi State thay đổi thì React sẽ tự tiến hành cập nhật giao diện (Re-render).
+\end{itemize}
+
+% ─────────────────────────────────────────────
+\section{Framework Next.js và Các phương thức Rendering tiên tiến}
+
+\subsection{Giới thiệu về Framework Next.js}
+
+Next.js là một framework dựa trên React, cung cấp các tính năng cần thiết để xây dựng các ứng dụng web sẵn sàng cho sản xuất (Production-ready). Các tính năng cốt lõi bao gồm:
+\begin{itemize}
+    \item \textbf{Hệ thống Routing (File-based Routing):} Tự động tạo ra các đường dẫn dựa trên cấu trúc thư mục và tệp tin, giúp quản lý cấu trúc trang web một cách minh bạch và dễ dàng mở rộng.
+    \item \textbf{Tối ưu hóa tài nguyên (Optimization):} Hỗ trợ tự động tối ưu hóa hình ảnh (Image), phông chữ (Fonts) và các đoạn mã script bên thứ ba để đảm bảo tốc độ tải trang nhanh nhất và tối ưu hóa trải nghiệm của người dùng.
+    \item \textbf{Hỗ trợ TypeScript:} Tích hợp sẵn TypeScript với các cấu hình tối ưu, giúp phát triển mã nguồn nhanh chóng và hiệu quả thông qua hệ thống kiểu tĩnh.
+\end{itemize}
+
+\subsection{Server-Side Rendering (SSR) và Lợi ích SEO}
+
+Server-Side Rendering (SSR) là cơ chế kết xuất giao diện ngay trên máy chủ trước khi gửi nội dung HTML hoàn chỉnh đến trình duyệt người dùng. Nhờ đó, trang web có thể hiển thị dữ liệu nhanh hơn và cải thiện khả năng truy cập nội dung đối với các công cụ tìm kiếm.
+
+Việc áp dụng SSR mang lại nhiều lợi ích như:
+\begin{itemize}
+    \item Tăng tốc độ hiển thị nội dung ban đầu của trang Web.
+    \item Hỗ trợ các công cụ tìm kiếm dễ dàng thu thập và lập chỉ mục dữ liệu.
+    \item Cải thiện SEO trên các công cụ tìm kiếm và tối ưu trải nghiệm người dùng.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{tai_nguyen/so-do-mo-ta-luong-xu-ly-cua-ssr-server-side-rendering.png}
+\caption{Sơ đồ mô tả luồng xử lý của SSR (Server-Side Rendering)}
+\label{fig:ssr-flow}
+\end{figure}
+
+Sơ đồ trên trình bày chu trình vòng đời kết xuất giao diện của một ứng dụng web áp dụng kiến trúc Server-Side Rendering (SSR). Quá trình này được thiết kế nhằm giảm thiểu tối đa thời gian chờ đợi (First Contentful Paint) và tối ưu hóa khả năng lập chỉ mục của các công cụ tìm kiếm. Luồng hoạt động được chia thành các giai đoạn tuần tự như sau:
+
+\begin{enumerate}
+    \item \textbf{Khởi tạo yêu cầu truy xuất (Request):} Quá trình bắt đầu khi trình duyệt (Client) gửi yêu cầu giao thức HTTP tới máy chủ để truy cập vào một tài nguyên hoặc đường dẫn cụ thể của ứng dụng.
+    \item \textbf{Thu thập dữ liệu và Kết xuất tại máy chủ (Fetch \& Render):} Khác với mô hình Client-Side Rendering truyền thống (chỉ trả về một khung HTML rỗng), máy chủ ở cơ chế SSR sẽ chủ động thực hiện các truy vấn đến cơ sở dữ liệu hoặc API nội bộ. Sau khi gom đủ dữ liệu, máy chủ tiến hành biên dịch các React Component và kết xuất chúng thành một tệp tài liệu HTML hoàn chỉnh trước khi gửi qua môi trường mạng.
+    \item \textbf{Hiển thị nội dung tức thời (First Paint):} Trình duyệt nhận được tệp HTML đã có sẵn nội dung văn bản và cấu trúc hiển thị. Ngay lập tức, trang web được phác họa lên màn hình, cho phép người dùng đọc và quan sát thông tin ngay cả khi quá trình xử lý mã nền (background scripts) chưa hoàn tất. Đặc điểm này mang lại lợi thế tuyệt đối cho kỹ thuật SEO.
+    \item \textbf{Quá trình Thủy hợp (Hydration / Event Attachment):} Mặc dù nội dung trực quan đã xuất hiện, trang web lúc này vẫn chưa có khả năng tương tác động. Trình duyệt sẽ tiếp tục tải xuống các tệp tin JavaScript đi kèm. Lúc này, React sẽ tiến hành khởi tạo cây Virtual DOM và đính kèm các bộ lắng nghe sự kiện (Event Listeners) vào các phần tử HTML tĩnh hiện có trên trang.
+    \item \textbf{Trạng thái Tương tác hoàn chỉnh (Fully Interactive):} Sau khi quá trình Thủy hợp kết thúc, ứng dụng web chuyển đổi liền mạch thành một Single Page Application (SPA) đúng nghĩa. Người dùng có thể thực hiện mọi thao tác tương tác mượt mà mà không cần phải tải lại trang ở các lần chuyển hướng tiếp theo.
+\end{enumerate}
+
+Bên cạnh SSR, Next.js còn hỗ trợ Client-Side Rendering (CSR): dữ liệu được xử lý và hiển thị trực tiếp trên trình duyệt người dùng. Phương pháp này phù hợp với các ứng dụng yêu cầu khả năng tương tác cao hoặc cập nhật dữ liệu realtime.
+
+% ─────────────────────────────────────────────
+\section{Giao thức giao tiếp RESTful API}
+
+REST là viết tắt của ``Representational State Transfer'' là một kiểu kiến trúc phần mềm tiêu chuẩn chi phối cách thức các dịch vụ web giao tiếp với nhau qua môi trường Internet. Hệ thống tuân thủ REST (RESTful API) sử dụng giao thức HTTP/HTTPS làm phương tiện truyền tải thông điệp, thường định dạng dữ liệu dưới chuẩn JSON (JavaScript Object Notation).
+
+Một hệ thống RESTful hoạt động dựa trên nguyên tắc phi trạng thái (Stateless), nghĩa là máy chủ không lưu trữ thông tin về phiên làm việc của máy khách giữa các yêu cầu. Mỗi luồng yêu cầu (Request) từ thiết bị ngoại vi hoặc trình duyệt gửi lên máy chủ đều phải chứa đầy đủ thông tin xác thực và ngữ cảnh để xử lý. Các phương thức HTTP cơ bản như GET (truy xuất), POST (tạo mới/gửi lệnh), PUT (cập nhật) và DELETE (xóa bỏ) được ánh xạ trực tiếp vào các hành động tương tác với tài nguyên hệ thống, tạo ra một chuẩn mực giao tiếp thống nhất giữa nền tảng web, cổng thanh toán trung gian và thiết bị vi điều khiển IoT.
+
+% ─────────────────────────────────────────────
+\section{Công nghệ IoT và Vi điều khiển ESP32}
+
+ESP32 là một thiết bị phần cứng hiệu năng cao. Trên mạch tích hợp Wi-Fi và Bluetooth rất phù hợp cho các hệ thống Internet of Things (IoT). Trong những hệ thống yêu cầu sự tương tác chặt chẽ giữa thiết bị vật lý và chương trình điều khiển, dòng chip này mang đến một môi trường xử lý đáng tin cậy, nổi bật với tốc độ tính toán cao cùng các phương thức giao tiếp mạng đa dạng.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/so-do-chi-tiet-cac-chan-chuc-nang-gpio-tren-bo-mach-esp32-chuan.png}
+\caption{Sơ đồ chi tiết các chân chức năng GPIO trên bo mạch ESP32 chuẩn}
+\label{fig:esp32-gpio}
+\end{figure}
+
+Một số ứng dụng thực tế phổ biến của ESP32:
+\begin{itemize}
+    \item \textbf{Nhà thông minh (Smart Home):} Điều khiển đèn, điều hòa, rèm cửa tự động và các thiết bị khác thông qua Wi-Fi hoặc Bluetooth.
+    \item \textbf{Nông nghiệp thông minh (Smart Agriculture):} Theo dõi độ ẩm đất, nhiệt độ, ánh sáng và có thể áp dụng tự động hóa hệ thống tưới tiêu, giúp tăng năng suất cây trồng.
+    \item \textbf{Hệ thống an ninh:} Tích hợp với camera (như ESP32-CAM), cảm biến chuyển động và hệ thống báo động để bảo vệ nhà ở và văn phòng.
+\end{itemize}
+
+Vai trò trong hệ thống ACW-SRS:
+\begin{itemize}
+    \item Đóng vai trò là thiết bị thực thi (Actuator) tại các trạm rửa xe vật lý.
+    \item Tiếp nhận lệnh điều khiển từ Server Next.js thông qua giao thức HTTP/HTTPS.
+    \item Điều khiển các module Relay và liên tục gửi báo cáo trạng thái về trung tâm.
+\end{itemize}
+
+% ─────────────────────────────────────────────
+\section{Hệ quản trị Cơ sở dữ liệu (MySQL \& Prisma ORM)}
+
+\subsection{Hệ quản trị cơ sở dữ liệu MySQL}
+
+Để xử lý và lưu trữ luồng thông tin có tính ràng buộc phức tạp, hệ thống sử dụng MySQL -- một trong những hệ quản trị cơ sở dữ liệu quan hệ (Relational Database Management System) mã nguồn mở được sử dụng phổ biến hiện nay. MySQL cho phép quản lý dữ liệu thông qua ngôn ngữ truy vấn SQL và tổ chức dữ liệu dưới dạng bảng có liên kết với nhau. MySQL được đánh giá cao nhờ khả năng hoạt động ổn định, tốc độ xử lý nhanh và phù hợp với nhiều quy mô hệ thống khác nhau.
+
+Trong dự án, MySQL được sử dụng để:
+\begin{itemize}
+    \item Lưu trữ thông tin người dùng và dữ liệu hệ thống.
+    \item Quản lý các mối quan hệ giữa các bảng dữ liệu.
+    \item Hỗ trợ truy vấn, thêm, sửa và xóa dữ liệu một cách hiệu quả.
+\end{itemize}
+
+Nhờ khả năng tương thích tốt với Node.js và các framework phát triển Web hiện đại, MySQL trở thành lựa chọn phù hợp cho việc xây dựng và triển khai hệ thống ứng dụng Web.
+
+\subsection{Prisma ORM và lợi ích trong phát triển hệ thống}
+
+Prisma là một bộ công cụ cơ sở dữ liệu hiện đại, giúp lập trình viên thao tác với dữ liệu một cách hiệu quả hơn thông qua:
+\begin{itemize}
+    \item \textbf{Tự động tạo mã:} Dựa trên sơ đồ dữ liệu (Schema), Prisma tự động tạo ra thư viện truy vấn mạnh mẽ, hỗ trợ đầy đủ TypeScript.
+    \item \textbf{Truy vấn an toàn:} Loại bỏ các lỗi cú pháp SQL và đảm bảo dữ liệu truy vấn luôn đúng kiểu, giúp giảm thiểu lỗi thời gian chạy (Runtime errors).
+    \item \textbf{Tính năng Migration:} Hỗ trợ đồng bộ cấu trúc dữ liệu giữa cơ sở dữ liệu và mã nguồn thực tế một cách có kiểm soát.
+\end{itemize}
+
+Ví dụ về cách triển khai Prisma:
+
+Prisma Schema (Định nghĩa dữ liệu):
+\begin{Verbatim}
+model Station {
+  uuid         Int      @id  @Default(Autoincrement())
+  Station_name String
+  status       String   @default("OFFLINE")
+  location     String?
+  Created_At   DateTime @default(now())
+}
+\end{Verbatim}
+
+Prisma Client (Truy vấn dữ liệu):
+\begin{Verbatim}
+// Lay danh sach tat ca cac tram dang hoat dong
+const activeStations = await prisma.station.findMany({
+  where: { status: "ONLINE" }
+});
+\end{Verbatim}
+
+Việc sử dụng Prisma giúp loại bỏ các câu lệnh SQL thô (raw SQL) phức tạp, thay vào đó là các hàm gọi trực quan, giúp tăng tốc độ phát triển và giảm thiểu sai sót về logic dữ liệu.
+
+% ─────────────────────────────────────────────
+\section{Công nghệ Thanh toán và Giải pháp SePay tự động}
+
+\subsection{QR Dynamic và Chuẩn VietQR (NAPAS 247)}
+
+Trong hệ thống ACW-SRS, thanh toán phải diễn ra chính xác. Dự án sử dụng tiêu chuẩn VietQR để tạo ra các mã code QR động cho mỗi trạm. Khách hàng chỉ cần quét mã, mọi thông tin về số tài khoản, số tiền và nội dung chuyển khoản sẽ được điền tự động.
+
+\subsection{Giải pháp SePay và Cơ chế Webhook tự động hóa}
+
+SePay là giải pháp trung gian kết nối giữa ngân hàng và hệ thống phần mềm. Cơ chế Webhook cho phép SePay gửi thông tin giao dịch tự động cho Server Next.js ngay khi tài khoản ngân hàng nhận được tiền.
+
+SePay sẽ gửi tới server một request với phương thức là POST, có nội dung như sau:
+\begin{Verbatim}
+{
+  "id": 909,
+  "gateway": "Vietabank",
+  "transactionDate": "2022-06-21 12:07:50",
+  "accountNumber": "0999888787",
+  "content": "NGO GIA QUYEN chuyen tien",
+  "transferType": "in",
+  "transferAmount": 15000,
+  "accumulated": 889998,
+  "subAccount": null,
+  "referenceCode": "ABC.92754",
+  "description": "BCA"
+}
+\end{Verbatim}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{tai_nguyen/so-do-luong-hoat-dong-cua-giai-phap-thanh-toan-trung-gian-sepay.jpeg}
+\caption{Sơ đồ luồng hoạt động của giải pháp thanh toán trung gian SePay}
+\label{fig:sepay-flow}
+\end{figure}
+
+Sơ đồ trên trình bày kiến trúc tích hợp và luồng luân chuyển dữ liệu tự động của dịch vụ thanh toán SePay. Hệ thống vận hành theo mô hình hướng sự kiện (Event-driven), bao gồm ba phân lớp xử lý rành mạch:
+\begin{enumerate}
+    \item \textbf{Lớp tiếp nhận sự kiện (Nguồn phát dữ liệu):} Nhóm bên trái thể hiện mạng lưới liên kết với hơn 15 ngân hàng lớn (như Viettinbank, MB, Techcombank,...). Bất cứ khi nào tài khoản thụ hưởng phát sinh giao dịch ghi có (nhận tiền), hệ thống ngân hàng sẽ tạo ra tín hiệu biến động số dư.
+    \item \textbf{Lớp trung gian phân tích (Lõi hệ thống SePay):} Toàn bộ dữ liệu thô từ ngân hàng được tập trung về máy chủ SePay. Tại đây, công cụ giải mã sẽ tự động trích xuất, phân tích và chuẩn hóa các trường thông tin mang tính quyết định như: số tiền giao dịch, nội dung chuyển khoản (Memo) và mã tham chiếu duy nhất.
+    \item \textbf{Lớp phân phối và tích hợp (Điểm tiếp nhận cuối):} Ở phía bên phải, sau khi dữ liệu đã được định dạng chuẩn hóa, SePay lập tức sử dụng công nghệ Webhooks hoặc RESTful API để đẩy (Push) thông tin đến các nền tảng ngoại vi.
+\end{enumerate}
+
+\end{document}

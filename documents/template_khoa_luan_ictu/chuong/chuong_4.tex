@@ -1,0 +1,279 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+% ─────────────────────────────────────────────
+\section{Môi trường và công cụ phát triển}
+
+Quá trình hiện thực hóa hệ thống ACW-SRS được triển khai dựa trên một hệ sinh thái công nghệ đồng bộ, đảm bảo sự liên kết chặt chẽ giữa ba phân hệ: tầng ứng dụng web, tầng dữ liệu và tầng thiết bị phần cứng.
+\begin{itemize}
+    \item \textbf{Công nghệ lõi và Ngôn ngữ lập trình:} Sử dụng Node.js kết hợp với Next.js – framework phục vụ cho việc phát triển. Việc sử dụng TypeScript làm ngôn ngữ lập trình chính giúp áp dụng cơ chế định kiểu tĩnh (static typing), từ đó kiểm soát nghiêm ngặt các rủi ro về kiểu dữ liệu ngay trong quá trình biên dịch và gia tăng tính ổn định của mã nguồn khi vận hành thực tế.
+    \item \textbf{Hệ quản trị Cơ sở dữ liệu và ORM:} Hệ thống sử dụng cơ sở dữ liệu quan hệ MySQL để tổ chức và lưu trữ thông tin, đáp ứng trọn vẹn bài toán phân tách dữ liệu độc lập giữa các chủ trạm. Việc thao tác với cơ sở dữ liệu được thực hiện thông qua Prisma ORM, giúp trừu tượng hóa các câu lệnh SQL phức tạp, tối ưu tốc độ truy vấn và ngăn chặn triệt để các lỗ hổng bảo mật như SQL Injection.
+    \item \textbf{Vi điều khiển và Giao tiếp IoT:} Ở phân hệ trạm rửa xe vật lý, mạch vi điều khiển ESP32 được lựa chọn làm thiết bị thực thi chính (Actuator). Phần mềm nhúng trên ESP32 được lập trình để liên tục duy trì giao tiếp với máy chủ thông qua các API Endpoint, đảm bảo khả năng tiếp nhận mệnh lệnh đóng ngắt rơ-le (Relay) và báo cáo trạng thái hệ thống với độ trễ ở mức tối thiểu.
+\end{itemize}
+
+% ─────────────────────────────────────────────
+\section{Nguyên lý xây dựng giao diện (UI/UX)}
+
+Kiến trúc giao diện của hệ thống được phát triển theo triết lý thiết kế lấy người dùng làm trung tâm (User-Centered Design), hướng tới việc tối ưu hóa hiệu năng hiển thị và đơn giản hóa các luồng thao tác nghiệp vụ.
+
+\textbf{Thiết kế tương thích đa nền tảng (Responsive Design):} Bằng việc ứng dụng các thư viện CSS hiện đại (điển hình như Tailwind CSS), hệ thống giao diện được xây dựng dựa trên mô hình lưới linh hoạt (flexbox/grid). Phương pháp này giúp bố cục trang tự động tinh chỉnh và thích ứng mượt mà trên mọi tỷ lệ màn hình
+
+% ─────────────────────────────────────────────
+\section{Cấu hình triển khai máy chủ (Deployment)}
+
+Để đảm bảo hệ thống ACW-SRS có khả năng phục vụ liên tục với độ sẵn sàng cao, quy trình triển khai mã nguồn (Deployment) được phân bổ lên hạ tầng điện toán đám mây chuyên biệt.
+
+\begin{itemize}
+    \item \textbf{Lưu trữ và Vận hành ứng dụng (Web Hosting):} Tầng Frontend và Backend của ứng dụng được biên dịch và triển khai trên các nền tảng đám mây Vercel. Mọi luồng truy cập và giao tiếp trên hệ thống đều được ép buộc sử dụng giao thức HTTPS với chứng chỉ bảo mật SSL/TLS được cấp phát tự động, tạo ra lớp mã hóa vững chắc bảo vệ dữ liệu nhạy cảm của người dùng và các phiên giao dịch.
+    \item \textbf{Xử lý Webhook và Tự động hóa giao dịch:} Một luồng tuyến API (Endpoint) được thiết kế tách biệt nhằm chuyên trách việc lắng nghe và tiếp nhận các sự kiện Webhook từ cổng trung gian thanh toán SePay. Phân hệ này được thiết lập với khả năng chịu tải tốt, đảm bảo ghi nhận tức thời mọi biến động số dư từ ngân hàng. Đây là mắt xích then chốt giúp hệ thống đối soát dữ liệu và tự động hóa hoàn toàn quy trình kích hoạt máy bơm nước mà không phụ thuộc vào sức người.
+\end{itemize}
+
+% ─────────────────────────────────────────────
+\section{Xây dựng giao diện các trang chức năng}
+
+\subsection{Trang Đăng nhập}
+
+Trang đăng nhập cho phép quản trị viên (Admin) và các chủ trạm truy cập vào website quản lý bằng cách điền thông tin tài khoản hợp lệ bao gồm:
+\begin{itemize}
+    \item Trường nhập Email và Mật khẩu.
+    \item Nút ``Đăng nhập'' để gửi thông tin và hệ thống sẽ kiểm tra và xác thực.
+    \item Hiển thị thông báo lỗi khi người dùng nhập sai thông tin đăng nhập.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/trang-dang-nhap.png}
+\caption{Trang đăng nhập}
+\label{fig:trang-dang-nhap}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/thong-bao-loi-khi-dang-nhap.png}
+\caption{Thông báo lỗi khi đăng nhập}
+\label{fig:loi-dang-nhap}
+\end{figure}
+
+\subsection{Trang Quên mật khẩu}
+
+Trang này được thiết kế nhằm cung cấp cơ chế dự phòng an toàn, cho phép người dùng tự thiết lập lại thông tin truy cập trong các tình huống thất lạc hoặc không nhớ khóa bảo mật hiện tại.
+
+Quy trình lấy lại mật khẩu như sau:
+\begin{itemize}
+    \item \textbf{Bước 1:} Người dùng tiến hành cung cấp chính xác địa chỉ thư điện tử (email) định danh đã được liên kết với hệ thống trong giai đoạn khởi tạo tài khoản ban đầu.
+    \item \textbf{Bước 2:} Ngay sau khi lệnh yêu cầu được kích hoạt từ phía giao diện, máy chủ sẽ tự động phát sinh và phân phối một chuỗi mã xác minh (OTP) -- hoặc một liên kết URL mã hóa dùng một lần -- trực tiếp đến hộp thư cá nhân vừa khai báo.
+    \item \textbf{Bước 3:} Màn hình ứng dụng sẽ cập nhật trạng thái gửi thành công, đồng thời hiển thị trực quan lại địa chỉ email đích. Bước này đóng vai trò như một cơ chế đối chứng, hỗ trợ người dùng rà soát lại thông tin và hạn chế tối đa các sự cố do nhập liệu sai lệch.
+    \item \textbf{Bước 4:} Người dùng nhập mã xác thực vào form để tiến hành đặt lại mật khẩu mới.
+    \item \textbf{Bước 5:} Có nút liên kết ``Quay lại'' để trở về trang đăng nhập ban đầu.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/form-yeu-cau-lay-lai-mat-khau.png}
+\caption{Form yêu cầu lấy lại mật khẩu}
+\label{fig:form-quen-mat-khau}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/nhap-ma-xac-thuc-de-doi-mat-khau.png}
+\caption{Nhập mã xác thực để đổi mật khẩu}
+\label{fig:nhap-ma-xac-thuc}
+\end{figure}
+
+\subsection{Trang Dashboard}
+
+Trong hệ thống quản lý thiết bị cho trạm rửa xe tự phục vụ ACW-SRS, Bảng điều khiển (Dashboard) đóng vai trò là trung tâm kiểm soát và phân tích dữ liệu theo thời gian thực. Đặc trưng kỹ thuật nổi bật của phân hệ này là việc áp dụng triệt để kiến trúc Đa chủ trạm. Tùy thuộc vào cấp độ phân quyền của tài khoản tại thời điểm xác thực, hệ thống sẽ tự động định tuyến và cung cấp không gian quản trị với góc nhìn và luồng dữ liệu hoàn toàn tách biệt.
+
+\textbf{Bảng điều khiển dành cho Quản trị viên cấp cao (Super Admin Dashboard):}
+Giao diện ``Hệ thống Quản trị'' được thiết kế đặc thù dành cho Quản trị viên cấp cao (Super Admin) nhằm giám sát, phân tích và điều phối toàn cục nền tảng phần mềm. Bố cục giao diện phản ánh tư duy quản trị vĩ mô thông qua các phân hệ dữ liệu chuyên sâu:
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/giao-dien-tong-quan-bang-dieu-khien-danh-cho-quan-tri-vien-cap-cao.png}
+\caption{Giao diện Tổng quan Bảng điều khiển dành cho Quản trị viên cấp cao}
+\label{fig:dashboard-admin}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{Thanh điều hướng hệ thống (System Navigation):} Được bố trí bên trái giao diện, cung cấp các trình đơn quản trị cấp cao bao gồm: Quản lý danh sách chủ trạm, Thống kê Doanh thu tổng thể. 
+    \item \textbf{Khu vực Thống kê Chỉ số nền tảng (Platform KPIs):} Trình bày 4 lăng kính dữ liệu cốt lõi nhằm đánh giá mức độ hoạt động của toàn hệ thống.
+    \item \textbf{Phân khu Biểu đồ Trực quan hóa (Data Visualization):} Tích hợp hai biểu đồ dạng đường (Line chart) bố trí song song, biểu diễn xu hướng ``Doanh thu theo ngày'' và ``Số giao dịch theo ngày''.
+\end{itemize}
+
+\textbf{Bảng điều khiển dành cho Chủ trạm:}
+Trái ngược với góc nhìn vĩ mô của Admin, giao diện Bảng điều khiển chủ trạm tập trung vào lăng kính vi mô, phục vụ trực tiếp nhu cầu giám sát vận hành và kiểm soát dòng tiền của từng đối tác kinh doanh độc lập. Mọi dữ liệu tại đây được cô lập hoàn toàn, đảm bảo tính bảo mật và quyền riêng tư tuyệt đối cho chủ trạm.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/giao-dien-tong-quan-bang-dieu-khien-danh-cho-chu-tram.png}
+\caption{Giao diện Tổng quan Bảng điều khiển dành cho Chủ trạm}
+\label{fig:dashboard-chutram}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{Thanh điều hướng chuyên dụng (Sidebar Navigation):} Chứa danh mục các nghiệp vụ tác nghiệp cốt lõi mà chủ trạm thường xuyên thao tác: Quản lý Thiết bị, Lịch sử Giao dịch, Thống kê Doanh thu và Thiết lập Cấu hình. Phía dưới cùng tích hợp khối thông tin định danh phiên làm việc (ID người dùng) kèm cơ chế ``Đăng xuất'' phiên an toàn.
+    \item \textbf{Khu vực Thống kê Chỉ số Hiệu suất (KPI Cards):} Nằm ở vị trí trung tâm, hệ thống truy xuất và hiển thị tức thời 4 thẻ thông số phản ánh tình hình kinh doanh thực tế trong ngày, được làm mới liên tục:
+    \begin{itemize}
+        \item \textbf{Doanh thu hôm nay:} Tổng hóa dòng tiền thực tế đã ghi nhận thành công qua luồng Webhook tự động.
+        \item \textbf{Giao dịch:} Tổng số lượt khách hàng quét mã VietQR và hoàn tất thanh toán.
+        \item \textbf{Đang Online:} Cung cấp thông số giám sát phần cứng, cho biết số lượng mạch vi điều khiển ESP32 đang duy trì kết nối mạng ổn định với máy chủ.
+        \item \textbf{Tổng thiết bị:} Quy mô số lượng máy rửa xe vật lý được cấp phép và đang khai thác trên hệ thống.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Trang Quản lý chủ trạm}
+
+Trang quản lý chủ trạm là giao diện dành riêng cho Admin hệ thống giúp hiển thị và quản lý toàn bộ thông tin đối tác/chủ trạm đã đăng ký.
+
+Chức năng chính:
+\begin{itemize}
+    \item Hiển thị danh sách tất cả các chủ trạm đang hoạt động trên hệ thống.
+    \item Hỗ trợ tìm kiếm nhanh theo: Tên chủ trạm, Số điện thoại hoặc Email.
+    \item Hỗ trợ bộ lọc dữ liệu theo trạng thái hoạt động (Đang hoạt động, Bị khóa).
+    \item Cho phép thực hiện các thao tác quản lý trực tiếp trên hàng dữ liệu: Xem chi tiết thông tin chủ trạm, Chỉnh sửa thông tin (icon Bút), Xóa chủ trạm (icon Thùng rác).
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/trang-danh-sach-quan-ly-chu-tram.png}
+\caption{Trang danh sách quản lý chủ trạm}
+\label{fig:ds-chu-tram}
+\end{figure}
+
+\subsection{Trang Thêm mới và Chỉnh sửa chủ trạm}
+
+Trang Thêm mới là giao diện cho phép Admin tạo tài khoản mới cho một chủ trạm (Tenant) để họ có thể bắt đầu sử dụng dịch vụ. Trang Chỉnh sửa cho phép cập nhật lại các thông tin nếu có sự thay đổi.
+
+Các trường thông tin yêu cầu:
+\begin{itemize}
+    \item Họ và tên chủ trạm.
+    \item Số điện thoại liên hệ.
+    \item Địa chỉ Email (dùng làm tài khoản đăng nhập).
+    \item Số lượng thiết bị tối đa được phép quản lý.
+    \item Cấu hình thông tin tích hợp thanh toán (SePay API Key) để tự động hóa doanh thu.
+\end{itemize}
+Thiết kế giao diện yêu cầu nhập đủ các thông tin cần thiết, tự động báo lỗi (Validate) nếu bỏ trống hoặc sai định dạng email.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/form-them-moi-chu-tram.png}
+\caption{Form thêm mới chủ trạm}
+\label{fig:form-them-chu-tram}
+\end{figure}
+
+\subsection{Trang Quản lý Thiết bị (IoT ESP32)}
+
+Trang quản lý thiết bị giúp chủ trạm có thể thêm mới, cấu hình và giám sát được tình trạng của các trạm rửa xe vật lý.
+\begin{itemize}
+    \item \textbf{Thêm thiết bị mới:} Yêu cầu nhập địa chỉ MAC của bộ ESP32 và Tên trạm.
+    \item \textbf{Cấu hình giá tiền:} Giao diện cho phép đặt mức giá dịch vụ (Ví dụ: 2000đ/phút).
+    \item \textbf{Theo dõi trạng thái:} Hiển thị danh sách thiết bị kèm các huy hiệu trạng thái thời gian thực như ``Online'' (Xanh lá), ``Offline'' (Xám) hoặc ``Busy'' (Đỏ -- Đang có khách rửa).
+    \item \textbf{Điều khiển từ xa:} Cho phép chủ trạm bật/tắt thiết bị khẩn cấp thông qua các nút gạt (Toggle Switch) ngay trên giao diện.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/trang-quan-ly-trang-thai-thiet-bi.png}
+\caption{Trang quản lý trạng thái thiết bị}
+\label{fig:quan-ly-trang-thai-thiet-bi}
+\end{figure}
+
+\subsection{Giao diện Quản lý Thiết bị IoT (Dành cho Chủ trạm)}
+
+Trang ``Quản lý thiết bị'' là phân hệ tác nghiệp cốt lõi, trao quyền cho các Chủ trạm kiểm soát toàn bộ vòng đời và trạng thái vận hành của các máy rửa xe vật lý (tích hợp vi điều khiển ESP32) thuộc phân khu quản lý của mình. Giao diện được thiết kế nhằm tối ưu hóa khả năng giám sát phần cứng từ xa thông qua nền tảng web.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/giao-dien-quan-ly-danh-sach-va-trang-thai-thiet-bi-phan-cung-cua-chu-tram.png}
+\caption{Giao diện Quản lý danh sách và trạng thái thiết bị phần cứng của Chủ trạm}
+\label{fig:gd-thiet-bi-chu-tram}
+\end{figure}
+
+Bố cục chức năng của phân hệ này được tổ chức chặt chẽ, bao gồm các thành phần trọng yếu sau:
+\begin{itemize}
+    \item \textbf{Bộ lọc và Truy xuất thông tin (Search Bar):} Nằm ở phía trên cùng của vùng không gian làm việc, hệ thống cung cấp một thanh tìm kiếm đa năng. Chủ trạm có thể truy xuất nhanh chóng một hoặc một nhóm thiết bị cụ thể thông qua các từ khóa định danh.
+    \item \textbf{Bảng Giám sát Trạng thái (Monitoring Data Grid):} Trung tâm của giao diện là bảng dữ liệu tổng hợp, trình bày các thông số kỹ thuật và kinh doanh của từng máy rửa xe theo thời gian thực:
+    \begin{itemize}
+        \item \textbf{Trạng thái Kết nối (Hoạt động \& Lần cuối):} Cột ``Hoạt động'' sử dụng chỉ báo màu sắc (Ví dụ: chấm xám cho trạng thái Offline) kết hợp cùng cột ``Lần cuối'' (Dấu thời gian -- Timestamp) để phản ánh chính xác tình trạng mạng của mạch ESP32. Dữ liệu này được nội suy từ cơ chế đồng bộ nhịp tim (Heartbeat) định kỳ giữa phần cứng và máy chủ Next.js.
+        \item \textbf{Thông số Kinh doanh (Giá/phút):} Hiển thị cấu hình đơn giá dịch vụ đang được áp dụng cho dòng máy tương ứng (Ví dụ: 1.000đ/phút). Tham số này làm cơ sở để máy chủ tính toán thời gian bơm nước tự động khi nhận được Webhook thanh toán từ phía ngân hàng.
+        \item \textbf{Quản trị Hệ thống (Firmware \& Kích hoạt):} Cung cấp thông tin về phiên bản phần mềm nhúng đang chạy trên thiết bị và trạng thái cấp phép hoạt động (Active) của phần cứng đó trên hệ thống lưới.
+    \end{itemize}
+    \item \textbf{Khu vực Thao tác Nghiệp vụ (Action Group):} Cột ``Thao tác'' tích hợp các bộ công cụ quản trị trực tiếp trên từng bản ghi dữ liệu. Bao gồm các biểu tượng lệnh (Icons):
+    \begin{itemize}
+        \item \textbf{Xem chi tiết (Biểu tượng Mắt):} Mở ra giao diện giám sát chuyên sâu các luồng tín hiệu và lịch sử hoạt động của thiết bị.
+        \item \textbf{Chỉnh sửa (Biểu tượng Bút):} Cho phép chủ trạm cập nhật lại cấu hình tên gọi, trạm gán hoặc điều chỉnh đơn giá theo phút.
+        \item \textbf{Xóa (Biểu tượng Thùng rác):} Thực thi lệnh gỡ bỏ thiết bị khỏi hệ thống.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Giao diện Cấu hình và Tinh chỉnh tham số Thiết bị}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/giao-dien-thiet-lap-thong-so-van-hanh-va-tich-hop-thanh-toan-cho-thiet-bi-iot.png}
+\caption{Giao diện thiết lập thông số vận hành và tích hợp thanh toán cho thiết bị IoT}
+\label{fig:cau-hinh-tham-so-thiet-bi}
+\end{figure}
+
+Trang ``Chỉnh sửa thiết bị'' cung cấp không gian tương tác chi tiết, cho phép các Chủ trạm thiết lập và cập nhật các tham số vận hành cốt lõi cho từng cụm máy rửa xe. Giao diện được thiết kế dưới dạng biểu mẫu (Form) với các trường thông tin được phân cụm logic, đảm bảo tính đồng bộ dữ liệu giữa máy chủ trung tâm và mạch vi điều khiển ESP32 tại hiện trường.
+
+\subsection{Giao diện Quản lý Lịch sử Giao dịch}
+
+Trang ``Danh sách giao dịch'' cung cấp cho Chủ trạm công cụ tổng hợp để theo dõi và đối soát toàn bộ các khoản thanh toán phát sinh từ hệ thống máy rửa xe tự phục vụ.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/giao-dien-theo-doi-lich-su-thanh-toan-va-doi-soat-giao-dich.png}
+\caption{Giao diện theo dõi lịch sử thanh toán và đối soát giao dịch}
+\label{fig:quan-ly-lich-su-giao-dich}
+\end{figure}
+
+Giao diện được thiết kế tối giản, tập trung vào bảng dữ liệu chi tiết với các trường thông tin phục vụ trực tiếp cho nghiệp vụ kế toán:
+\begin{itemize}
+    \item \textbf{Thiết bị:} Hiển thị định danh của máy rửa xe phát sinh giao dịch, giúp chủ trạm phân loại được nguồn thu từ từng thiết bị cụ thể.
+    \item \textbf{Số tiền \& Thời lượng:} Thể hiện giá trị khoản thanh toán mà khách hàng đã chuyển khoản và thời gian hoạt động tương ứng được hệ thống quy đổi tự động (ví dụ: 10.000đ cho 10 phút).
+    \item \textbf{Trạng thái:} Các nhãn trạng thái (ví dụ: ``Thành công'' màu xanh) giúp người quản lý nhận biết nhanh tiến trình xử lý của hệ thống thanh toán tự động.
+    \item \textbf{Mã giao dịch:} Chuỗi định danh duy nhất sinh ra cho mỗi phiên thanh toán, đóng vai trò làm mã đối chứng khi chủ trạm cần tra cứu chéo với lịch sử biến động số dư trên ứng dụng ngân hàng.
+    \item \textbf{Thời gian:} Ghi nhận chính xác mốc thời gian (Timestamp) hệ thống tiếp nhận Webhook và hoàn tất giao dịch.
+\end{itemize}
+
+\subsection{Giao diện Cấu hình Hệ thống Thanh toán}
+
+Trang ``Cấu hình'' là phân hệ quan trọng cho phép chủ trạm thiết lập và đồng bộ tài khoản ngân hàng nhận tiền với nền tảng trung gian SePay. Đây là cơ sở dữ liệu bắt buộc để hệ thống có thể tự động hóa quy trình đối soát giao dịch.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/giao-dien-thiet-lap-tham-so-tich-hop-thanh-toan-tu-dong-sepay.png}
+\caption{Giao diện thiết lập tham số tích hợp thanh toán tự động SePay}
+\label{fig:cau-hinh-thanh-toan-sepay}
+\end{figure}
+
+Biểu mẫu cấu hình được thiết kế trực quan, tập trung vào các tham số bảo mật và định danh tài chính cốt lõi:
+\begin{itemize}
+    \item \textbf{Số tài khoản ngân hàng \& Mã ngân hàng:} Thông tin định tuyến đích đến của dòng tiền (ví dụ: mã ngân hàng VTB). Hệ thống sử dụng dữ liệu này làm tham số gốc để khởi tạo mã QR động (VietQR) hiển thị cho khách hàng quét.
+    \item \textbf{Tên chủ tài khoản:} Định danh người thụ hưởng chính thức. Thông tin này giúp khách hàng dễ dàng đối chứng và xác nhận trước khi thực hiện lệnh chuyển tiền trên ứng dụng ngân hàng.
+    \item \textbf{Webhook Secret:} Chuỗi mã khóa bảo mật cấp cao, hoạt động như một chữ ký điện tử. Máy chủ ACW-SRS sử dụng khóa này để xác thực nguồn gốc các gói tin thông báo số dư đẩy về từ SePay, qua đó ngăn chặn triệt để các rủi ro tấn công giả mạo giao dịch (Fake Webhook).
+\end{itemize}
+
+\textbf{Thao tác lưu trữ:} Nút ``Lưu cấu hình'' sẽ tiến hành mã hóa các dữ liệu nhạy cảm và cập nhật đồng bộ các thiết lập thanh toán này áp dụng lên toàn bộ mạng lưới máy rửa xe do chủ trạm đó quản lý.
+
+\subsection{Trang Xem Doanh thu và Giao dịch}
+
+Đây là trang Dashboard tài chính, đóng vai trò như một báo cáo trực quan cho các chủ trạm:
+\begin{itemize}
+    \item Hiển thị các thẻ thống kê tổng quan (Thống kê số dư hiện tại, Doanh thu trong ngày, Doanh thu tuần).
+    \item Tích hợp biểu đồ trực quan (Bar chart/Line chart) thể hiện dòng tiền theo từng chu kỳ.
+    \item Bảng lịch sử giao dịch bên dưới giúp đối soát từng khoản tiền khách hàng chuyển vào thông qua quét QR.
+    \item Hỗ trợ xuất dữ liệu (Export) ra file Excel/CSV phục vụ việc kế toán.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/trang-thong-ke-doanh-thu-va-giao-dich.png}
+\caption{Trang thống kê doanh thu và giao dịch}
+\label{fig:trang-thong-ke-doanh-thu}
+\end{figure}
+
+\end{document}

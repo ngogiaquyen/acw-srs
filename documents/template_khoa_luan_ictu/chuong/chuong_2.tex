@@ -1,0 +1,153 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+% ─────────────────────────────────────────────
+\section{Khảo sát nhu cầu thông qua phỏng vấn doanh nghiệp vận tải}
+
+Để đảm bảo tính xác thực và bám sát nhu cầu của thị trường kinh doanh dịch vụ vận tải, thay vì thực hiện các biểu mẫu khảo sát đại trà thiếu tính chuyên sâu, đề tài đã tiến hành phỏng vấn trực tiếp bộ phận quản lý vận hành của một đơn vị kinh doanh taxi điện (taxi xanh).
+
+Kết quả trao đổi cho thấy những đặc thù riêng biệt của ngành: Phương tiện dịch vụ phải di chuyển liên tục, trung bình mỗi tháng một xe cần được vệ sinh ít nhất 4 lần. Đặc biệt, đại diện doanh nghiệp nhấn mạnh rằng tài xế không cần các dịch vụ chăm sóc nội thất cầu kỳ hay phủ bóng mất thời gian. Mục đích chính của họ chỉ là làm sạch nhanh phần ngoại thất (bụi bẩn, bùn đất bám trên thân vỏ) nhằm duy trì diện mạo chuyên nghiệp của hãng xe và có thể nhanh chóng quay lại ca làm việc.
+
+\subsection{Những điểm nghẽn trong phương thức vận hành hiện tại}
+
+Dưới lăng kính của doanh nghiệp quản lý đội xe, việc tiếp tục sử dụng các cơ sở rửa xe truyền thống đang bộc lộ nhiều điểm hạn chế, làm giảm hiệu suất khai thác của toàn hệ thống:
+\begin{itemize}
+    \item \textbf{Gây lãng phí quỹ thời gian:} Vào những khung giờ cao điểm, tài xế thường xuyên phải xếp hàng chờ đợi nhân viên thao tác. Việc xe phải nằm chờ quá lâu làm ảnh hưởng trực tiếp đến thời gian chạy cuốc, giảm thu nhập của tài xế và ảnh hưởng đến năng suất của cả hãng.
+    \item \textbf{Khó khăn trong quản lý chi phí và khung giờ hoạt động:} Các điểm rửa xe truyền thống thường giao dịch bằng tiền mặt hoặc chuyển khoản thủ công, dễ gây độ trễ trong đối soát chi phí giữa tài xế và công ty. Đồng thời, các cơ sở này chỉ hoạt động trong giờ hành chính, không thể đáp ứng nhu cầu xịt rửa nhanh vào ban đêm hay rạng sáng của các tài xế chạy ca đêm.
+\end{itemize}
+
+\subsection{Cơ hội tích hợp tiện ích IoT tại hệ thống trạm sạc xe điện}
+
+Từ những bất cập trên, buổi phỏng vấn đã gợi mở một định hướng giải quyết bài toán tối ưu quỹ thời gian: Tận dụng khoảng thời gian sạc pin của xe điện. Thông thường, một chu kỳ sạc pin tại trạm sạc sẽ kéo dài từ 20 đến 30 phút. Đây là khoảng thời gian trống lý tưởng để tài xế kết hợp thực hiện các công việc chăm sóc phương tiện.
+
+Việc đưa các module máy rửa xe tự phục vụ vào ngay bãi đỗ của trạm sạc là một bước đi chiến lược. Tài xế có thể tranh thủ tự xịt rửa ngoại thất xe trong lúc chờ nạp năng lượng. Mô hình này không chỉ giúp tối ưu hóa thời gian nghỉ của tài xế mà còn nâng cao hiệu suất khai thác mặt bằng cho các chủ trạm sạc. Cùng với đó, nền tảng vi điều khiển IoT (tiêu biểu là mạch ESP32) và mã QR động hoàn toàn đủ năng lực để tự động hóa khâu thanh toán và điều khiển máy bơm mà không cần tốn chi phí thuê nhân sự túc trực.
+
+\subsection{Định hướng phát triển hệ thống ACW-SRS}
+
+Từ những dữ liệu thu thập được qua quá trình phỏng vấn chuyên sâu, đề tài xác định việc xây dựng Hệ thống quản lý thiết bị cho trạm rửa xe tự phục vụ là hướng đi khả thi, đáp ứng trúng yêu cầu của doanh nghiệp. Hệ thống được thiết kế tập trung giải quyết các mục tiêu cốt lõi:
+\begin{enumerate}
+    \item \textbf{Số hóa và tự động hóa toàn diện:} Cho phép tài xế tự chủ việc quét mã QR thanh toán và sử dụng máy. Hệ thống tự động đối soát luồng tiền qua Webhook và đóng ngắt rơ-le (Relay) qua giao thức mạng, loại bỏ hoàn toàn sự can thiệp của con người trong khâu vận hành.
+    \item \textbf{Mô hình tích hợp trạm sạc linh hoạt:} Cung cấp tiện ích xịt rửa ngoại thất nhanh chóng, chi phí thấp, khả năng hoạt động xuyên suốt 24/7, cực kỳ phù hợp để triển khai quy mô lớn tại các trạm sạc xe điện hiện hữu.
+    \item \textbf{Phân quyền và quản lý độc lập:} Cung cấp cho các đối tác (chủ trạm sạc, quản lý hãng xe) một hệ thống quản trị trực quan. Qua đó, họ có thể giám sát tình trạng online/offline của thiết bị máy bơm và thống kê dòng tiền doanh thu một cách minh bạch, chính xác theo thời gian thực.
+\end{enumerate}
+
+% ─────────────────────────────────────────────
+\section{Giới thiệu hệ thống}
+
+\subsection{Giới thiệu về hệ thống quản lý thiết bị cho trạm rửa xe tự phục vụ (ACW-SRS)}
+
+ACW-SRS là viết tắt của Automatic Car Wash -- Self-service System, có nghĩa là Hệ thống Rửa xe Tự động Tự phục vụ. Tên gọi phản ánh đúng bản chất của hệ thống: khách hàng chủ động thanh toán qua mã QR và sử dụng máy rửa xe mà không cần bất kỳ hỗ trợ nào từ nhân viên, mọi thứ được tự động thông qua nền tảng web và thiết bị IoT.
+
+ACW-SRS là một hệ thống rửa xe tự phục vụ thông minh, tích hợp giữa nền tảng web hiện đại (Next.js, React, TypeScript) và thiết bị phần cứng nhúng (ESP32), nhằm tự động hóa toàn bộ quy trình thanh toán và vận hành trạm rửa xe. Hệ thống được phát triển với mục tiêu loại bỏ sự can thiệp thủ công của người quản lý trong quá trình thanh toán và kích hoạt máy, từ đó giảm chi phí nhân sự, tăng tính minh bạch và nâng cao trải nghiệm của khách hàng.
+
+ACW-SRS được xây dựng theo mô hình tự phục vụ (self-service) kết hợp mô hình kinh doanh đa chủ trạm, trong đó khách hàng chủ động quét mã QR, thực hiện thanh toán và sử dụng máy rửa xe mà không cần nhân viên thu tiền hay vận hành trực tiếp. Đồng thời, nhiều chủ trạm độc lập sẽ cùng quản lý thiết bị rửa xe của riêng mình trên một nền tảng chung mà không ảnh hưởng lẫn nhau. Hệ thống sẽ có các tác vụ sau:
+\begin{itemize}
+    \item Quản lý trạm rửa xe và thiết bị IoT của trạm thông qua Dashboard web.
+    \item Tự động kích hoạt máy rửa xe khi hoàn tất thanh toán qua mã QR Dynamic (VietQR).
+    \item Giám sát trạng thái thiết bị IoT theo thời gian thực và dễ quan sát khi gặp phải sự cố.
+    \item Theo dõi doanh thu và lịch sử giao dịch một cách trực quan.
+\end{itemize}
+
+ACW-SRS cung cấp các tính năng cốt lõi giúp tối ưu hóa hoạt động kinh doanh dịch vụ rửa xe:
+\begin{itemize}
+    \item \textbf{Thanh toán tự động qua QR Dynamic:} Khách hàng quét mã QR, thực hiện chuyển khoản ngân hàng; hệ thống tự động nhận biến động số dư qua Webhook SePay và kích hoạt máy mà không cần sự can thiệp con người.
+    \item \textbf{Giám sát IoT thời gian thực:} Dashboard hiển thị trạng thái Online/Offline của thiết bị ESP32, thời gian còn lại của lượt sử dụng và các cảnh báo sự cố.
+    \item \textbf{Quản lý đa trạm:} Mỗi chủ trạm có không gian quản lý riêng biệt, an toàn và được cô lập dữ liệu hoàn toàn.
+    \item \textbf{Thống kê doanh thu trực quan:} Biểu đồ doanh thu theo ngày, tuần, tháng giúp chủ trạm quản lý được hiệu quả kinh doanh.
+    \item \textbf{Điều khiển thiết bị từ xa:} Cho phép bật/tắt cưỡng bức thiết bị từ Dashboard trong trường hợp cần bảo trì.
+\end{itemize}
+
+\subsection{Giới thiệu hệ thống}
+
+Dịch vụ rửa xe là một ngành dịch vụ phổ biến tại Việt Nam với hàng nghìn cơ sở hoạt động trên cả nước. Tuy nhiên, phần lớn các trạm rửa xe hiện nay vẫn theo cách truyền thống là thu tiền mặt. Mô hình vận hành này tồn tại nhiều hạn chế, bao gồm sự phụ thuộc vào nhân lực trực tiếp, nguy cơ thất thoát doanh thu do thiếu minh bạch và không có khả năng phát hiện sự cố thiết bị kịp thời.
+
+Mục tiêu chính khi xây dựng hệ thống ACW-SRS là tạo ra một nền tảng quản lý thiết bị cho trạm rửa xe tự phục vụ toàn diện, giúp người dùng:
+\begin{itemize}
+    \item Tự động hóa hoàn toàn quy trình thanh toán và kích hoạt thiết bị thông qua tích hợp cổng thanh toán SePay và giao tiếp HTTP với thiết bị ESP32.
+    \item Giám sát hệ thống 24/7 với khả năng theo dõi trạng thái thiết bị IoT theo thời gian thực, nhận cảnh báo sự cố và điều khiển từ xa.
+    \item Quản lý đa trạm linh hoạt theo mô hình đa chủ trạm, đảm bảo cô lập dữ liệu tuyệt đối giữa các chủ trạm.
+    \item Minh bạch hóa doanh thu thông qua thống kê chi tiết các giao dịch.
+\end{itemize}
+
+\subsection{Mô tả bài toán}
+
+\textbf{Nghiệp vụ:}
+
+\textbf{Về phía khách hàng:} Khách hàng thanh toán qua mã QR được dán sẵn tại trạm, thực hiện chuyển khoản theo đúng nội dung có sẵn khi quét mã QR. Hệ thống tự động nhận biến động số dư, đối chiếu giao dịch và kích hoạt máy rửa xe mà không cần nhân viên can thiệp.
+
+\textbf{Về phía chủ trạm:}
+\begin{itemize}
+    \item \textbf{Đăng ký và đăng nhập:} Admin sẽ tạo tài khoản và chủ trạm có thể đăng nhập vào hệ thống để quản lý các trạm của mình.
+    \item \textbf{Đổi mật khẩu / Quên mật khẩu:} Chủ trạm có thể thay đổi mật khẩu hoặc lấy lại mật khẩu thông qua email.
+    \item \textbf{Quản lý trạm rửa xe:} Thêm trạm mới bằng cách gán ID thiết bị ESP32, cấu hình đơn giá dịch vụ theo phút, chỉnh sửa thông tin hoặc tạm dừng hoạt động trạm.
+    \item \textbf{Giám sát và điều khiển IoT:} Theo dõi trạng thái Online/Offline của thiết bị theo thời gian thực; điều khiển bật/tắt thiết bị từ Dashboard khi cần bảo trì; nhận cảnh báo khi thiết bị mất kết nối hoặc Relay gặp sự cố.
+    \item \textbf{Quản lý doanh thu:} Xem thống kê doanh thu theo ngày, tuần, tháng cho từng trạm; xuất báo cáo lịch sử giao dịch; theo dõi biểu đồ tăng trưởng doanh thu.
+\end{itemize}
+
+\textbf{Về phía quản trị viên (Admin):}
+\begin{itemize}
+    \item \textbf{Đăng nhập hệ thống:} Quản trị viên đăng nhập bằng tài khoản riêng có đặc quyền cao nhất.
+    \item \textbf{Quản lý tài khoản chủ trạm:} Admin có thể xem danh sách, kích hoạt hoặc vô hiệu hóa tài khoản chủ trạm và các thiết bị rửa xe trên toàn hệ thống.
+\end{itemize}
+
+% ─────────────────────────────────────────────
+\section{Yêu cầu về hệ thống}
+
+\subsection{Yêu cầu chức năng của hệ thống}
+
+\textbf{Quản lý tài khoản:}
+\begin{itemize}
+    \item Đăng nhập, đổi mật khẩu, quên mật khẩu.
+    \item Cập nhật thông tin chủ trạm.
+\end{itemize}
+
+\textbf{Quản lý trạm rửa xe:}
+\begin{itemize}
+    \item Thêm trạm mới (Gán ID cho bộ ESP32).
+    \item Cấu hình giá tiền thuê trạm theo phút.
+    \item Chỉnh sửa thông tin trạm hoặc tạm dừng hoạt động trạm.
+\end{itemize}
+
+\textbf{Giám sát \& Điều khiển IoT:}
+\begin{itemize}
+    \item Theo dõi trạng thái Online/Offline của thiết bị ESP32 theo thời gian thực.
+    \item Điều khiển bật/tắt cưỡng bức thiết bị từ Dashboard (trong trường hợp bảo trì).
+    \item Nhận cảnh báo khi thiết bị mất kết nối hoặc Relay gặp sự cố.
+\end{itemize}
+
+\textbf{Quản lý doanh thu:}
+\begin{itemize}
+    \item Xem thống kê doanh thu theo ngày, tuần, tháng cho từng trạm.
+    \item Xuất báo cáo lịch sử giao dịch (thanh toán qua SePay).
+    \item Biểu đồ trực quan hóa dữ liệu tăng trưởng doanh thu.
+\end{itemize}
+
+\textbf{Thanh toán \& Thuê máy:}
+\begin{itemize}
+    \item Quét mã QR Dynamic để thực hiện thanh toán tự động.
+    \item Hệ thống tự động kích hoạt máy rửa xe sau khi nhận được tiền.
+    \item Theo dõi tiến trình: Xem thời gian đếm ngược còn lại của lượt thuê trực tiếp trên giao diện web.
+\end{itemize}
+
+\subsection{Yêu cầu phi chức năng}
+
+\textbf{Bảo mật:}
+\begin{itemize}
+    \item Dữ liệu giữa các chủ trạm phải được cô lập hoàn toàn.
+    \item Mã hóa mật khẩu người dùng.
+    \item Đảm bảo an toàn cho các Webhook nhận biến động số dư từ ngân hàng.
+\end{itemize}
+
+\textbf{Hiệu suất:}
+\begin{itemize}
+    \item Thời gian phản hồi từ lúc khách thanh toán đến khi máy kích hoạt (Relay đóng) phải dưới 5 giây.
+    \item Giao diện Dashboard quản lý phải hoạt động mượt mà, phản hồi chuyển trang dưới 2 giây.
+\end{itemize}
+
+\textbf{Độ tin cậy:}
+\begin{itemize}
+    \item Hệ thống hoạt động 24/7, có khả năng khôi phục kết nối Wi-Fi cho ESP32 khi gặp sự cố mạng.
+    \item Sao lưu cơ sở dữ liệu hàng ngày để đảm bảo an toàn dữ liệu doanh thu.
+\end{itemize}
+
+\end{document}

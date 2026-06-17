@@ -1,0 +1,32 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+Trong quá trình phát triển hệ thống ACW-SRS (Auto Car Wash Smart Rental System), em đã đúc kết ra được những thành quả và bài học quý giá sau:
+
+\section*{Kết quả đã đạt được}
+\begin{itemize}
+    \item Hoàn thành đầy đủ các chức năng lõi đã đề ra: Quản trị đa người dùng, quản lý trạng thái thiết bị IoT thời gian thực, tự động hóa thanh toán và báo cáo doanh thu.
+    \item Hoàn thiện hệ thống với kiến trúc Full-stack chặt chẽ, tối ưu hiệu năng.
+    \item Sử dụng thành thạo framework Next.js và React để xây dựng giao diện người dùng trực quan, hỗ trợ tốt trên cả thiết bị di động và máy tính.
+    \item Áp dụng thành công hệ quản trị CSDL MySQL cùng Prisma ORM giúp thao tác dữ liệu (CRUD) an toàn, linh hoạt và truy vấn tốc độ cao.
+    \item Triển khai thành công thiết bị phần cứng ESP32, lập trình luồng kết nối tự động phục hồi và xử lý tín hiệu bật/tắt thiết bị vật lý với độ trễ thấp ($<$ 5 giây).
+    \item Tích hợp giải pháp thanh toán không tiền mặt tự động qua Webhook SePay, mang lại giá trị thực tiễn lớn trong việc tự động hóa mô hình kinh doanh.
+    \item Nâng cao kỹ năng thiết kế UI/UX (Tailwind CSS, shadcn/ui) giúp giao diện trở nên thân thiện và chuyên nghiệp hơn.
+\end{itemize}
+
+\section*{Hạn chế}
+\begin{itemize}
+    \item Giao diện vẫn còn khá đơn giản, chưa tích hợp nhiều hoạt ảnh (animation) thu hút.
+    \item Hệ thống hiện tại chỉ mới kết nối thanh toán qua tài khoản ngân hàng, chưa tích hợp các ví điện tử phổ biến như MoMo, ZaloPay.
+    \item Thiết bị IoT ESP32 phụ thuộc hoàn toàn vào mạng Wi-Fi, có thể gặp rủi ro mất kết nối tại các khu vực sóng yếu.
+\end{itemize}
+
+\section*{Phương hướng phát triển}
+\begin{itemize}
+    \item Nâng cấp UI/UX cho toàn bộ hệ thống để mang lại trải nghiệm tiệm cận các ứng dụng thương mại cao cấp.
+    \item Tích hợp thêm các module kết nối 4G/LTE cho phần cứng IoT nhằm khắc phục điểm yếu của sóng Wi-Fi.
+    \item Phát triển thêm tính năng ``Thẻ thành viên'' hoặc ``Ví nạp trước'' giúp khách hàng thân thiết thao tác nhanh hơn mà không cần phải chuyển khoản ngân hàng nhiều lần.
+\end{itemize}
+
+\end{document}

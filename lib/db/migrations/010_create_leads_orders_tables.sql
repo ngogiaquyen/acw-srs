@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS orders (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   confirmed_at TIMESTAMP NULL,
   FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE SET NULL,
-  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE SET NULL,
+  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
   INDEX idx_orders_status (status),
   INDEX idx_orders_order_number (order_number),
   INDEX idx_orders_lead_id (lead_id),

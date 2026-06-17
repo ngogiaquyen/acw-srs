@@ -1,0 +1,62 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+\section*{Lý do chọn đề tài}
+Bước vào thời đại số hóa, xu hướng tự động hóa đang len lỏi vào hầu hết mọi lĩnh vực của nền kinh tế. Các ngành dịch vụ truyền thống, trong đó có dịch vụ vận hành và bảo dưỡng phương tiện giao thông, đang chịu áp lực phải thay đổi mô hình vận hành để bắt kịp với nhu cầu và đòi hỏi ngày càng cao của thị trường. Ứng dụng các giải pháp công nghệ không còn là lợi thế cạnh tranh mà đã trở thành điều kiện tối thiểu để duy trì và phát triển.
+
+Xuất phát từ thực tế em đã có cơ hội tiếp cận và hỗ trợ một số đơn vị kinh doanh taxi, em nhận ra rằng nhu cầu rửa xe của đội taxi đang tăng trưởng rất mạnh nhưng chưa có giải pháp phù hợp để đáp ứng. Khi các hãng taxi dịch vụ và taxi điện như VinFast/GSM phát triển bùng nổ, số lượng phương tiện lưu thông ngày càng tăng cao. Trung bình mỗi chiếc taxi cần được vệ sinh khoảng 4 lần mỗi tháng để đảm bảo hình ảnh khi phục vụ khách. Đặc thù của tài xế taxi là cần quay vòng nhanh chủ yếu chỉ cần làm sạch vỏ xe, nhưng các trạm rửa xe truyền thống dựa vào nhân công lại thường xuyên gây tình trạng xếp hàng và mất nhiều thời gian chờ đợi.
+
+Từ bài toán thực tế đó, em quyết định xây dựng đề tài: "Xây dựng hệ thống quản lý trạm rửa xe thông minh ACW-SRS (Auto Car Wash Smart Rental System)".
+
+Dự án hướng đến giải pháp kết hợp giữa phần cứng IoT và nền tảng phần mềm SaaS:
+\begin{itemize}
+    \item \textbf{Ứng dụng IoT (ESP32):} Cho phép kết nối các thiết bị vật lý với internet, thực hiện giám sát trạng thái trực tuyến (Heartbeat) và điều khiển bật/tắt thiết bị từ xa một cách chính xác.
+    \item \textbf{Nền tảng SaaS (Next.js):} Cung cấp khả năng quản lý đa chủ trạm, cho phép mỗi chủ trạm có một không gian làm việc riêng biệt để quản lý thiết bị và theo dõi doanh thu của chính mình.
+    \item \textbf{Thanh toán tự động qua mã QR:} Tích hợp các cổng thanh toán (SePay) giúp khách hàng dễ dàng tự phục vụ, hệ thống sẽ tự động kích hoạt máy ngay sau khi nhận được tiền, đảm bảo tính thuận tiện và minh bạch tuyệt đối.
+\end{itemize}
+
+Triển khai đề tài này không chỉ giúp em củng cố kiến thức chuyên môn về lập trình web hiện đại, hệ thống nhúng IoT mà còn mang lại một sản phẩm có tính ứng dụng thực tiễn cao, đáp ứng nhu cầu cấp thiết của thị trường dịch vụ tự động hóa hiện nay.
+
+Thời gian làm sản phẩm còn ngắn nên còn một số thiếu sót và chưa thực sự hoàn chỉnh, Em rất mong được sự đón nhận của người dùng và giúp sản phẩm hoàn thiện hơn.
+
+\section*{Mục tiêu nghiên cứu}
+\begin{itemize}
+    \item Tìm hiểu và làm chủ công nghệ vi điều khiển ESP32 trong việc điều khiển thiết bị ngoại vi.
+    \item Xây dựng hệ thống backend quản lý dữ liệu theo mô hình Multi-tenant trên nền tảng Next.js.
+    \item Thiết kế giao diện Dashboard trực quan cho Admin và Tenant để theo dõi doanh thu và thiết bị.
+    \item Triển khai thành công luồng thanh toán tự động qua QR Code để kích hoạt máy rửa xe.
+\end{itemize}
+
+\section*{Đối tượng và phạm vi nghiên cứu}
+\begin{itemize}
+    \item \textbf{Đối tượng nghiên cứu:} Hệ thống phần cứng điều khiển (ESP32, Relay), nền tảng quản lý SaaS (Next.js) và các giao thức kết nối IoT.
+    \item \textbf{Phạm vi thực hiện:}
+    \begin{itemize}
+        \item \textbf{Nhu cầu thực tế:} Giải quyết khó khăn trong việc quản lý doanh thu và giám sát trạng thái thiết bị tại các trạm rửa xe tự động từ xa, giúp chủ trạm tránh thất thoát và kiểm soát vận hành hiệu quả.
+        \item \textbf{Tiết kiệm thời gian:} Tự động hoá quy trình, giảm thiểu ghi chép. Hệ thống giúp rút ngắn thời gian thanh toán và kích hoạt máy cho khách hàng.
+        \item \textbf{Hỗ trợ ra quyết định:} Thông qua các báo cáo thống kê doanh thu và biểu đồ trực quan, chủ trạm có thể đưa ra các quyết định điều chỉnh bảng giá hoặc mở rộng quy mô kinh doanh hợp lý.
+        \item \textbf{Quản lý đa chủ trạm:} Tập trung vào việc xây dựng nền tảng SaaS hỗ trợ nhiều chủ trạm cùng sử dụng trên một hệ thống nhưng dữ liệu hoàn toàn tách biệt và bảo mật.
+    \end{itemize}
+\end{itemize}
+
+\section*{Phương pháp nghiên cứu}
+\begin{itemize}
+    \item \textbf{Phương pháp nghiên cứu lý thuyết:} Thực hiện nghiên cứu tài liệu về kiến trúc SaaS, giao thức HTTP cho IoT và các framework Next.js, Prisma.
+    \item \textbf{Phương pháp điều tra và khảo sát:}
+    \begin{itemize}
+        \item Quan sát, phân tích quy trình vận hành tại các trạm rửa xe hiện nay để đánh giá và tổng hợp các yêu cầu chức năng cần thiết.
+        \item Phỏng vấn khách hàng (tài xế taxi) để hiểu rõ hơn về những khó khăn, mong muốn trong quá trình sử dụng dịch vụ.
+        \item Khai thác ý kiến phản hồi từ người dùng thử nghiệm để xây dựng các tính năng phù hợp và tối ưu hóa trải nghiệm trên Dashboard.
+    \end{itemize}
+    \item \textbf{Phương pháp thực nghiệm:} Lập trình firmware cho ESP32 và xây dựng website quản lý.
+    \item \textbf{Kiểm thử và đánh giá:} Chạy thử nghiệm quy trình thực tế từ quét mã QR đến kích hoạt Relay để đánh giá độ trễ và tính ổn định của hệ thống.
+\end{itemize}
+
+\section*{Ý nghĩa khoa học và thực tiễn}
+\begin{itemize}
+    \item \textbf{Ý nghĩa khoa học:} Đề xuất một mô hình kết hợp hiệu quả giữa IoT và SaaS để giải quyết bài toán quản lý phân tán.
+    \item \textbf{Ý nghĩa thực tiễn:} Tạo ra một phần mềm quản lý hiệu quả cho các chủ kinh doanh rửa xe, giúp giảm thiểu rủi ro thất thoát doanh thu và nâng cao trải nghiệm khách hàng.
+\end{itemize}
+
+\end{document}

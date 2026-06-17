@@ -1,0 +1,771 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+% ─────────────────────────────────────────────
+\section{Tác nhân hệ thống}
+
+Trong hệ thống quản lý thiết bị cho trạm rửa xe tự phục vụ ACW-SRS, các tác nhân được xác định rõ ràng nhằm phục vụ cho mô hình đa chủ trạm, bao gồm:
+
+\begin{itemize}
+    \item \textbf{Quản trị viên (Admin):} Là người có đặc quyền cao nhất trong toàn bộ hệ thống. Admin chịu trách nhiệm vận hành nền tảng, quản trị thông tin các chủ trạm.
+    \item \textbf{Chủ trạm:} Là đối tác kinh doanh hoặc cá nhân sở hữu các trạm rửa xe tự phục vụ thực tế. Mỗi chủ trạm sẽ sở hữu một không gian làm việc (workspace) riêng biệt và dữ liệu được cô lập hoàn toàn với các chủ trạm khác.
+    \item \textbf{Khách hàng:} Là người trực tiếp sử dụng dịch vụ tại trạm rửa xe. Khách hàng tương tác với hệ thống chủ yếu thông qua giao diện Web di động sau khi quét mã QR để thanh toán tiền và kích hoạt máy rửa.
+    \item \textbf{Thiết bị IoT (Mạch vi điều khiển ESP32):} Là tác nhân phần cứng (System Actor) đóng vai trò cầu nối thực thi giữa phần mềm và thiết bị cơ học vật lý (máy bơm nước, van điện từ). ESP32 được lập trình firmware và giao tiếp trực tiếp với máy chủ trung tâm qua giao thức HTTP/HTTPS.
+\end{itemize}
+
+% ─────────────────────────────────────────────
+\section{Sơ đồ Use Case}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{tai_nguyen/so-do-use-case-chi-tiet-he-thong.png}
+\caption{Sơ đồ Use Case chi tiết hệ thống}
+\label{fig:usecase-he-thong}
+\end{figure}
+
+% ─────────────────────────────────────────────
+\section{Thiết kế chi tiết từng chức năng}
+
+\subsection{Chức năng đăng nhập}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Đăng nhập''}
+\label{tab:uc-dangnhap}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Đăng nhập \\
+\hline
+Mục đích & Xác thực thông tin người dùng để cho phép họ có thể truy cập vào các chức năng. \\
+\hline
+Mô tả & Người dùng đăng nhập vào ứng dụng bằng cách nhập thông tin email và mật khẩu hợp lệ. \\
+\hline
+Tác nhân & Admin, chủ trạm \\
+\hline
+Điều kiện trước & Tác nhân đã có tài khoản trên hệ thống và đang ở trang đăng nhập. \\
+\hline
+Điều kiện sau & Hệ thống chuyển người dùng đến màn hình dashboard quản trị tương ứng theo phân quyền. \\
+\hline
+Luồng sự kiện chính & 1. Người dùng truy cập trang đăng nhập. \newline 2. Web hiển thị form đăng nhập. \newline 3. Nhập Email và mật khẩu. \newline 4. Bấm nút đăng nhập. \newline 5. Web gửi thông tin gọi API đăng nhập xuống Backend. \newline 6. Backend nhận yêu cầu và đối chiếu với database (users table). \newline 7. Backend trả về kết quả thành công kèm Access Token. \newline 8. Web lưu Access Token vào bộ nhớ local và điều hướng tới trang quản lý. \\
+\hline
+Luồng sự kiện phụ & 3.a: Sai định dạng \newline -- 3.a.1: Hệ thống hiển thị cảnh báo ngay trên form. \newline -- 3.a.2: Người dùng nhập lại thông tin. \newline 6.a: Sai thông tin đăng nhập hoặc tài khoản bị khóa \newline -- 6.a.1: Backend trả về lỗi 401 Unauthorized. \newline -- 6.a.2: Web hiển thị thẻ báo lỗi ``Tài khoản hoặc mật khẩu không chính xác''. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-dang-nhap.png}
+\caption{Biểu đồ hoạt động chức năng ``Đăng nhập''}
+\label{fig:activity-dangnhap}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-dang-nhap.png}
+\caption{Biểu đồ trình tự chức năng ``Đăng nhập''}
+\label{fig:sequence-dangnhap}
+\end{figure}
+
+\subsection{Chức năng xem thông tin chủ trạm}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Xem thông tin chủ trạm''}
+\label{tab:uc-xemchutram}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Xem thông tin chủ trạm \\
+\hline
+Mục đích & Cho phép xem chi tiết thông tin từng đối tác, gói dịch vụ của họ. \\
+\hline
+Mô tả & Xem danh sách tổng quan và thông tin chủ trạm, thông tin hợp đồng. \\
+\hline
+Tác nhân & Admin \\
+\hline
+Điều kiện trước & Tác nhân đã đăng nhập vào hệ thống và đang ở màn hình Quản lý chủ trạm. \\
+\hline
+Điều kiện sau & Admin xem được dữ liệu chủ trạm và chi tiết cấu hình. \\
+\hline
+Luồng sự kiện chính & 1. Web gọi API lấy danh sách chủ trạm. \newline 2. Backend Load dữ liệu trả về mảng danh sách. \newline 3. Web hiển thị bảng các thông tin cơ bản: Tên, Email, Số điện thoại\ldots{} \newline 4. Admin chọn ``Xem chi tiết''. \newline 5. Hệ thống hiển thị thông tin chuyên sâu: Số thiết bị tối đa, Tài khoản ngân hàng, Hạn đăng ký. \\
+\hline
+Luồng sự kiện phụ & 5.a: Không tìm thấy bất kỳ chủ trạm nào, trả về bảng rỗng và hiện ``Chưa có chủ trạm''. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-xem-thong-tin-chu-tram.png}
+\caption{Biểu đồ hoạt động chức năng ``Xem thông tin chủ trạm''}
+\label{fig:activity-xemchutram}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-xem-thong-tin-nguoi-chu-tram.png}
+\caption{Biểu đồ trình tự chức năng ``Xem thông tin người chủ trạm''}
+\label{fig:sequence-xemchutram}
+\end{figure}
+
+\subsection{Chức năng thêm chủ trạm}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Thêm thông tin chủ trạm''}
+\label{tab:uc-themchutram}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Thêm chủ trạm \\
+\hline
+Mục đích & Thêm một chủ trạm mới vào nền tảng. \\
+\hline
+Mô tả & Tạo một chủ trạm mới với các cấu hình về gói dịch vụ. \\
+\hline
+Tác nhân & Admin \\
+\hline
+Điều kiện trước & Tác nhân đã đăng nhập vào hệ thống và đang ở màn hình ``Quản lý chủ trạm''. \\
+\hline
+Điều kiện sau & Lập bản ghi mới trong bảng chủ trạm và liên kết với tài khoản users tương ứng. \\
+\hline
+Luồng sự kiện chính & 1. Admin bấm nút ``Thêm mới''. \newline 2. Hệ thống hiển thị form nhập thông tin (Tên, Email, SĐT, Số thiết bị tối đa, Chu kỳ đăng ký hợp đồng). \newline 3. Admin điền thông tin và bấm ``Lưu''. \newline 4. Backend ghi dữ liệu vào bảng chủ trạm. \newline 5. Backend trả về thông báo tạo thành công. \newline 6. Cập nhật lại giao diện danh sách. \\
+\hline
+Luồng sự kiện phụ & 4.a: Email đã tồn tại \newline -- 4.a.1: Database báo lỗi Unique Constraint. \newline -- 4.a.2: Server báo lỗi ``Email này đã được sử dụng''. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-them-chu-tram.png}
+\caption{Biểu đồ hoạt động chức năng ``Thêm chủ trạm''}
+\label{fig:activity-themchutram}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-them-chu-tram.png}
+\caption{Biểu đồ trình tự chức năng ``Thêm chủ trạm''}
+\label{fig:sequence-themchutram}
+\end{figure}
+
+\subsection{Chức năng sửa chủ trạm}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Sửa chủ trạm''}
+\label{tab:uc-suachutram}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Sửa chủ trạm \\
+\hline
+Mục đích & Quản lý thay đổi trạng thái, gian hạn hoặc cài đặt webhook hỗ trợ thanh toán tự động. \\
+\hline
+Mô tả & Cho phép chỉnh sửa thông tin thông của chủ trạm và cấu hình thanh toán (Ví dụ cài đặt SePay webhook). \\
+\hline
+Tác nhân & Admin \\
+\hline
+Điều kiện trước & Tác nhân đã đăng nhập vào hệ thống, đang ở màn hình Quản lý chủ trạm và có ít nhất 1 chủ trạm đang tồn tại. \\
+\hline
+Điều kiện sau & Thông tin chủ trạm (bao gồm cả thiết lập thanh toán) được lưu lại. \\
+\hline
+Luồng sự kiện chính & 1. Admin chọn chủ trạm cần sửa. \newline 2. Hệ thống hiển thị form với dữ liệu cũ (Thông tin chủ trạm, cấu hình ngân hàng, Token thanh toán). \newline 3. Admin điều chỉnh và bấm ``Cập nhật''. \newline 4. Gọi API cập nhật xuống Backend. \newline 5. Backend cập nhật Database và trả về thành công. \newline 6. Web tải lại danh sách/báo cáo. \\
+\hline
+Luồng sự kiện phụ & 5.a: Lỗi không tìm thấy bản ghi (Màn hình báo lỗi không tìm thấy chủ trạm). \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-sua-chu-tram.png}
+\caption{Biểu đồ hoạt động chức năng ``Sửa chủ trạm''}
+\label{fig:activity-suachutram}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-sua-chu-tram.png}
+\caption{Biểu đồ trình tự chức năng ``Sửa chủ trạm''}
+\label{fig:sequence-suachutram}
+\end{figure}
+
+\subsection{Chức năng xóa chủ trạm}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Xóa chủ trạm''}
+\label{tab:uc-xoachutram}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Xóa chủ trạm \\
+\hline
+Mục đích & Xóa dữ liệu những đối tác ngừng hợp đồng. \\
+\hline
+Mô tả & Xóa bỏ một chủ trạm, kéo theo các Thiết bị và Người dùng phụ thuộc cũng sẽ bị giải phóng. \\
+\hline
+Tác nhân & Admin \\
+\hline
+Điều kiện trước & Tác nhân đã đăng nhập vào hệ thống và đang thao tác trên bảng chủ trạm. \\
+\hline
+Điều kiện sau & Chủ trạm bị xóa khỏi DB. \\
+\hline
+Luồng sự kiện chính & 1. Admin nhấn chọn ``Xóa''. \newline 2. Hộp thoại cảnh báo xuất hiện. \newline 3. Admin xác nhận thao tác. \newline 4. Backend tiến hành chạy lệnh Xóa chủ trạm. \newline 5. Đóng hộp thoại và refresh UI danh sách. \\
+\hline
+Luồng sự kiện phụ & 3.a: Admin hủy thao tác (Quay lại bước trước, tắt hộp thoại). \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-xoa-chu-tram.png}
+\caption{Biểu đồ hoạt động chức năng ``Xóa chủ trạm''}
+\label{fig:activity-xoachutram}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-xoa-chu-tram.png}
+\caption{Biểu đồ trình tự chức năng ``Xóa chủ trạm''}
+\label{fig:sequence-xoachutram}
+\end{figure}
+
+\subsection{Chức năng xem doanh thu}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Xem doanh thu''}
+\label{tab:uc-xemdoanhthu}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Xem doanh thu \\
+\hline
+Mục đích & Xác định lãi/lỗ thông qua báo cáo dạng biểu đồ và thẻ tổng kết. \\
+\hline
+Mô tả & Báo cáo tài chính cho admin hoặc riêng cho chủ trạm. \\
+\hline
+Tác nhân & Admin, chủ trạm \\
+\hline
+Điều kiện trước & Tác nhân đã đăng nhập vào hệ thống và đang ở màn hình ``Doanh thu''. \\
+\hline
+Điều kiện sau & Hiển thị bảng tổng kết hoặc biểu đồ theo thời gian. \\
+\hline
+Luồng sự kiện chính & 1. Người dùng chọn phạm vi ngày tháng cần lấy dữ liệu. \newline 2. Gửi API request Report tổng hợp. \newline 3. Backend duyệt qua bảng transactions có status completed, tổng hợp và nhóm số liệu. \newline 4. Web tiếp nhận dữ liệu render lên các thành phần đồ họa (Bar Chart/Thẻ tổng kết). \\
+\hline
+Luồng sự kiện phụ & 3.a: Giai đoạn không có thay đổi giao dịch (Hiển thị 0đ và chart phẳng). \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-xem-doanh-thu.png}
+\caption{Biểu đồ hoạt động chức năng ``Xem doanh thu''}
+\label{fig:activity-xemdoanhthu}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-xem-doanh-thu.png}
+\caption{Biểu đồ trình tự chức năng ``Xem doanh thu''}
+\label{fig:sequence-xemdoanhthu}
+\end{figure}
+
+\subsection{Chức năng gửi báo cáo doanh thu}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Gửi báo cáo doanh thu''}
+\label{tab:uc-guibaocao}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Gửi báo cáo doanh thu \\
+\hline
+Mục đích & Gửi thông tin tổng kết doanh thu định kỳ qua email. \\
+\hline
+Mô tả & Trích xuất báo cáo doanh thu dưới dạng PDF/Excel và tự động gửi tới email chỉ định. \\
+\hline
+Tác nhân & Admin, chủ trạm \\
+\hline
+Điều kiện trước & Tác nhân đã đăng nhập vào hệ thống và đang ở màn hình Doanh thu. \\
+\hline
+Điều kiện sau & Email chứa báo cáo được gửi đi thành công. \\
+\hline
+Luồng sự kiện chính & 1. Admin bấm nút ``Gửi báo cáo''. \newline 2. Hệ thống hiển thị popup chọn kỳ báo cáo và email nhận. \newline 3. Admin điền thông tin và bấm ``Gửi''. \newline 4. Backend tạo file tổng hợp và sử dụng Mail Service để gửi tin. \newline 5. Backend trả về trạng thái gửi thành công. \newline 6. Web thông báo ``Báo cáo đã gửi thành công''. \\
+\hline
+Luồng sự kiện phụ & 4.a: Lỗi dịch vụ gửi Email (Mail server out/Timeout) \newline -- 4.a.1: Backend bắt lỗi gửi mail thất bại. \newline -- 4.a.2: Trả về thông báo ``Lỗi khi gửi email, vui lòng xem lại cấu hình máy chủ''. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-gui-bao-cao-doanh-thu.png}
+\caption{Biểu đồ hoạt động chức năng ``Gửi báo cáo doanh thu''}
+\label{fig:activity-guibaocao}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-gui-bao-cao-doanh-thu.png}
+\caption{Biểu đồ trình tự chức năng ``Gửi báo cáo doanh thu''}
+\label{fig:sequence-guibaocao}
+\end{figure}
+
+\subsection{Chức năng xem giao dịch}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Xem giao dịch''}
+\label{tab:uc-xemgiaodich}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Xem giao dịch \\
+\hline
+Mục đích & Kiểm tra chi tiết thời gian, số tiền, trạng thái của từng giao dịch. \\
+\hline
+Mô tả & Khám phá dữ liệu từng bản ghi giao dịch để đối soát. \\
+\hline
+Tác nhân & Admin, chủ trạm \\
+\hline
+Điều kiện trước & Tác nhân đã đăng nhập vào hệ thống và đang ở màn hình Giao dịch. \\
+\hline
+Điều kiện sau & Danh sách giao dịch được hiển thị đúng quyền hạn. \\
+\hline
+Luồng sự kiện chính & 1. Web gửi yêu cầu lấy danh sách giao dịch (có phân trang/lọc). \newline 2. Backend xác nhận quyền và trả về dữ liệu tương ứng. \newline 3. Web hiển thị bảng giao dịch (Thời gian, Số tiền, Mã KH, Trạng thái). \newline 4. Người dùng có thể bấm xem chi tiết từng dòng. \\
+\hline
+Luồng sự kiện phụ & 2.a: Lọc theo thời điểm không cố định/Lỗi DB \newline -- 2.a.1: Web thông báo không tìm thấy dữ liệu người dùng. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-xem-giao-dich.png}
+\caption{Biểu đồ hoạt động chức năng ``Xem giao dịch''}
+\label{fig:activity-xemgiaodich}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-xem-giao-dich.png}
+\caption{Biểu đồ trình tự chức năng ``Xem giao dịch''}
+\label{fig:sequence-xemgiaodich}
+\end{figure}
+
+\subsection{Chức năng xuất file thống kê}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Xuất file thống kê''}
+\label{tab:uc-xuatfile}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Xuất file thống kê \\
+\hline
+Mục đích & Xuất dữ liệu ra file mềm (Excel) cho việc kế toán ngoài hệ thống. \\
+\hline
+Mô tả & Người dùng chọn dữ liệu và hệ thống sẽ xuất định dạng file tải về máy. \\
+\hline
+Tác nhân & Admin, chủ trạm \\
+\hline
+Điều kiện trước & Tác nhân đã đăng nhập vào hệ thống và đang xem danh sách giao dịch. \\
+\hline
+Điều kiện sau & File lưu sẵn ở thiết bị cục bộ. \\
+\hline
+Luồng sự kiện chính & 1. Người dùng bấm ``Xuất file''. \newline 2. Chọn định dạng (Xuất toàn bộ hoặc theo bộ lọc hiện có). \newline 3. Backend tạo file excel tĩnh và trả lại luồng (stream). \newline 4. Web tải file xuống máy tính của người dùng. \newline 5. Thông báo xuất thành công. \\
+\hline
+Luồng sự kiện phụ & 3.a: Khối lượng dữ liệu quá lớn \newline -- 3.a.1: Backend xử lý quá lâu, báo Timeout. \newline -- 3.a.2: Web đề xuất người dùng chia nhỏ bộ lọc thời gian để xuất. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-xuat-file-thong-ke.png}
+\caption{Biểu đồ hoạt động chức năng ``Xuất file thống kê''}
+\label{fig:activity-xuatfile}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-xuat-file-thong-ke.png}
+\caption{Biểu đồ trình tự chức năng ``Xuất file thống kê''}
+\label{fig:sequence-xuatfile}
+\end{figure}
+
+\subsection{Chức năng xem thiết bị}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Xem thiết bị''}
+\label{tab:uc-xemthietbi}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Xem thiết bị \\
+\hline
+Mục đích & Xem trạng thái kết nối và thuộc tính của các thiết bị máy bơm. \\
+\hline
+Mô tả & Hiển thị tất cả thiết bị với label đánh dấu ``Online'', ``Offline'', ``Busy''. \\
+\hline
+Tác nhân & Admin, chủ trạm \\
+\hline
+Điều kiện trước & Tác nhân đã đăng nhập vào hệ thống và đang ở màn hình Thiết bị. \\
+\hline
+Điều kiện sau & Danh sách thiết bị cập nhật đúng trạng thái thực tế nhất. \\
+\hline
+Luồng sự kiện chính & 1. Web gửi API lấy danh sách thiết bị. \newline 2. Backend ghép với thông tin Heartbeat cuối cùng để tính toán trạng thái. \newline 3. Backend trả dữ liệu kèm cờ Online/Offline. \newline 4. Web hiển thị danh sách thiết bị dạng bảng hoặc dạng thẻ (Card). \\
+\hline
+Luồng sự kiện phụ & 3.a: Mất đồng bộ Heartbeat Database \newline -- 3.a.1: Backend báo lỗi log. \newline -- 3.a.2: Web tạm nhận trạng thái cũ (Cached). \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-xem-thiet-bi.png}
+\caption{Biểu đồ hoạt động chức năng ``Xem thiết bị''}
+\label{fig:activity-xemthietbi}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-xem-thiet-bi.png}
+\caption{Biểu đồ trình tự chức năng ``Xem thiết bị''}
+\label{fig:sequence-xemthietbi}
+\end{figure}
+
+\subsection{Chức năng thêm thiết bị}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Thêm thiết bị''}
+\label{tab:uc-themthietbi}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Thêm thiết bị \\
+\hline
+Mục đích & Thêm một module ESP32 mới vào phần mềm quản lý trạm cụ thể. \\
+\hline
+Mô tả & Người dùng khai báo mã thiết bị và Tên cho hệ thống chấp nhận thiết bị kết nối lên. \\
+\hline
+Tác nhân & Admin, chủ trạm \\
+\hline
+Điều kiện trước & Tác nhân đã đăng nhập vào hệ thống và đang ở màn hình Thiết bị. \\
+\hline
+Điều kiện sau & Thiết bị thiết lập thành công. \\
+\hline
+Luồng sự kiện chính & 1. Người dùng bấm ``Thêm thiết bị mới''. \newline 2. Điền mã thiết bị, Tên thiết bị\ldots{} \newline 3. Bấm ``Lưu''. \newline 4. Backend thẩm định dữ liệu và lưu DB. \newline 5. Báo thêm mới thành công, thiết bị có thể bắt đầu được kết nối. \\
+\hline
+Luồng sự kiện phụ & 4.a: Mã thiết bị trùng lặp \newline -- 4.a.1: Backend báo thiết bị này đang thuộc trạm khác/người khác. \newline -- 4.a.2: Hệ thống báo lỗi ``Mã thiết bị không hợp lệ''. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-them-thiet-bi.png}
+\caption{Biểu đồ hoạt động chức năng ``Thêm thiết bị''}
+\label{fig:activity-themthietbi}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-them-thiet-bi.png}
+\caption{Biểu đồ trình tự chức năng ``Thêm thiết bị''}
+\label{fig:sequence-themthietbi}
+\end{figure}
+
+\subsection{Chức năng sửa cấu hình thiết bị}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Sửa cấu hình thiết bị''}
+\label{tab:uc-suathietbi}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Sửa cấu hình thiết bị \\
+\hline
+Mục đích & Định cấu hình giá tiền, thời gian tương ứng. \\
+\hline
+Mô tả & Cập nhật thông tin thiết bị hoặc bảng giá cước (Ví dụ x vnđ/phút). \\
+\hline
+Tác nhân & Admin, chủ trạm \\
+\hline
+Điều kiện trước & Tác nhân đã đăng nhập vào hệ thống, đang ở màn hình Thiết bị và thiết bị đã tồn tại. \\
+\hline
+Điều kiện sau & Thiết bị lưu trữ thông tin cấu hình mới nhất. \\
+\hline
+Luồng sự kiện chính & 1. Bấm nút ``Sửa'' ở dòng thiết bị cần chỉnh. \newline 2. Thay đổi các thuộc tính như Tên, Đơn giá/phút\ldots{} \newline 3. Bấm ``Cập nhật''. \newline 4. Backend ghi lại DB. \newline 5. Trả kết quả thành công. \\
+\hline
+Luồng sự kiện phụ & 2.a: Nhập số âm cho đơn giá \newline -- 2.a.1: Web validation bắt lỗi. \newline -- 2.a.2: Hiển thị lỗi ``Đơn giá phải lớn hơn 0'' trên form. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-sua-cau-hinh-thiet-bi.png}
+\caption{Biểu đồ hoạt động chức năng ``Sửa cấu hình thiết bị''}
+\label{fig:activity-suathietbi}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-sua-cau-hinh-thiet-bi.png}
+\caption{Biểu đồ trình tự chức năng ``Sửa cấu hình thiết bị''}
+\label{fig:sequence-suathietbi}
+\end{figure}
+
+\subsection{Chức năng xóa thiết bị}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Xóa thiết bị''}
+\label{tab:uc-xoathietbi}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Xóa thiết bị \\
+\hline
+Mục đích & Xóa hoàn toàn thiết bị khỏi hệ thống khi hư hỏng/dời đi. \\
+\hline
+Mô tả & Xóa liên kết và dữ liệu thiết bị, từ đó thiết bị vật lý này sẽ không cấp phép nối lên Server được nữa. \\
+\hline
+Tác nhân & Admin, chủ trạm \\
+\hline
+Điều kiện trước & Tác nhân đã đăng nhập vào hệ thống và đang ở màn hình Thiết bị. \\
+\hline
+Điều kiện sau & Thiết bị biến mất khỏi hệ thống. \\
+\hline
+Luồng sự kiện chính & 1. Bấm xoá thiết bị. \newline 2. Nhận popup cảnh báo rủi ro thao tác. \newline 3. Bấm xác nhận xóa. \newline 4. Backend cô lập dữ liệu giao dịch cũ (giữ lại) nhưng xoá thực thể device table. \newline 5. Thông báo xoá thành công. \\
+\hline
+Luồng sự kiện phụ & 4.a: Thiết bị đang trong trạng thái BUSY (đáp ứng khách) \newline -- 4.a.1: Backend chặn tiến tình xoá để tránh mất tiền của khách đang dùng dở. \newline -- 4.a.2: Web báo lỗi ``Hãy chờ chu kỳ rửa hoàn tất để xoá''. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-xoa-thiet-bi.png}
+\caption{Biểu đồ hoạt động chức năng ``Xóa thiết bị''}
+\label{fig:activity-xoathietbi}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-xoa-thiet-bi.png}
+\caption{Biểu đồ trình tự chức năng ``Xóa thiết bị''}
+\label{fig:sequence-xoathietbi}
+\end{figure}
+
+\subsection{Chức năng thanh toán}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Thanh toán''}
+\label{tab:uc-thanhtoan}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Thanh toán \\
+\hline
+Mục đích & Cho phép khách hàng trả phí để bắt đầu sử dụng máy rửa xe. \\
+\hline
+Mô tả & Khách hàng quét mã QR, thanh toán qua cổng điện tử và server sẽ bật relay điều khiển máy bơm. \\
+\hline
+Tác nhân & Khách hàng \\
+\hline
+Điều kiện trước & Khách hàng ở gần trạm rửa xe, có thiết bị kết nối internet. \\
+\hline
+Điều kiện sau & Máy bơm được kích hoạt (Relay ON) trong khoảng thời gian đã mua. \\
+\hline
+Luồng sự kiện chính & 1. Khách hàng sử dụng điện thoại quét mã QR được dán trên tủ máy rửa xe. \newline 2. Hệ thống thanh toán (SePay/Webhook) gửi callback xác nhận về Backend. \newline 3. Web polling hoặc WebSocket nhận được tín hiệu thành công. \newline 4. Backend chuyển lệnh qua mạng để ESP32 đóng relay máy bơm. \newline 5. Web hiển thị đồng hồ đếm ngược. \\
+\hline
+Luồng sự kiện phụ & 4.a: Ngay lúc bấm bắt đầu, Thiết bị ngắt kết nối Wifi \newline -- 4.a.1: Backend gọi xuống ESP32 nhưng Timeout. \newline -- 4.a.2: Web ghi lại log ``Thiết bị gặp sự cố kết nối, đã ghi nhận hoàn tiền vào tài khoản/SĐT\ldots{}''. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-thanh-toan.png}
+\caption{Biểu đồ hoạt động chức năng ``Thanh toán''}
+\label{fig:activity-thanhtoan}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-thanh-toan.png}
+\caption{Biểu đồ trình tự chức năng ``Thanh toán''}
+\label{fig:sequence-thanhtoan}
+\end{figure}
+
+\subsection{Chức năng đăng ký hệ thống}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Đăng ký hệ thống''}
+\label{tab:uc-dangky}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Đăng ký hệ thống \\
+\hline
+Mục đích & Đăng ký thiết bị ESP32 để Server nhận diện và kết nối với hệ thống. \\
+\hline
+Mô tả & Khi thiết bị ESP32 boot lên, nó sẽ gửi một gói tin HTTP kèm mã thiết bị để thông báo danh tính lên API Server. \\
+\hline
+Tác nhân & IoT Device \\
+\hline
+Điều kiện trước & Đã cấu hình Wifi mật khẩu tại trạm thành công. \\
+\hline
+Điều kiện sau & Thiết bị bước vào vòng lặp làm việc bình thường. \\
+\hline
+Luồng sự kiện chính & 1. Node ESP32 khởi động, truy cập Wifi. \newline 2. Gửi lệnh POST /api/iot/register bao gồm tham số bắt buộc là MAC\_ADDRESS. \newline 3. Backend đối chiếu MAC\_ADDRESS này trong Schema của chủ trạm/Admin tải lên trước đó. \newline 4. Backend ghi nhận trạng thái thiết bị online và gửi phản hồi 200 kèm Token/cấu hình pin. \newline 5. ESP32 lưu thông số và vào vòng lặp chờ lệnh. \\
+\hline
+Luồng sự kiện phụ & 3.a: MAC Address chưa được cấu hình trong bảng Backend \newline -- 3.a.1: Backend trả HTTP 403 Forbidden. \newline -- 3.a.2: ESP32 đi vào trạng thái chờ 5p rồi đăng ký lại. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-dang-ky-he-thong.png}
+\caption{Biểu đồ hoạt động chức năng ``Đăng ký hệ thống''}
+\label{fig:activity-dangky}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-dang-ky-he-thong.png}
+\caption{Biểu đồ trình tự chức năng ``Đăng ký hệ thống''}
+\label{fig:sequence-dangky}
+\end{figure}
+
+\subsection{Chức năng gửi trạng thái}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Gửi trạng thái''}
+\label{tab:uc-guitrangthai}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Gửi trạng thái (Heartbeat) \\
+\hline
+Mục đích & Duy trì bằng chứng thiết bị vẫn đang sống (Online). \\
+\hline
+Mô tả & Thiết bị ping định kỳ về server 30--60s 1 lần cập nhật trạng thái làm việc hiện tại (Bật hay đang Tắt). \\
+\hline
+Tác nhân & IoT Device \\
+\hline
+Điều kiện trước & ESP32 đã đăng ký hệ thống thành công. \\
+\hline
+Điều kiện sau & Last\_seen của thiết bị được cập nhật. \\
+\hline
+Luồng sự kiện chính & 1. Mỗi N giây, ESP32 gọi HTTP GET tới /api/iot/heartbeat. \newline 2. Gói tin gắn kèm State (Bật/Tắt). \newline 3. Backend cập nhật timestamp trong DB. \newline 4. Server phản hồi 200 OK. \\
+\hline
+Luồng sự kiện phụ & 1.a: Rớt mạng Wifi trong lúc chạy \newline -- 1.a.1: Gửi request thất bại. \newline -- 1.a.2: Phần cứng tiếp tục cho phép chạy nếu còn timer, sau đó nó sẽ retry liên tục tới khi có net. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-gui-trang-thai.png}
+\caption{Biểu đồ hoạt động chức năng ``Gửi trạng thái''}
+\label{fig:activity-guitrangthai}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-gui-trang-thai.png}
+\caption{Biểu đồ trình tự chức năng ``Gửi trạng thái''}
+\label{fig:sequence-guitrangthai}
+\end{figure}
+
+\subsection{Chức năng nhận lệnh điều khiển}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả chức năng ``Nhận lệnh điều khiển''}
+\label{tab:uc-nhanlenh}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Thông tin} & \textbf{Nội dung} \\
+\hline
+Use Case & Nhận lệnh điều khiển \\
+\hline
+Mục đích & ESP32 nhận tín hiệu khởi động từ xa sau khi người dùng trả tiền. \\
+\hline
+Mô tả & ESP32 đáp ứng các mệnh lệnh bật và tắt Relay vật lý qua giao tiếp Server (HTTP long polling hoặc Websocket tùy lựa chọn công nghệ IoT). \\
+\hline
+Tác nhân & IoT Device \\
+\hline
+Điều kiện trước & Đang có kết nối mạng ổn định với Backend. \\
+\hline
+Điều kiện sau & Rơ-le (Relay) được kích mức cao hoặc mức thấp thành công, trạng thái máy vật lý đổi khác. \\
+\hline
+Luồng sự kiện chính & 1. Admin/Customer kích hoạt lệnh ``Bật'' cho thời gian N phút trên Server. \newline 2. Server đẩy lệnh cmd=START\&duration=N xuống module ESP32. \newline 3. ESP32 phân tích gói lệnh. \newline 4. ESP32 Set-Pin kích hoạt GPIO liên kết Relay $\Rightarrow$ Bơm bắt đầu chạy. \newline 5. ESP32 Gửi POST status\_log=STARTED báo điểm danh thành công lên Server. \newline 6. (Kết thúc) Sau khi timer đếm ngược tại ESP32 kết thúc, nó Set-Pin ngắt Relay và Gửi POST status=STOPPED lên server một lần nữa. \\
+\hline
+Luồng sự kiện phụ & 4.a: Mạch chập cháy, Relay không hoạt động \newline -- 4.a.1: Trạng thái không thể thay đổi, phần cứng ghi nhận timeout hoặc ADC check. \newline -- 4.a.2: Gửi gói Error packet Error=Hardware\_Fails ngược lên Server cho Admin check tu bổ. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-hoat-dong-chuc-nang-nhan-lenh-dieu-khien.png}
+\caption{Biểu đồ hoạt động chức năng ``Nhận lệnh điều khiển''}
+\label{fig:activity-nhanlenh}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tai_nguyen/bieu-do-trinh-tu-chuc-nang-nhan-lenh-dieu-khien.png}
+\caption{Biểu đồ trình tự chức năng ``Nhận lệnh điều khiển''}
+\label{fig:sequence-nhanlenh}
+\end{figure}
+
+% ─────────────────────────────────────────────
+\section{Biểu đồ lớp}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{tai_nguyen/bieu-do-lop.png}
+\caption{Biểu đồ lớp}
+\label{fig:bieu-do-lop}
+\end{figure}
+
+\end{document}
