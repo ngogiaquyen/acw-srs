@@ -12,6 +12,7 @@ import {
 } from "@/lib/db/devices";
 import { findTenantAdminByTenantId } from "@/lib/db/users";
 import { validateDevicePayload, type DevicePayload } from "@/lib/utils/validation";
+import { handleDatabaseError } from "@/lib/utils/db-errors";
 
 async function ensureAuthenticated() {
   const auth = await getCurrentUserFromCookies();
@@ -138,8 +139,11 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ device }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in POST /api/tenant/devices:", error);
+    const dbErrorResponse = handleDatabaseError(error);
+    if (dbErrorResponse) return dbErrorResponse;
+
     return NextResponse.json(
       { error: "Đã xảy ra lỗi khi tạo thiết bị" },
       { status: 500 },

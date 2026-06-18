@@ -11,6 +11,7 @@ import {
 } from "@/lib/utils/validation";
 import { findUserByEmail, createUser } from "@/lib/db/users";
 import { hashPassword } from "@/lib/auth/password";
+import { handleDatabaseError } from "@/lib/utils/db-errors";
 
 async function ensureSuperAdmin() {
   const auth = await getCurrentUserFromCookies();
@@ -103,13 +104,14 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ tenant }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in POST /api/super-admin/tenants:", error);
+    const dbErrorResponse = handleDatabaseError(error);
+    if (dbErrorResponse) return dbErrorResponse;
+
     return NextResponse.json(
-      { error: "Đã xảy ra lỗi khi tạo tenant" },
+      { error: "Đã xảy ra lỗi khi tạo hệ thống thuê" },
       { status: 500 },
     );
   }
 }
-
-

@@ -24,8 +24,8 @@ export default async function SuperAdminNewDevicePage({ params }: Props) {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Thêm thiết bị mới cho người thuê</h2>
-        <p className="text-sm text-muted-foreground">Nhập thông tin thiết bị để thêm mới vào hệ thống cho người thuê này.</p>
+        <h2 className="text-2xl font-semibold tracking-tight">Thêm thiết bị mới cho chủ trạm</h2>
+        <p className="text-sm text-muted-foreground">Nhập thông tin thiết bị để thêm mới vào hệ thống cho chủ trạm này.</p>
       </div>
 
       <DeviceForm mode="create" tenantId={tenantId} />

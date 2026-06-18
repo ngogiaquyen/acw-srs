@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
+import { findUserById } from "@/lib/db/users";
 import { SuperAdminSidebar } from "@/components/super-admin/Sidebar";
 
 interface SuperAdminLayoutProps {
@@ -17,9 +18,14 @@ export async function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
     redirect("/");
   }
 
+  const dbUser = await findUserById(auth.user.userId);
+  if (!dbUser) {
+    redirect("/login");
+  }
+
   return (
     <div className="min-h-screen bg-slate-50/50 lg:flex">
-      <SuperAdminSidebar user={auth.user} />
+      <SuperAdminSidebar user={dbUser} />
       
       <main className="flex-1">
         <header className="hidden lg:flex items-center justify-between border-b bg-white px-8 py-4">

@@ -128,7 +128,7 @@ export async function POST(request: Request) {
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 32px 24px; text-align: center; color: #ffffff;">
             <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.025em;">BÁO CÁO DOANH THU NGƯỜI THUÊ</h1>
-            <p style="margin: 8px 0 0 0; font-size: 16px; opacity: 0.9; font-weight: 500;">Người thuê: ${tenant.name}</p>
+            <p style="margin: 8px 0 0 0; font-size: 16px; opacity: 0.9; font-weight: 500;">Chủ trạm: ${tenant.name}</p>
             <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.75;">Kỳ báo cáo: ${rangeDays} ngày qua (Tính đến hôm nay)</p>
           </div>
 
@@ -197,7 +197,7 @@ export async function POST(request: Request) {
     // 6. Send the email
     const mailResult = await sendEmail({
       to: email,
-      subject: `[ACW-SRS] Báo cáo doanh thu ${rangeDays} ngày qua - Người thuê: ${tenant.name}`,
+      subject: `[ACW-SRS] Báo cáo doanh thu ${rangeDays} ngày qua - Chủ trạm: ${tenant.name}`,
       html: emailHtml,
       attachments: [
         {

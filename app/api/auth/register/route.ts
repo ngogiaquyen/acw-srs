@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth/password";
 import { createUser, findUserByEmail, type UserRole } from "@/lib/db/users";
+import { handleDatabaseError } from "@/lib/utils/db-errors";
 
 interface RegisterBody {
   email?: string;
@@ -53,8 +54,12 @@ export async function POST(request: Request) {
       },
       { status: 201 },
     );
-  } catch (error) {
-    console.error("Error in /api/auth/register:", error);
+  } catch (error: any) {
+    console.error("Error in POST /api/auth/register:", error);
+
+    const dbErrorResponse = handleDatabaseError(error);
+    if (dbErrorResponse) return dbErrorResponse;
+
     return NextResponse.json(
       { error: "Đã xảy ra lỗi khi đăng ký" },
       { status: 500 },

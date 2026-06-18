@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
 import { deleteOrder, getOrderById, updateOrder } from "@/lib/db/orders";
 import { createTenant } from "@/lib/db/tenants";
+import { handleDatabaseError } from "@/lib/utils/db-errors";
 
 async function ensureSuperAdmin() {
   const auth = await getCurrentUserFromCookies();
@@ -105,9 +106,15 @@ export async function PUT(request: Request, { params }: Params) {
     }
 
     return NextResponse.json({ order: updated }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in PUT /api/super-admin/orders/[id]:", error);
-    return NextResponse.json({ error: "Đã xảy ra lỗi khi cập nhật order" }, { status: 500 });
+    const dbErrorResponse = handleDatabaseError(error);
+    if (dbErrorResponse) return dbErrorResponse;
+
+    return NextResponse.json(
+      { error: "Đã xảy ra lỗi khi cập nhật đơn hàng" },
+      { status: 500 },
+    );
   }
 }
 

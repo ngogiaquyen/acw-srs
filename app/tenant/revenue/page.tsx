@@ -41,9 +41,9 @@ export default async function TenantRevenuePage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Doanh thu người thuê</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">Doanh thu chủ trạm</h2>
           <p className="text-sm text-muted-foreground">
-            Tổng quan doanh thu và giao dịch của người thuê.
+            Tổng quan doanh thu và giao dịch của chủ trạm.
           </p>
         </div>
         {auth.isAuthenticated && (

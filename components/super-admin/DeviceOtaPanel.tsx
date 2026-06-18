@@ -186,7 +186,7 @@ export function DeviceOtaPanel({
       </Card>
 
       {/* Push credentials */}
-      <Card className="p-6 space-y-4">
+      {/* <Card className="p-6 space-y-4">
         <h3 className="font-semibold text-base">Cập nhật credentials web ESP</h3>
         <p className="text-xs text-muted-foreground">
           Gửi lệnh <code>config</code> xuống thiết bị để đổi username/password đăng nhập web ESP.
@@ -227,7 +227,7 @@ export function DeviceOtaPanel({
             </Button>
           </div>
         </form>
-      </Card>
+      </Card> */}
 
 
       {/* Command history */}

@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     // 4. Create CSV content
     const csvData = transactions.map((tx) => ({
       id: tx.id,
-      tenant_name: tx.tenant_name ?? `Người thuê #${tx.tenant_id}`,
+      tenant_name: tx.tenant_name ?? `Chủ trạm #${tx.tenant_id}`,
       device_name: tx.device_name ?? `Thiết bị #${tx.device_id}`,
       device_code: tx.device_code ?? "-",
       amount: tx.amount,
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
     const csvColumns = [
       { key: "id", label: "Mã giao dịch hệ thống" },
-      { key: "tenant_name", label: "Tên người thuê" },
+      { key: "tenant_name", label: "Tên chủ trạm" },
       { key: "device_name", label: "Tên thiết bị" },
       { key: "device_code", label: "Mã thiết bị" },
       { key: "amount", label: "Số tiền (VND)" },
@@ -150,7 +150,7 @@ export async function POST(request: Request) {
                   <thead>
                     <tr style="background-color: #f8fafc; border-bottom: 2px solid #e2e8f0;">
                       <th style="padding: 10px; font-size: 12px; font-weight: 600; color: #64748b; width: 60px;">Hạng</th>
-                      <th style="padding: 10px; font-size: 12px; font-weight: 600; color: #64748b;">Người thuê</th>
+                      <th style="padding: 10px; font-size: 12px; font-weight: 600; color: #64748b;">Chủ trạm</th>
                       <th style="padding: 10px; font-size: 12px; font-weight: 600; color: #64748b;">Doanh thu</th>
                       <th style="padding: 10px; font-size: 12px; font-weight: 600; color: #64748b;">Giao dịch</th>
                       <th style="padding: 10px; font-size: 12px; font-weight: 600; color: #64748b;">Quy mô thiết bị</th>

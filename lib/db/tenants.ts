@@ -60,7 +60,21 @@ export interface UpdateTenantInput {
 }
 
 export async function getTenants(): Promise<TenantRecord[]> {
-  const [rows] = await pool.query("SELECT * FROM tenants ORDER BY created_at DESC");
+  const [rows] = await pool.query(`
+    SELECT
+      t.*,
+      COUNT(d.id) AS total_devices,
+      SUM(CASE 
+        WHEN d.is_active = 1 
+         AND d.last_heartbeat IS NOT NULL 
+         AND TIMESTAMPDIFF(MINUTE, d.last_heartbeat, NOW()) <= 5 
+        THEN 1 ELSE 0 
+      END) AS online_devices
+    FROM tenants t
+    LEFT JOIN devices d ON d.tenant_id = t.id
+    GROUP BY t.id
+    ORDER BY t.created_at DESC
+  `);
   return rows as TenantRecord[];
 }
 

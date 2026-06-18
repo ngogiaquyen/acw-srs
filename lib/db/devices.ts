@@ -31,6 +31,7 @@ export interface CreateDeviceInput {
 }
 
 export interface UpdateDeviceInput {
+  deviceId?: string;
   name?: string;
   paymentCode?: string | null;
   webUsername?: string | null;
@@ -170,6 +171,11 @@ export async function updateDevice(id: number, input: UpdateDeviceInput): Promis
   const fields: string[] = [];
   const values: unknown[] = [];
 
+  if (input.deviceId !== undefined) {
+    fields.push("device_id = ?");
+    values.push(input.deviceId);
+    fields.push("last_heartbeat = NULL"); // Đặt lại heartbeat để báo offline ngay lập tức khi đổi mạch vật lý
+  }
   if (input.name !== undefined) {
     fields.push("name = ?");
     values.push(input.name);

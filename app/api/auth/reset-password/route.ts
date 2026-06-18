@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { findValidOTP, markTokenAsUsed } from "@/lib/db/password-reset";
 import { updateUserPassword } from "@/lib/db/users";
+import { handleDatabaseError } from "@/lib/utils/db-errors";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
@@ -37,8 +38,15 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ message: "Mật khẩu của bạn đã được cập nhật thành công!" });
 
-  } catch (error) {
-    console.error("[RESET_PASSWORD_API]", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra khi đặt lại mật khẩu" }, { status: 500 });
+  } catch (error: any) {
+    console.error("Error in POST /api/auth/reset-password:", error);
+    
+    const dbErrorResponse = handleDatabaseError(error);
+    if (dbErrorResponse) return dbErrorResponse;
+
+    return NextResponse.json(
+      { error: "Đã xảy ra lỗi khi đặt lại mật khẩu" },
+      { status: 500 },
+    );
   }
 }

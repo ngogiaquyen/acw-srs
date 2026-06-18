@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
 import { createLead, getLeads } from "@/lib/db/leads";
+import { handleDatabaseError } from "@/lib/utils/db-errors";
 
 async function ensureSuperAdmin() {
   const auth = await getCurrentUserFromCookies();
@@ -54,8 +55,14 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ lead }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in POST /api/super-admin/leads:", error);
-    return NextResponse.json({ error: "Đã xảy ra lỗi khi tạo lead" }, { status: 500 });
+    const dbErrorResponse = handleDatabaseError(error);
+    if (dbErrorResponse) return dbErrorResponse;
+
+    return NextResponse.json(
+      { error: "Đã xảy ra lỗi khi tạo lead" },
+      { status: 500 },
+    );
   }
 }

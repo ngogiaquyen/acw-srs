@@ -10,8 +10,8 @@
 #define RELAY_ACTIVE_LOW false // true: LOW=ON, false: HIGH=ON
 
 // ========== GIÁ TRỊ MẶC ĐỊNH ==========
-#define DEFAULT_WIFI_SSID       "GIA QUYEN 2.4G"
-#define DEFAULT_WIFI_PASSWORD   "diem20255"
+#define DEFAULT_WIFI_SSID       "WYNDEV"
+#define DEFAULT_WIFI_PASSWORD   "quyen2025"
 // #define DEFAULT_SERVER_BASE     "http://192.168.1.3:3000"
 #define DEFAULT_SERVER_BASE     "https://wash.wyndev.space"
 #define DEFAULT_DEVICE_ID       "1"
@@ -19,7 +19,7 @@
 #define DEFAULT_FIRMWARE_VER    "1.0.0"
 #define DEFAULT_HB_INTERVAL_S   30
 #define DEFAULT_CMD_INTERVAL_S  5
-#define DEFAULT_AP_PASSWORD     "12345678"
+#define DEFAULT_AP_PASSWORD     "123456788"
 
 // ========== CẦU HÌNH RUNTIME (đọc từ NVS) ==========
 char cfg_wifi_ssid[64];
@@ -786,6 +786,7 @@ void setup() {
 
   if (WiFi.status() == WL_CONNECTED) {
     registerDevice();
+    sendHeartbeat(); // Gửi heartbeat ngay lập tức sau khi khởi động
     sendLog("info", "ESP32 started & registered");
   }
 }

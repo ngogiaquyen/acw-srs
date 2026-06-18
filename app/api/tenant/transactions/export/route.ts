@@ -12,6 +12,8 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const tenantIdParam = searchParams.get("tenantId");
+    const deviceIdParam = searchParams.get("device");
+    const deviceId = deviceIdParam ? parseInt(deviceIdParam, 10) : null;
 
     const access = resolveTenantAccess(auth.user, tenantIdParam);
     if (!access.ok) {
@@ -23,7 +25,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Không tìm thấy thông tin tenant" }, { status: 400 });
     }
 
-    const transactions = await getTransactionsByTenantId(tenantId);
+    const transactions = await getTransactionsByTenantId(tenantId, deviceId);
 
     // Mapped data for Excel
     const excelData = transactions.map((tx) => ({

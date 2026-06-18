@@ -3,7 +3,7 @@ import {
   getPendingCommandsByDeviceId,
   markCommandsAsSent,
 } from "@/lib/db/device-commands";
-import { getDeviceByDeviceId } from "@/lib/db/devices";
+import { getDeviceByDeviceId, updateDeviceHeartbeat } from "@/lib/db/devices";
 
 interface Params {
   params: Promise<{
@@ -29,10 +29,14 @@ export async function GET(_request: Request, { params }: Params) {
 
   if (!device.tenant_id) {
     return NextResponse.json(
-      { error: "Người thuê không tồn tại", clearCredentials: true, commands: [], count: 0 },
+      { error: "Chủ trạm không tồn tại", clearCredentials: true, commands: [], count: 0 },
       { status: 200 },
     );
   }
+
+  // Cập nhật heartbeat mỗi khi mạch gọi lệnh (mặc định 5s/lần)
+  // để mạch báo Online nhanh chóng.
+  await updateDeviceHeartbeat(deviceIdParam);
 
   const commands = await getPendingCommandsByDeviceId(device.id, 20);
 

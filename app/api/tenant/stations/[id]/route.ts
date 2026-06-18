@@ -11,6 +11,7 @@ import {
   validateStationPayload,
   type StationPayload,
 } from "@/lib/utils/validation";
+import { handleDatabaseError } from "@/lib/utils/db-errors";
 
 async function ensureAuthenticated() {
   const auth = await getCurrentUserFromCookies();
@@ -122,8 +123,11 @@ export async function PUT(request: Request, { params }: Params) {
     }
 
     return NextResponse.json({ station: updated }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in PUT /api/tenant/stations/[id]:", error);
+    const dbErrorResponse = handleDatabaseError(error);
+    if (dbErrorResponse) return dbErrorResponse;
+
     return NextResponse.json(
       { error: "Đã xảy ra lỗi khi cập nhật trạm" },
       { status: 500 },

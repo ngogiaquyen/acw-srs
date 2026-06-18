@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CountdownTimer } from "@/components/ui/countdown-timer";
+import { SectionHeader } from "@/components/ui/section-header";
 import { Power, PowerOff, Loader2 } from "lucide-react";
 
 interface DeviceData {
@@ -135,71 +136,61 @@ export function DeviceControlPanel({ device: initialDevice, initialLogs }: Devic
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Monitoring thiết bị</h2>
-        <p className="text-sm text-muted-foreground">
-          Theo dõi trạng thái và logs thiết bị.
-        </p>
-      </div>
+      <SectionHeader
+        title="Monitoring thiết bị"
+        description="Theo dõi trạng thái và logs thiết bị."
+      />
 
-      <Card className="p-3 md:p-6">
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          <Badge variant={isOfflineOver5m ? "destructive" : "secondary"}>
-            {isOfflineOver5m ? "Offline > 5 phút" : "Ổn định"}
-          </Badge>
-          <Badge variant={isRunning ? "default" : "outline"} className={isRunning ? "bg-green-500" : ""}>
-            {isRunning ? "Đang chạy" : "Dừng"}
-          </Badge>
-        </div>
-
-        <p className="text-sm text-muted-foreground mb-4">
-          Last heartbeat:{" "}
-          {device.last_heartbeat
-            ? new Date(device.last_heartbeat).toLocaleString("vi-VN")
-            : "-"}
-        </p>
-
-        {remainingSeconds != null && (
-          <div className="mb-4 flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Thời gian đếm ngược tắt thiết bị:</span>
-            {remainingSeconds > 0 ? (
-              <CountdownTimer initialSeconds={remainingSeconds} />
-            ) : (
-              <span className="text-sm text-gray-400">Đã hết thời gian</span>
-            )}
+      <Card className="p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span className="relative flex h-3 w-3">
+                {!isOfflineOver5m && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                )}
+                <span className={`relative inline-flex rounded-full h-3 w-3 ${isOfflineOver5m ? "bg-red-500" : "bg-emerald-500"}`}></span>
+              </span>
+              <span className="font-medium text-sm">
+                {isOfflineOver5m ? "Offline" : "Online"}
+              </span>
+            </div>
+            <div className="h-4 w-px bg-border" />
+            <Badge variant={isRunning ? "default" : "secondary"} className={isRunning ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}>
+              {isRunning ? "Đang hoạt động" : "Đang dừng"}
+            </Badge>
           </div>
-        )}
-
-        <div className="flex items-center gap-4">
-          <Button
-            onClick={handleToggle}
-            disabled={loading || isOfflineOver5m}
-            variant={isRunning ? "destructive" : "default"}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {isRunning ? "Đang tắt..." : "Đang bật..."}
-              </>
-            ) : isRunning ? (
-              <>
-                <PowerOff className="mr-2 h-4 w-4" />
-                Tắt máy
-              </>
-            ) : (
-              <>
-                <Power className="mr-2 h-4 w-4" />
-                Bật máy
-              </>
-            )}
-          </Button>
-
           {isOfflineOver5m && (
-            <span className="text-sm text-red-500">
-              Thiết bị offline, không thể điều khiển
-            </span>
+            <p className="text-sm text-red-500 mt-2">
+              Thiết bị đã mất kết nối trên 5 phút, hiện không thể điều khiển.
+            </p>
           )}
         </div>
+
+        <Button
+          onClick={handleToggle}
+          disabled={loading || isOfflineOver5m}
+          variant={isRunning ? "destructive" : "default"}
+          size="lg"
+          className="w-full sm:w-auto font-semibold shadow-sm"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {isRunning ? "Đang tắt..." : "Đang bật..."}
+            </>
+          ) : isRunning ? (
+            <>
+              <PowerOff className="mr-2 h-4 w-4" />
+              Tắt máy
+            </>
+          ) : (
+            <>
+              <Power className="mr-2 h-4 w-4" />
+              Bật máy
+            </>
+          )}
+        </Button>
       </Card>
 
       <Card className="p-3 md:p-6">
@@ -207,7 +198,7 @@ export function DeviceControlPanel({ device: initialDevice, initialLogs }: Devic
           <h3 className="text-sm font-medium">Logs gần nhất</h3>
           {loadingLogs && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
           {logs.map((log) => (
             <div key={log.id} className="rounded-md border p-3">
               <p className="text-xs text-muted-foreground">

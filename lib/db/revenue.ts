@@ -25,16 +25,39 @@ export interface TenantRevenuePoint {
   devices: number;
 }
 
-export async function getSuperAdminRevenueSummary(): Promise<SuperAdminRevenueSummary> {
+export async function getSuperAdminRevenueSummary(
+  tenantId?: number,
+  deviceId?: number
+): Promise<SuperAdminRevenueSummary> {
+  let tenantFilter = "";
+  const queryParams: unknown[] = [];
+  if (tenantId) {
+    tenantFilter = "WHERE id = ?";
+    queryParams.push(tenantId);
+  }
+
   const [tenantRows] = await pool.query(
     `
     SELECT
       COUNT(*) AS totalTenants,
       SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) AS activeTenants
     FROM tenants
+    ${tenantFilter}
   `,
+    queryParams
   );
   const [tenantRow] = tenantRows as Array<{ totalTenants: number; activeTenants: number | null }>;
+
+  let deviceFilter = "WHERE is_active = 1";
+  const deviceParams: unknown[] = [];
+  if (tenantId) {
+    deviceFilter += " AND tenant_id = ?";
+    deviceParams.push(tenantId);
+  }
+  if (deviceId) {
+    deviceFilter += " AND id = ?";
+    deviceParams.push(deviceId);
+  }
 
   const [deviceRows] = await pool.query(
     `
@@ -42,10 +65,22 @@ export async function getSuperAdminRevenueSummary(): Promise<SuperAdminRevenueSu
       COUNT(*) AS totalDevices,
       COUNT(*) AS onlineDevices
     FROM devices
-    WHERE is_active = 1
+    ${deviceFilter}
   `,
+    deviceParams
   );
   const [deviceRow] = deviceRows as Array<{ totalDevices: number; onlineDevices: number | null }>;
+
+  let txnFilter = "WHERE 1=1";
+  const txnParams: unknown[] = [];
+  if (tenantId) {
+    txnFilter += " AND tenant_id = ?";
+    txnParams.push(tenantId);
+  }
+  if (deviceId) {
+    txnFilter += " AND device_id = ?";
+    txnParams.push(deviceId);
+  }
 
   const [txnRows] = await pool.query(
     `
@@ -55,7 +90,9 @@ export async function getSuperAdminRevenueSummary(): Promise<SuperAdminRevenueSu
       COUNT(*) AS totalTransactions,
       SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) AS transactionsToday
     FROM transactions
+    ${txnFilter}
   `,
+    txnParams
   );
   const [txnRow] = txnRows as Array<{
     totalRevenue: number | string;
@@ -80,8 +117,24 @@ export async function getSuperAdminRevenueSummary(): Promise<SuperAdminRevenueSu
   };
 }
 
-export async function getSuperAdminRevenueAnalytics(days = 30): Promise<RevenuePoint[]> {
+export async function getSuperAdminRevenueAnalytics(
+  days = 30,
+  tenantId?: number,
+  deviceId?: number
+): Promise<RevenuePoint[]> {
   const safeDays = Math.min(Math.max(days, 1), 365);
+
+  let filter = "";
+  const params: unknown[] = [safeDays - 1];
+
+  if (tenantId) {
+    filter += " AND tenant_id = ?";
+    params.push(tenantId);
+  }
+  if (deviceId) {
+    filter += " AND device_id = ?";
+    params.push(deviceId);
+  }
 
   const [rows] = await pool.query(
     `
@@ -92,10 +145,11 @@ export async function getSuperAdminRevenueAnalytics(days = 30): Promise<RevenueP
     FROM transactions
     WHERE status = 'completed'
       AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+      ${filter}
     GROUP BY DATE(created_at)
     ORDER BY DATE(created_at) ASC
   `,
-    [safeDays - 1],
+    params,
   );
 
   const rawRows = rows as Array<{

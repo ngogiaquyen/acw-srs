@@ -15,7 +15,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: "/super-admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/super-admin/tenants", label: "Người thuê", icon: Users },
+  { href: "/super-admin/tenants", label: "Chủ trạm", icon: Users },
   { href: "/super-admin/revenue", label: "Doanh thu", icon: BarChart },
   // { href: "/super-admin/simulate-payment", label: "Giả lập thanh toán", icon: Zap },
 ];
@@ -88,8 +88,11 @@ export function SuperAdminSidebar({ user }: { user: any }) {
           </nav>
 
           <div className="mt-auto border-t pt-4 px-2">
-            <p className="text-xs font-medium text-muted-foreground truncate">
-              Admin #{user.userId}
+            <p className="text-xs font-medium text-muted-foreground truncate" title={user.name}>
+              {user.name}
+            </p>
+            <p className="text-[10px] text-muted-foreground/60 mb-4 truncate" title={user.email}>
+              {user.email}
             </p>
             <form action="/api/auth/logout" method="POST">
               <Button type="submit" variant="outline" className="w-full justify-start gap-2 text-destructive hover:text-destructive" size="sm">

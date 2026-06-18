@@ -122,7 +122,7 @@ export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="name">Tên người thuê</Label>
+            <Label htmlFor="name">Tên chủ trạm</Label>
             <Input
               id="name"
               value={formData.name}
@@ -263,9 +263,9 @@ export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
         </div>
 
         <div className="rounded-md border p-4 space-y-4 bg-gray-50/50">
-          <h3 className="text-sm font-medium text-primary">Mật khẩu tài khoản quản trị (Quản trị người thuê)</h3>
+          <h3 className="text-sm font-medium text-primary">Mật khẩu tài khoản quản trị (Quản trị chủ trạm)</h3>
           <p className="text-xs text-muted-foreground -mt-2">
-            Tài khoản đăng nhập của người thuê sẽ sử dụng tên và email của người thuê ở trên.
+            Tài khoản đăng nhập của chủ trạm sẽ sử dụng tên và email của chủ trạm ở trên.
           </p>
           <div className="space-y-2">
             <Label htmlFor="adminPassword">
@@ -344,8 +344,8 @@ export function TenantForm({ mode, tenantId, initialData }: TenantFormProps) {
             {loading
               ? "Đang lưu..."
               : mode === "create"
-                ? "Tạo người thuê"
-                : "Cập nhật người thuê"}
+                ? "Tạo chủ trạm"
+                : "Cập nhật chủ trạm"}
           </Button>
           <Button
             type="button"

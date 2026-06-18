@@ -11,6 +11,7 @@ import {
   validateTenantPayload,
   type TenantPayload,
 } from "@/lib/utils/validation";
+import { handleDatabaseError } from "@/lib/utils/db-errors";
 
 async function ensureSuperAdmin() {
   const auth = await getCurrentUserFromCookies();
@@ -149,8 +150,11 @@ export async function PUT(request: Request, { params }: Params) {
     });
 
     return NextResponse.json({ tenant: updated }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in PUT /api/super-admin/tenants/[id]:", error);
+    const dbErrorResponse = handleDatabaseError(error);
+    if (dbErrorResponse) return dbErrorResponse;
+
     return NextResponse.json(
       { error: "Đã xảy ra lỗi khi cập nhật tenant" },
       { status: 500 },

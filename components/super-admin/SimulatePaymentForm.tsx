@@ -117,7 +117,7 @@ export function SimulatePaymentForm({ devices }: Props) {
             >
               {devices.map((d) => (
                 <option key={d.id} value={d.id} disabled={!d.payment_code}>
-                  [{d.tenant_name}] {d.name}{d.payment_code ? ` — ${d.payment_code}` : " (chưa có payment_code)"}
+                  [{d.tenant_name}] {d.name}{d.payment_code ? ` — SEVQR ${d.payment_code}` : " (chưa có payment_code)"}
                 </option>
               ))}
             </select>
@@ -130,9 +130,9 @@ export function SimulatePaymentForm({ devices }: Props) {
                 <span className="text-muted-foreground w-28">Device ID:</span>
                 <span className="font-mono font-medium">{selectedDevice.device_id}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground w-28">Payment code:</span>
-                <span className="font-mono font-medium">{selectedDevice.payment_code ?? "—"}</span>
+              <div className="flex items-center justify-between p-2 border rounded-md bg-slate-50">
+                <span className="text-sm text-muted-foreground">payment_code</span>
+                <span className="font-mono font-medium">{selectedDevice.payment_code ? `SEVQR ${selectedDevice.payment_code}` : "—"}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground w-28">Giá/phút:</span>

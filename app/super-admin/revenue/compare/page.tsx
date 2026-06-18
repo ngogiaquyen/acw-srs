@@ -16,9 +16,9 @@ export default async function SuperAdminRevenueComparePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight">So sánh doanh thu người thuê</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">So sánh doanh thu chủ trạm</h2>
         <p className="text-sm text-muted-foreground">
-          Xếp hạng doanh thu giữa các người thuê để theo dõi hiệu quả kinh doanh.
+          Xếp hạng doanh thu giữa các chủ trạm để theo dõi hiệu quả kinh doanh.
         </p>
       </div>
 
@@ -31,7 +31,7 @@ export default async function SuperAdminRevenueComparePage() {
             <thead>
               <tr className="border-b text-left">
                 <th className="px-2 py-2">#</th>
-                <th className="px-2 py-2">Người thuê</th>
+                <th className="px-2 py-2">Chủ trạm</th>
                 <th className="px-2 py-2">Doanh thu</th>
                 <th className="px-2 py-2">Giao dịch</th>
                 <th className="px-2 py-2">Thiết bị</th>

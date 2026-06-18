@@ -38,9 +38,15 @@ const defaultValues: DeviceFormData = {
 
 export function DeviceForm({ mode, deviceIdParam, initialData, tenantId }: DeviceFormProps) {
   const router = useRouter();
-  const [formData, setFormData] = useState<DeviceFormData>({
-    ...defaultValues,
-    ...initialData,
+  const [formData, setFormData] = useState<DeviceFormData>(() => {
+    const data = { ...defaultValues, ...initialData };
+    if (data.pricePerMinute) {
+      const numericValue = parseInt(String(data.pricePerMinute), 10);
+      if (!isNaN(numericValue)) {
+        data.pricePerMinute = numericValue.toLocaleString("vi-VN");
+      }
+    }
+    return data;
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +76,7 @@ export function DeviceForm({ mode, deviceIdParam, initialData, tenantId }: Devic
         ...formData,
         tenantId,
         firmwareVersion: formData.firmwareVersion || null,
-        pricePerMinute: formData.pricePerMinute ? Number(formData.pricePerMinute) : null,
+        pricePerMinute: formData.pricePerMinute ? Number(formData.pricePerMinute.replace(/\./g, '')) : null,
         paymentCode: formData.paymentCode || null,
         webUsername: formData.webUsername || null,
         webPassword: formData.webPassword || null,
@@ -120,7 +126,6 @@ export function DeviceForm({ mode, deviceIdParam, initialData, tenantId }: Devic
               id="deviceId"
               value={formData.deviceId}
               onChange={(e) => setFormData((p) => ({ ...p, deviceId: e.target.value }))}
-              disabled={mode === "edit"}
               required
             />
           </div>
@@ -161,14 +166,18 @@ export function DeviceForm({ mode, deviceIdParam, initialData, tenantId }: Devic
             <Label htmlFor="pricePerMinute">Giá mỗi phút (VNĐ)</Label>
             <Input
               id="pricePerMinute"
-              type="number"
-              min={0}
-              step="any"
+              type="text"
               value={formData.pricePerMinute}
-              onChange={(e) =>
-                setFormData((p) => ({ ...p, pricePerMinute: e.target.value }))
-              }
-              placeholder="VD: 5000"
+              onChange={(e) => {
+                const rawValue = e.target.value.replace(/\D/g, "");
+                if (!rawValue) {
+                  setFormData((p) => ({ ...p, pricePerMinute: "" }));
+                  return;
+                }
+                const formatted = Number(rawValue).toLocaleString("vi-VN");
+                setFormData((p) => ({ ...p, pricePerMinute: formatted }));
+              }}
+              placeholder="VD: 5.000"
             />
           </div>
 

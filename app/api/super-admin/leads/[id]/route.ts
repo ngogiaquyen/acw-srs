@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
 import { deleteLead, getLeadById, updateLead } from "@/lib/db/leads";
+import { handleDatabaseError } from "@/lib/utils/db-errors";
 
 async function ensureSuperAdmin() {
   const auth = await getCurrentUserFromCookies();
@@ -68,9 +69,15 @@ export async function PUT(request: Request, { params }: Params) {
     }
 
     return NextResponse.json({ lead: updated }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in PUT /api/super-admin/leads/[id]:", error);
-    return NextResponse.json({ error: "Đã xảy ra lỗi khi cập nhật lead" }, { status: 500 });
+    const dbErrorResponse = handleDatabaseError(error);
+    if (dbErrorResponse) return dbErrorResponse;
+
+    return NextResponse.json(
+      { error: "Đã xảy ra lỗi khi cập nhật lead" },
+      { status: 500 },
+    );
   }
 }
 

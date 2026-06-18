@@ -8,6 +8,7 @@ import {
   type UpdateDeviceInput,
 } from "@/lib/db/devices";
 import { validateDevicePayload, type DevicePayload } from "@/lib/utils/validation";
+import { handleDatabaseError } from "@/lib/utils/db-errors";
 
 async function ensureAuthenticated() {
   const auth = await getCurrentUserFromCookies();
@@ -106,6 +107,7 @@ export async function PUT(request: Request, { params }: Params) {
     }
 
     const input: UpdateDeviceInput = {
+      deviceId: body.deviceId,
       name: body.name,
       paymentCode: body.paymentCode,
       webUsername: body.webUsername,
@@ -115,7 +117,14 @@ export async function PUT(request: Request, { params }: Params) {
       pricePerMinute: body.pricePerMinute,
     };
 
-    const updated = await updateDevice(id, input);
+    let updated;
+    try {
+      updated = await updateDevice(id, input);
+    } catch (err: any) {
+      const dbErrorResponse = handleDatabaseError(err);
+      if (dbErrorResponse) return dbErrorResponse;
+      throw err;
+    }
 
     if (!updated) {
       return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
@@ -142,8 +151,11 @@ export async function PUT(request: Request, { params }: Params) {
     }
 
     return NextResponse.json({ device: updated }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in PUT /api/tenant/devices/[id]:", error);
+    const dbErrorResponse = handleDatabaseError(error);
+    if (dbErrorResponse) return dbErrorResponse;
+
     return NextResponse.json(
       { error: "Đã xảy ra lỗi khi cập nhật thiết bị" },
       { status: 500 },

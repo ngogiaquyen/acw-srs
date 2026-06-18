@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     if (!device.tenant_id) {
       const updated = await updateDeviceHeartbeat(body.deviceId, undefined, body.localIp ?? null);
       return NextResponse.json(
-        { error: "Người thuê không tồn tại", clearCredentials: true, device: updated },
+        { error: "Chủ trạm không tồn tại", clearCredentials: true, device: updated },
         { status: 200 },
       );
     }

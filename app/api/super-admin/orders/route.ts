@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
 import { createOrder, generateOrderNumber, getOrders } from "@/lib/db/orders";
+import { handleDatabaseError } from "@/lib/utils/db-errors";
 
 async function ensureSuperAdmin() {
   const auth = await getCurrentUserFromCookies();
@@ -75,8 +76,14 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ order }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in POST /api/super-admin/orders:", error);
-    return NextResponse.json({ error: "Đã xảy ra lỗi khi tạo order" }, { status: 500 });
+    const dbErrorResponse = handleDatabaseError(error);
+    if (dbErrorResponse) return dbErrorResponse;
+
+    return NextResponse.json(
+      { error: "Đã xảy ra lỗi khi tạo đơn hàng" },
+      { status: 500 },
+    );
   }
 }

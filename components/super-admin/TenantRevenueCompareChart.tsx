@@ -25,7 +25,7 @@ function formatCurrency(value: number) {
 export function TenantRevenueCompareChart({ data }: TenantRevenueCompareChartProps) {
   return (
     <div className="h-96 rounded-lg border p-3">
-      <p className="mb-3 text-sm font-medium">So sánh doanh thu theo người thuê</p>
+      <p className="mb-3 text-sm font-medium">So sánh doanh thu theo chủ trạm</p>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} layout="vertical" margin={{ left: 20, right: 20 }}>
           <CartesianGrid strokeDasharray="3 3" />

@@ -28,6 +28,8 @@ export interface TenantItem {
   subscription_status: "active" | "suspended" | "expired";
   is_active: number | boolean;
   created_at: Date | string;
+  total_devices?: number;
+  online_devices?: number;
 }
 
 interface TenantListProps {
@@ -130,7 +132,7 @@ export function TenantList({ tenants }: TenantListProps) {
         </div>
 
         <Button asChild>
-          <Link href="/super-admin/tenants/new">Tạo người thuê mới</Link>
+          <Link href="/super-admin/tenants/new">Tạo chủ trạm mới</Link>
         </Button>
       </div>
 
@@ -143,7 +145,7 @@ export function TenantList({ tenants }: TenantListProps) {
               <th className="px-3 py-2">Tên</th>
               <th className="px-3 py-2">Email</th>
               <th className="px-3 py-2">SĐT</th>
-              <th className="px-3 py-2">Giới hạn thiết bị</th>
+              <th className="px-3 py-2">Thiết bị (Online/Đã thêm/Tối đa)</th>
               <th className="px-3 py-2">Trạng thái</th>
               <th className="px-3 py-2">Thao tác</th>
             </tr>
@@ -155,7 +157,13 @@ export function TenantList({ tenants }: TenantListProps) {
                 <td className="px-3 py-3 font-medium">{tenant.name}</td>
                 <td className="px-3 py-3 text-xs">{tenant.email}</td>
                 <td className="px-3 py-3 text-xs">{tenant.phone ?? "-"}</td>
-                <td className="px-3 py-3">{tenant.license_max_devices}</td>
+                <td className="px-3 py-3 text-sm">
+                  <span className="text-green-600 font-medium">{tenant.online_devices || 0}</span>
+                  <span className="text-muted-foreground mx-1">/</span>
+                  <span className="font-medium">{tenant.total_devices || 0}</span>
+                  <span className="text-muted-foreground mx-1">/</span>
+                  <span className="text-muted-foreground">{tenant.license_max_devices}</span>
+                </td>
                 <td className="px-3 py-3">
                   <Badge variant={tenant.is_active ? "default" : "outline"} className="text-[10px]">
                     {tenant.is_active ? "Active" : "Disabled"}
@@ -184,9 +192,9 @@ export function TenantList({ tenants }: TenantListProps) {
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Vô hiệu hóa người thuê này?</AlertDialogTitle>
+                          <AlertDialogTitle>Vô hiệu hóa chủ trạm này?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Hành động này sẽ đặt người thuê về trạng thái không hoạt động.
+                            Hành động này sẽ đặt chủ trạm về trạng thái không hoạt động.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -234,8 +242,10 @@ export function TenantList({ tenants }: TenantListProps) {
                 <span className="text-xs">{tenant.phone ?? "-"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Giới hạn License:</span>
-                <span className="font-medium">{tenant.license_max_devices} thiết bị</span>
+                <span className="text-muted-foreground">Thiết bị:</span>
+                <span className="font-medium text-xs">
+                  <span className="text-green-600">{tenant.online_devices || 0} online</span> / {tenant.total_devices || 0} đã thêm / {tenant.license_max_devices} tối đa
+                </span>
               </div>
             </div>
 
@@ -261,7 +271,7 @@ export function TenantList({ tenants }: TenantListProps) {
 
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
-          Hiển thị {paginated.length} / {filtered.length} người thuê
+          Hiển thị {paginated.length} / {filtered.length} chủ trạm
         </p>
 
         <div className="flex items-center gap-2">
@@ -289,7 +299,7 @@ export function TenantList({ tenants }: TenantListProps) {
 
       {filtered.length === 0 && (
         <p className="py-6 text-center text-sm text-muted-foreground">
-          Không có người thuê phù hợp.
+          Không có chủ trạm phù hợp.
         </p>
       )}
     </Card>

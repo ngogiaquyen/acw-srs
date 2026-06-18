@@ -37,9 +37,9 @@ export default async function SuperAdminEditTenantPage({ params }: Props) {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Chỉnh sửa người thuê</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Chỉnh sửa chủ trạm</h2>
         <p className="text-sm text-muted-foreground">
-          Cập nhật thông tin người thuê và chu kỳ hợp đồng.
+          Cập nhật thông tin chủ trạm và chu kỳ hợp đồng.
         </p>
       </div>
 

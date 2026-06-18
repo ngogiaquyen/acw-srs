@@ -33,7 +33,7 @@ export function TenantDetail({ tenant }: TenantDetailProps) {
       <div className="mb-6 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold">{tenant.name}</h2>
-          <p className="text-sm text-muted-foreground">Người thuê #{tenant.id}</p>
+          <p className="text-sm text-muted-foreground">Chủ trạm #{tenant.id}</p>
         </div>
 
         <Button asChild variant="outline">
@@ -41,7 +41,7 @@ export function TenantDetail({ tenant }: TenantDetailProps) {
         </Button>
       </div>
 
-      <dl className="grid gap-4 md:grid-cols-2">
+      <dl className="grid grid-cols-2 gap-4">
         <div>
           <dt className="text-xs text-muted-foreground">Email</dt>
           <dd className="font-medium">{tenant.email}</dd>
@@ -51,11 +51,11 @@ export function TenantDetail({ tenant }: TenantDetailProps) {
           <dd className="font-medium">{tenant.phone ?? "-"}</dd>
         </div>
         <div>
-          <dt className="text-xs text-muted-foreground">License tối đa</dt>
+          <dt className="text-xs text-muted-foreground">Thiết bị tối đa</dt>
           <dd className="font-medium">{tenant.license_max_devices}</dd>
         </div>
         <div>
-          <dt className="text-xs text-muted-foreground">Subscription</dt>
+          <dt className="text-xs text-muted-foreground">Trạng thái thiết bị</dt>
           <dd className="font-medium">{tenant.subscription_status}</dd>
         </div>
         <div>
@@ -87,7 +87,7 @@ export function TenantDetail({ tenant }: TenantDetailProps) {
       {(tenant.sepay_bank_account || tenant.sepay_bank_code) && (
         <div className="mt-6 pt-6 border-t">
           <h3 className="text-sm font-medium mb-3">Cấu hình SePay</h3>
-          <dl className="grid gap-4 md:grid-cols-2">
+          <dl className="grid grid-cols-2 gap-4">
             <div>
               <dt className="text-xs text-muted-foreground">Số tài khoản</dt>
               <dd className="font-medium">{tenant.sepay_bank_account ?? "-"}</dd>

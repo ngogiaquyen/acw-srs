@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { CopyButton } from "@/components/ui/copy-button";
 import { CountdownTimer } from "@/components/ui/countdown-timer";
 
 export interface DeviceItem {
@@ -114,7 +115,7 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
 
   return (
     <Card className="p-3 md:p-6">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 flex items-center gap-3 justify-between">
         <Input
           placeholder="Tìm theo Device ID, tên..."
           value={keyword}
@@ -133,12 +134,12 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left">
-              <th className="px-3 py-2">ID</th>
+              <th className="px-3 py-2">STT</th>
               <th className="px-3 py-2">ID Thiết bị</th>
               <th className="px-3 py-2">Tên</th>
               <th className="px-3 py-2">Mã thanh toán</th>
               <th className="px-3 py-2">Hoạt động</th>
-              <th className="px-3 py-2">Còn lại</th>
+              <th className="px-3 py-2">Thời gian lại</th>
               <th className="px-3 py-2">Lần cuối</th>
               <th className="px-3 py-2">Giá/phút</th>
               <th className="px-3 py-2">Kích hoạt</th>
@@ -146,16 +147,24 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
             </tr>
           </thead>
           <tbody>
-            {filtered.map((device) => (
+            {filtered.map((device, index) => (
               <tr key={device.id} className="border-b hover:bg-slate-50 transition-colors">
-                <td className="px-3 py-3 text-xs text-muted-foreground">#{device.id}</td>
-                <td className="px-3 py-3 font-medium">{device.device_id}</td>
+                <td className="px-3 py-3 text-xs text-muted-foreground">{index + 1}</td>
+                <td className="px-3 py-3 font-medium">
+                  <div className="flex items-center gap-2">
+                    {device.device_id}
+                    <CopyButton value={device.device_id} />
+                  </div>
+                </td>
                 <td className="px-3 py-3">{device.name}</td>
                 <td className="px-3 py-3 font-mono font-semibold">
                   {device.payment_code ? (
-                    <span className="bg-slate-100 text-slate-800 text-xs px-2 py-0.5 rounded border border-slate-200">
-                      {device.payment_code}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="bg-slate-100 text-slate-800 text-xs px-2 py-0.5 rounded border border-slate-200">
+                        SEVQR {device.payment_code}
+                      </span>
+                      <CopyButton value={`SEVQR ${device.payment_code}`} />
+                    </div>
                   ) : (
                     <span className="text-gray-400 text-xs">—</span>
                   )}
@@ -229,21 +238,25 @@ export function DeviceList({ devices, deviceDetailBase = "/tenant/devices" }: De
             </div>
 
             <div className="space-y-2 text-sm mb-4">
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Device ID:</span>
-                <span className="font-mono font-medium">{device.device_id}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-medium">{device.device_id}</span>
+                  <CopyButton value={device.device_id} />
+                </div>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Mã thanh toán:</span>
-                <span className="font-mono font-semibold">
-                  {device.payment_code ? (
-                    <span className="bg-slate-100 text-slate-800 text-xs px-2 py-0.5 rounded border border-slate-200">
-                      {device.payment_code}
+                {device.payment_code ? (
+                  <div className="flex items-center gap-2">
+                    <span className="bg-slate-100 font-mono text-slate-800 text-[10px] px-1.5 py-0.5 rounded border border-slate-200">
+                      SEVQR {device.payment_code}
                     </span>
-                  ) : (
-                    <span className="text-slate-400 text-xs">—</span>
-                  )}
-                </span>
+                    <CopyButton value={`SEVQR ${device.payment_code}`} />
+                  </div>
+                ) : (
+                  <span className="text-slate-400 text-xs">—</span>
+                )}
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Trạng thái:</span>

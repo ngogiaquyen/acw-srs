@@ -17,19 +17,19 @@ export default async function TenantDashboardPage() {
 
   const [summary, devices] = tenantId
     ? await Promise.all([
-        getTenantRevenueSummary(tenantId),
-        getDevicesByTenantId(tenantId),
-      ])
+      getTenantRevenueSummary(tenantId),
+      getDevicesByTenantId(tenantId),
+    ])
     : [
-        {
-          tenantId: 0,
-          totalRevenue: 0,
-          revenueToday: 0,
-          totalTransactions: 0,
-          transactionsToday: 0,
-        },
-        [],
-      ];
+      {
+        tenantId: 0,
+        totalRevenue: 0,
+        revenueToday: 0,
+        totalTransactions: 0,
+        transactionsToday: 0,
+      },
+      [],
+    ];
 
   // Online = có heartbeat trong vòng 5 phút gần đây
   const onlineDevices = devices.filter((device) => {
@@ -73,13 +73,6 @@ export default async function TenantDashboardPage() {
           <p className="mt-1 md:mt-2 text-lg md:text-2xl font-bold">{devices.length}</p>
         </Card>
       </div>
-
-      <Card className="p-6">
-        <h3 className="text-base font-medium">Tổng quan tenant</h3>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Dữ liệu được tổng hợp theo ngày hiện tại và trạng thái thiết bị đang hoạt động.
-        </p>
-      </Card>
     </div>
   );
 }
