@@ -74,6 +74,17 @@ export async function POST(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
     }
 
+    if (user.role === "TENANT_ADMIN") {
+      const { getTenantById } = await import("@/lib/db/tenants");
+      const tenant = await getTenantById(device.tenant_id);
+      if (tenant && tenant.subscription_status === "expired" && !tenant.allow_expired_access) {
+        return NextResponse.json(
+          { error: "Tài khoản của bạn đã hết hạn. Vui lòng gia hạn để tiếp tục sử dụng." },
+          { status: 403 }
+        );
+      }
+    }
+
     const command = await createDeviceCommand({
       deviceId: device.id,
       commandType: body.commandType,

@@ -132,12 +132,12 @@ export function DeviceForm({ mode, deviceIdParam, initialData, tenantId }: Devic
 
           {mode === "edit" && (
             <div className="space-y-2">
-              <Label htmlFor="paymentCode">Mã thanh toán (tự tạo theo PA1)</Label>
+              <Label htmlFor="paymentCode">Mã thanh toán</Label>
               <div className="flex gap-2">
                 <Input
                   id="paymentCode"
                   value={formData.paymentCode || ""}
-                  readOnly
+                  onChange={(e) => setFormData((p) => ({ ...p, paymentCode: e.target.value }))}
                 />
                 <Button
                   type="button"

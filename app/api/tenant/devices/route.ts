@@ -94,6 +94,13 @@ export async function POST(request: Request) {
 
     // Check device limit for TENANT_ADMIN
     if (user.role === "TENANT_ADMIN") {
+      if (tenant.subscription_status === "expired" && !tenant.allow_expired_access) {
+        return NextResponse.json(
+          { error: "Tài khoản của bạn đã hết hạn. Vui lòng gia hạn để thêm thiết bị." },
+          { status: 403 }
+        );
+      }
+
       const currentDevices = await getDevicesByTenantId(tenantId);
       if (currentDevices.length >= tenant.license_max_devices) {
         return NextResponse.json(

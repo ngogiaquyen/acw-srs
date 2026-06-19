@@ -102,6 +102,15 @@ export async function PUT(request: Request, { params }: Params) {
       if (existingDevice.tenant_id !== user.tenantId) {
         return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
       }
+
+      const { getTenantById } = await import("@/lib/db/tenants");
+      const tenant = await getTenantById(user.tenantId);
+      if (tenant && tenant.subscription_status === "expired" && !tenant.allow_expired_access) {
+        return NextResponse.json(
+          { error: "Tài khoản của bạn đã hết hạn. Vui lòng gia hạn để cập nhật thiết bị." },
+          { status: 403 }
+        );
+      }
     } else if (user.role !== "SUPER_ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -186,6 +195,15 @@ export async function DELETE(_request: Request, { params }: Params) {
     const owned = await getDeviceByIdAndTenantId(id, user.tenantId);
     if (!owned) {
       return NextResponse.json({ error: "Thiết bị không tồn tại" }, { status: 404 });
+    }
+
+    const { getTenantById } = await import("@/lib/db/tenants");
+    const tenant = await getTenantById(user.tenantId);
+    if (tenant && tenant.subscription_status === "expired" && !tenant.allow_expired_access) {
+      return NextResponse.json(
+        { error: "Tài khoản của bạn đã hết hạn. Vui lòng gia hạn để xóa thiết bị." },
+        { status: 403 }
+      );
     }
   } else if (user.role === "SUPER_ADMIN") {
     const device = await getDeviceById(id);

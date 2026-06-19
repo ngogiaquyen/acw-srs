@@ -243,6 +243,7 @@ export async function deactivateTenant(id: number): Promise<void> {
 
 export async function deleteTenant(id: number): Promise<void> {
   await pool.query("DELETE FROM users WHERE tenant_id = ?", [id]);
+  await pool.query("DELETE FROM devices WHERE tenant_id = ?", [id]);
   await pool.query("DELETE FROM tenants WHERE id = ?", [id]);
 }
 
