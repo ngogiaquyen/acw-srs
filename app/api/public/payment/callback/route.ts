@@ -128,6 +128,39 @@ export async function POST(request: Request) {
       },
     });
 
+    // --- BACKGROUND TIMEOUT CHECK ---
+    // Vì không có Web cho khách, hệ thống tự động kiểm tra sau 30 giây
+    // Nếu ESP32 chưa lấy lệnh (vẫn pending), đánh dấu lỗi và lưu log hoàn tiền.
+    setTimeout(async () => {
+      try {
+        const { getDeviceCommandById, completeDeviceCommand } = await import("@/lib/db/device-commands");
+        const { updateTransactionStatus } = await import("@/lib/db/transactions");
+        const { createDeviceLog } = await import("@/lib/db/device-logs");
+
+        const latestCommand = await getDeviceCommandById(command.id);
+        if (latestCommand && latestCommand.status === "pending") {
+          // Timeout! ESP32 offline or didn't fetch in time
+          await completeDeviceCommand(command.id, "failed", { error: "timeout_after_30s" });
+          await updateTransactionStatus(transaction.id, "failed");
+          
+          await createDeviceLog({
+            deviceId: device.id,
+            logLevel: "error",
+            message: `Thiết bị gặp sự cố kết nối khi thanh toán ${transferAmount}đ. Đã chuyển giao dịch sang trạng thái Cần hoàn tiền.`,
+            metadata: {
+              transactionId: transaction.id,
+              paymentCode,
+              reason: "timeout_after_payment"
+            }
+          });
+          console.log(`[TIMEOUT] Transaction ${transaction.id} failed. Logged for refund.`);
+        }
+      } catch (err) {
+        console.error("Error in background timeout check:", err);
+      }
+    }, 30000); // 30s timeout
+    // --------------------------------
+
     return NextResponse.json(
       {
         success: true,

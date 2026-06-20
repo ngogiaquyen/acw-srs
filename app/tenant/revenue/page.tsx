@@ -4,6 +4,7 @@ import { getCurrentUserFromCookies } from "@/lib/auth/middleware";
 import { getTenantRevenueAnalytics, getTenantRevenueSummary } from "@/lib/db/tenant-revenue";
 import { findUserById } from "@/lib/db/users";
 import { SendReportDialog } from "@/components/tenant/SendReportDialog";
+import { TenantRevenueFilters } from "@/components/tenant/TenantRevenueFilters";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("vi-VN", {
@@ -13,7 +14,11 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-export default async function TenantRevenuePage() {
+interface Props {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function TenantRevenuePage({ searchParams }: Props) {
   const auth = await getCurrentUserFromCookies();
   const tenantId = auth.isAuthenticated ? auth.user.tenantId : null;
   const userId = auth.isAuthenticated ? auth.user.userId : null;
@@ -24,8 +29,12 @@ export default async function TenantRevenuePage() {
     userEmail = userRecord?.email || "";
   }
 
+  const resolvedParams = await searchParams;
+  const startDate = typeof resolvedParams.startDate === 'string' ? resolvedParams.startDate : undefined;
+  const endDate = typeof resolvedParams.endDate === 'string' ? resolvedParams.endDate : undefined;
+
   const [summary, analytics] = tenantId
-    ? await Promise.all([getTenantRevenueSummary(tenantId), getTenantRevenueAnalytics(tenantId, 30)])
+    ? await Promise.all([getTenantRevenueSummary(tenantId, startDate, endDate), getTenantRevenueAnalytics(tenantId, startDate, endDate)])
     : [
         {
           tenantId: 0,
@@ -54,6 +63,8 @@ export default async function TenantRevenuePage() {
         )}
       </div>
 
+      <TenantRevenueFilters />
+
       <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
         <Card className="p-3 md:p-4 border-l-4 border-l-blue-500">
           <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-wider font-semibold">Hôm nay</p>
@@ -61,7 +72,9 @@ export default async function TenantRevenuePage() {
         </Card>
 
         <Card className="p-3 md:p-4 border-l-4 border-l-slate-400">
-          <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-wider font-semibold">Tổng doanh thu</p>
+          <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-wider font-semibold">
+            {startDate || endDate ? "Doanh thu kỳ" : "Tổng doanh thu"}
+          </p>
           <p className="mt-1 md:mt-2 text-lg md:text-2xl font-bold">{formatCurrency(summary.totalRevenue)}</p>
         </Card>
 
@@ -71,7 +84,9 @@ export default async function TenantRevenuePage() {
         </Card>
 
         <Card className="p-4 border-l-4 border-l-slate-400">
-          <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-wider font-semibold">Tổng giao dịch</p>
+          <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-wider font-semibold">
+            {startDate || endDate ? "Giao dịch kỳ" : "Tổng giao dịch"}
+          </p>
           <p className="mt-1 md:mt-2 text-lg md:text-2xl font-bold">{summary.totalTransactions}</p>
         </Card>
       </div>

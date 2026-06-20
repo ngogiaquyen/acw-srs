@@ -214,6 +214,13 @@ export async function DELETE(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const { getActiveTransactionByDeviceId } = await import("@/lib/db/transactions");
+  const activeTx = await getActiveTransactionByDeviceId(id);
+  
+  if (activeTx) {
+    return NextResponse.json({ error: "Hãy chờ chu kỳ rửa hoàn tất để xoá" }, { status: 409 });
+  }
+
   await deleteDevice(id);
 
   return NextResponse.json({ message: "Đã xóa thiết bị" }, { status: 200 });

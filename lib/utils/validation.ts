@@ -187,7 +187,7 @@ export function validateDevicePayload(
     payload.pricePerMinute !== null &&
     (Number.isNaN(payload.pricePerMinute) || payload.pricePerMinute <= 0)
   ) {
-    errors.push("Giá mỗi phút phải là số dương");
+    errors.push("Đơn giá phải lớn hơn 0");
   }
 
   return {

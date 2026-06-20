@@ -18,8 +18,16 @@ export default async function TenantTransactionsPage({ searchParams }: Props) {
   const deviceIdParam = typeof params.device === 'string' ? params.device : null;
   const deviceId = deviceIdParam ? parseInt(deviceIdParam, 10) : null;
 
-  const transactions = tenantId ? await getTransactionsByTenantId(tenantId, deviceId) : [];
-  const devices = tenantId ? await getDevicesByTenantId(tenantId) : [];
+  let transactions: any[] = [];
+  let devices: any[] = [];
+
+  try {
+    transactions = tenantId ? await getTransactionsByTenantId(tenantId, deviceId) : [];
+    devices = tenantId ? await getDevicesByTenantId(tenantId) : [];
+  } catch (error) {
+    console.error("Lỗi DB khi lấy danh sách giao dịch (Tenant):", error);
+    // Fallback mảng rỗng để UI tự hiển thị "Không tìm thấy dữ liệu"
+  }
 
   return (
     <div className="space-y-4">

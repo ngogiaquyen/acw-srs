@@ -27,6 +27,8 @@ export default async function SuperAdminRevenuePage({ searchParams }: Props) {
   const resolvedParams = await searchParams;
   const currentTenantId = resolvedParams.tenantId ? Number(resolvedParams.tenantId) : undefined;
   const currentDeviceId = resolvedParams.deviceId ? Number(resolvedParams.deviceId) : undefined;
+  const startDate = typeof resolvedParams.startDate === 'string' ? resolvedParams.startDate : undefined;
+  const endDate = typeof resolvedParams.endDate === 'string' ? resolvedParams.endDate : undefined;
 
   let userEmail = "";
   if (userId) {
@@ -35,11 +37,13 @@ export default async function SuperAdminRevenuePage({ searchParams }: Props) {
   }
 
   const [summary, analytics, tenants, devices] = await Promise.all([
-    getSuperAdminRevenueSummary(currentTenantId, currentDeviceId),
-    getSuperAdminRevenueAnalytics(30, currentTenantId, currentDeviceId),
+    getSuperAdminRevenueSummary(currentTenantId, currentDeviceId, startDate, endDate),
+    getSuperAdminRevenueAnalytics(currentTenantId, currentDeviceId, startDate, endDate),
     getTenants(),
     getAllDevices(),
   ]);
+
+  const hasDateFilter = !!startDate || !!endDate;
 
   return (
     <div className="space-y-6">
@@ -47,7 +51,7 @@ export default async function SuperAdminRevenuePage({ searchParams }: Props) {
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Tổng doanh thu hệ thống</h2>
           <p className="text-sm text-muted-foreground">
-            Theo dõi doanh thu và giao dịch toàn hệ thống trong 30 ngày gần nhất.
+            Theo dõi doanh thu và giao dịch toàn hệ thống.
           </p>
         </div>
         {auth.isAuthenticated && (
@@ -66,11 +70,15 @@ export default async function SuperAdminRevenuePage({ searchParams }: Props) {
           <p className="mt-2 text-2xl font-bold">{formatCurrency(summary.revenueToday)}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Tổng doanh thu</p>
+          <p className="text-sm text-muted-foreground">
+            {hasDateFilter ? "Doanh thu trong kỳ" : "Tổng doanh thu"}
+          </p>
           <p className="mt-2 text-2xl font-bold">{formatCurrency(summary.totalRevenue)}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Tổng giao dịch</p>
+          <p className="text-sm text-muted-foreground">
+            {hasDateFilter ? "Giao dịch trong kỳ" : "Tổng giao dịch"}
+          </p>
           <p className="mt-2 text-2xl font-bold">{summary.totalTransactions}</p>
         </Card>
       </div>

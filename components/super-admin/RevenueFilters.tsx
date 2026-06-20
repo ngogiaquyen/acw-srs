@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 interface Tenant {
   id: number;
@@ -34,6 +35,8 @@ export function RevenueFilters({ tenants, devices }: RevenueFiltersProps) {
 
   const currentTenantId = searchParams.get("tenantId") || "all";
   const currentDeviceId = searchParams.get("deviceId") || "all";
+  const currentStartDate = searchParams.get("startDate") || "";
+  const currentEndDate = searchParams.get("endDate") || "";
 
   // Filter devices based on selected tenant
   const filteredDevices =
@@ -56,7 +59,7 @@ export function RevenueFilters({ tenants, devices }: RevenueFiltersProps) {
 
   return (
     <Card className="p-4 mb-6">
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-4">
         <div className="space-y-2">
           <Label>Chủ trạm</Label>
           <Select
@@ -104,6 +107,28 @@ export function RevenueFilters({ tenants, devices }: RevenueFiltersProps) {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Từ ngày</Label>
+          <Input
+            type="date"
+            value={currentStartDate}
+            onChange={(e) => {
+              router.push(`?${createQueryString("startDate", e.target.value || "all")}`);
+            }}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Đến ngày</Label>
+          <Input
+            type="date"
+            value={currentEndDate}
+            onChange={(e) => {
+              router.push(`?${createQueryString("endDate", e.target.value || "all")}`);
+            }}
+          />
         </div>
       </div>
     </Card>

@@ -27,7 +27,9 @@ export interface TenantRevenuePoint {
 
 export async function getSuperAdminRevenueSummary(
   tenantId?: number,
-  deviceId?: number
+  deviceId?: number,
+  startDate?: string,
+  endDate?: string
 ): Promise<SuperAdminRevenueSummary> {
   let tenantFilter = "";
   const queryParams: unknown[] = [];
@@ -81,6 +83,14 @@ export async function getSuperAdminRevenueSummary(
     txnFilter += " AND device_id = ?";
     txnParams.push(deviceId);
   }
+  if (startDate) {
+    txnFilter += " AND DATE(created_at) >= ?";
+    txnParams.push(startDate);
+  }
+  if (endDate) {
+    txnFilter += " AND DATE(created_at) <= ?";
+    txnParams.push(endDate);
+  }
 
   const [txnRows] = await pool.query(
     `
@@ -118,14 +128,13 @@ export async function getSuperAdminRevenueSummary(
 }
 
 export async function getSuperAdminRevenueAnalytics(
-  days = 30,
   tenantId?: number,
-  deviceId?: number
+  deviceId?: number,
+  startDate?: string,
+  endDate?: string
 ): Promise<RevenuePoint[]> {
-  const safeDays = Math.min(Math.max(days, 1), 365);
-
   let filter = "";
-  const params: unknown[] = [safeDays - 1];
+  const params: unknown[] = [];
 
   if (tenantId) {
     filter += " AND tenant_id = ?";
@@ -136,6 +145,26 @@ export async function getSuperAdminRevenueAnalytics(
     params.push(deviceId);
   }
 
+  // Calculate actual start and end if not provided
+  let actualStart = startDate;
+  let actualEnd = endDate;
+
+  if (!actualEnd) {
+    const today = new Date();
+    // Offset by timezone to get local YYYY-MM-DD
+    const offset = today.getTimezoneOffset();
+    const localDate = new Date(today.getTime() - (offset * 60 * 1000));
+    actualEnd = localDate.toISOString().split('T')[0];
+  }
+  if (!actualStart) {
+    const end = new Date(actualEnd);
+    end.setDate(end.getDate() - 29); // 30 days total including end
+    actualStart = end.toISOString().split('T')[0];
+  }
+
+  filter += " AND DATE(created_at) >= ? AND DATE(created_at) <= ?";
+  params.push(actualStart, actualEnd);
+
   const [rows] = await pool.query(
     `
     SELECT
@@ -144,7 +173,6 @@ export async function getSuperAdminRevenueAnalytics(
       COUNT(*) AS transactions
     FROM transactions
     WHERE status = 'completed'
-      AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
       ${filter}
     GROUP BY DATE(created_at)
     ORDER BY DATE(created_at) ASC
@@ -170,13 +198,11 @@ export async function getSuperAdminRevenueAnalytics(
   }
 
   const result: RevenuePoint[] = [];
-  const now = new Date();
+  const currDate = new Date(actualStart);
+  const lastDate = new Date(actualEnd);
 
-  for (let i = safeDays - 1; i >= 0; i -= 1) {
-    const d = new Date(now);
-    d.setDate(now.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
-
+  while (currDate <= lastDate) {
+    const key = currDate.toISOString().slice(0, 10);
     result.push(
       map.get(key) ?? {
         date: key,
@@ -184,6 +210,7 @@ export async function getSuperAdminRevenueAnalytics(
         transactions: 0,
       },
     );
+    currDate.setDate(currDate.getDate() + 1);
   }
 
   return result;

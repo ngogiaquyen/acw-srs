@@ -112,7 +112,10 @@ export async function POST(request: Request) {
 
     const existed = await getDeviceByDeviceId(body.deviceId!);
     if (existed) {
-      return NextResponse.json({ error: "deviceId đã tồn tại" }, { status: 409 });
+      const reason = existed.tenant_id === tenantId 
+        ? "Mã thiết bị này đã tồn tại trong trạm của bạn." 
+        : "Thiết bị này đang thuộc trạm khác/người khác.";
+      return NextResponse.json({ error: `${reason} Mã thiết bị không hợp lệ.` }, { status: 409 });
     }
 
     const input: CreateDeviceInput = {

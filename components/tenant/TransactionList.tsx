@@ -13,6 +13,7 @@ export interface TransactionItem {
   payment_method: string | null;
   payment_transaction_id?: string | null;
   created_at: Date | string;
+  tenant_name?: string | null;
 }
 
 interface TransactionListProps {
@@ -49,6 +50,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
           <thead>
             <tr className="border-b text-left">
               <th className="px-3 py-2">#</th>
+              {transactions.some(tx => tx.tenant_name) && <th className="px-3 py-2">Chủ trạm</th>}
               <th className="px-3 py-2">Thiết bị</th>
               <th className="px-3 py-2">Số tiền</th>
               <th className="px-3 py-2">Thời lượng</th>
@@ -61,6 +63,11 @@ export function TransactionList({ transactions }: TransactionListProps) {
             {transactions.map((tx) => (
               <tr key={tx.id} className="border-b hover:bg-slate-50 transition-colors">
                 <td className="px-3 py-3 text-xs text-muted-foreground">#{tx.id}</td>
+                {transactions.some(t => t.tenant_name) && (
+                  <td className="px-3 py-3 font-medium text-slate-700">
+                    {tx.tenant_name ?? "-"}
+                  </td>
+                )}
                 <td className="px-3 py-3">
                   <div className="font-medium">{tx.device_name ?? `Device #${tx.device_id}`}</div>
                   {tx.device_code && (
@@ -99,6 +106,12 @@ export function TransactionList({ transactions }: TransactionListProps) {
             </div>
 
             <div className="space-y-2 text-sm">
+              {tx.tenant_name && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Chủ trạm:</span>
+                  <span className="font-medium text-right">{tx.tenant_name}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Thiết bị:</span>
                 <span className="font-medium text-right">{tx.device_name ?? `Device #${tx.device_id}`}</span>
@@ -122,7 +135,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
       </div>
 
       {transactions.length === 0 && (
-        <p className="py-6 text-center text-sm text-muted-foreground">Chưa có giao dịch.</p>
+        <p className="py-6 text-center text-sm text-muted-foreground">Không tìm thấy dữ liệu giao dịch.</p>
       )}
     </Card>
   );

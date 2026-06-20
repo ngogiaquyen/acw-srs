@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, LayoutDashboard, Users, BarChart, Zap, LogOut } from "lucide-react";
+import { Menu, X, LayoutDashboard, Users, BarChart, Zap, LogOut, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: "/super-admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/super-admin/tenants", label: "Chủ trạm", icon: Users },
+  { href: "/super-admin/transactions", label: "Giao dịch", icon: Receipt },
   { href: "/super-admin/revenue", label: "Doanh thu", icon: BarChart },
   // { href: "/super-admin/simulate-payment", label: "Giả lập thanh toán", icon: Zap },
 ];

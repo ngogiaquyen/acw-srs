@@ -76,6 +76,35 @@ export async function getTransactionsByTenantId(tenantId: number, deviceId: numb
   return rows as TransactionWithDevice[];
 }
 
+export interface TransactionWithDeviceAndTenant extends TransactionWithDevice {
+  tenant_name: string;
+}
+
+export async function getAllTransactions(tenantId?: number, deviceId?: number): Promise<TransactionWithDeviceAndTenant[]> {
+  let query = `
+     SELECT t.*, d.name AS device_name, d.device_id AS device_code, tn.name AS tenant_name
+     FROM transactions t
+     LEFT JOIN devices d ON d.id = t.device_id
+     LEFT JOIN tenants tn ON tn.id = t.tenant_id
+     WHERE 1=1
+  `;
+  const params: any[] = [];
+  
+  if (tenantId) {
+    query += ` AND t.tenant_id = ?`;
+    params.push(tenantId);
+  }
+  if (deviceId) {
+    query += ` AND t.device_id = ?`;
+    params.push(deviceId);
+  }
+  
+  query += ` ORDER BY t.created_at DESC`;
+
+  const [rows] = await pool.query(query, params);
+  return rows as TransactionWithDeviceAndTenant[];
+}
+
 export async function getActiveTransactionByDeviceId(deviceId: number): Promise<TransactionRecord | null> {
   const [rows] = await pool.query(
     `

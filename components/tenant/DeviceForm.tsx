@@ -82,6 +82,12 @@ export function DeviceForm({ mode, deviceIdParam, initialData, tenantId }: Devic
         webPassword: formData.webPassword || null,
       };
 
+      if (payload.pricePerMinute !== null && payload.pricePerMinute <= 0) {
+        setError("Đơn giá phải lớn hơn 0");
+        setLoading(false);
+        return;
+      }
+
       const res = await fetch(endpoint, {
         method,
         headers: { "Content-Type": "application/json" },

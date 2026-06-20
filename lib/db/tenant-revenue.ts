@@ -16,7 +16,21 @@ export interface TenantRevenuePoint {
 
 export async function getTenantRevenueSummary(
   tenantId: number,
+  startDate?: string,
+  endDate?: string
 ): Promise<TenantRevenueSummary> {
+  let filter = "WHERE tenant_id = ?";
+  const params: unknown[] = [tenantId];
+
+  if (startDate) {
+    filter += " AND DATE(created_at) >= ?";
+    params.push(startDate);
+  }
+  if (endDate) {
+    filter += " AND DATE(created_at) <= ?";
+    params.push(endDate);
+  }
+
   const [resultRows] = await pool.query(
     `
     SELECT
@@ -25,9 +39,9 @@ export async function getTenantRevenueSummary(
       COUNT(*) AS totalTransactions,
       SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) AS transactionsToday
     FROM transactions
-    WHERE tenant_id = ?
+    ${filter}
   `,
-    [tenantId],
+    params,
   );
   const [row] = resultRows as Array<{
     totalRevenue: number | string;
@@ -49,9 +63,25 @@ export async function getTenantRevenueSummary(
 
 export async function getTenantRevenueAnalytics(
   tenantId: number,
-  days = 30,
+  startDate?: string,
+  endDate?: string
 ): Promise<TenantRevenuePoint[]> {
-  const safeDays = Math.min(Math.max(days, 1), 365);
+  // Calculate actual start and end if not provided
+  let actualStart = startDate;
+  let actualEnd = endDate;
+
+  if (!actualEnd) {
+    const today = new Date();
+    // Offset by timezone to get local YYYY-MM-DD
+    const offset = today.getTimezoneOffset();
+    const localDate = new Date(today.getTime() - (offset * 60 * 1000));
+    actualEnd = localDate.toISOString().split('T')[0];
+  }
+  if (!actualStart) {
+    const end = new Date(actualEnd);
+    end.setDate(end.getDate() - 29); // 30 days total including end
+    actualStart = end.toISOString().split('T')[0];
+  }
 
   const [rows] = await pool.query(
     `
@@ -62,11 +92,11 @@ export async function getTenantRevenueAnalytics(
     FROM transactions
     WHERE tenant_id = ?
       AND status = 'completed'
-      AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+      AND DATE(created_at) >= ? AND DATE(created_at) <= ?
     GROUP BY DATE(created_at)
     ORDER BY DATE(created_at) ASC
   `,
-    [tenantId, safeDays - 1],
+    [tenantId, actualStart, actualEnd],
   );
 
   const rawRows = rows as Array<{
@@ -86,12 +116,13 @@ export async function getTenantRevenueAnalytics(
   }
 
   const result: TenantRevenuePoint[] = [];
-  const now = new Date();
-  for (let i = safeDays - 1; i >= 0; i -= 1) {
-    const d = new Date(now);
-    d.setDate(now.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
+  const currDate = new Date(actualStart);
+  const lastDate = new Date(actualEnd);
+
+  while (currDate <= lastDate) {
+    const key = currDate.toISOString().slice(0, 10);
     result.push(map.get(key) ?? { date: key, revenue: 0, transactions: 0 });
+    currDate.setDate(currDate.getDate() + 1);
   }
 
   return result;
