@@ -26,8 +26,17 @@ export async function GET(request: Request) {
   const daysParam = url.searchParams.get("days");
   const days = daysParam ? Number.parseInt(daysParam, 10) : 30;
 
+  const today = new Date();
+  const offset = today.getTimezoneOffset();
+  const localDate = new Date(today.getTime() - (offset * 60 * 1000));
+  const endDate = localDate.toISOString().split('T')[0];
+
+  const end = new Date(endDate);
+  end.setDate(end.getDate() - (days - 1));
+  const startDate = end.toISOString().split('T')[0];
+
   try {
-    const analytics = await getTenantRevenueAnalytics(access.tenantId, days);
+    const analytics = await getTenantRevenueAnalytics(access.tenantId, startDate, endDate);
     return NextResponse.json({ analytics }, { status: 200 });
   } catch (error) {
     console.error("Error in GET /api/tenant/revenue/analytics:", error);

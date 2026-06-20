@@ -7,7 +7,7 @@ export default async function TenantRevenueAnalyticsPage() {
   const auth = await getCurrentUserFromCookies();
   const tenantId = auth.isAuthenticated ? auth.user.tenantId : null;
 
-  const analytics = tenantId ? await getTenantRevenueAnalytics(tenantId, 30) : [];
+  const analytics = tenantId ? await getTenantRevenueAnalytics(tenantId) : [];
 
   return (
     <div className="space-y-6">
